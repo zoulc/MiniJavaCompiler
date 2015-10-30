@@ -1,5 +1,5 @@
 #include <iostream>
-#include "AstStruct.h"
+#include "ast/AstStruct.h"
 extern Program* programAst ; 
 extern int yyparse();
 

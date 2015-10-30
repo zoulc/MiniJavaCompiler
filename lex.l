@@ -1,6 +1,6 @@
 %{
 #include <string>
-#include "AstStruct.h"
+#include "ast/AstStruct.h"
 #include "parser.hpp"
 
 #define SAVE_TOKEN	yylval.string = new std::string(yytext, yyleng)
@@ -14,7 +14,7 @@ ws		{delim}+
 letter		[A-Za-z]
 digit		[0-9]
 identifier	(_|{letter})(_|{digit}|{letter})*
-number		[+|-]?{digit}+
+number		{digit}+
 comment		\/\/[^\n]*
 
 %%

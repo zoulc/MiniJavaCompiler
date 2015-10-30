@@ -1,29 +1,29 @@
 %{
-#include "ArrNewExpr.h"
-#include "BiOpExpr.h"
-#include "ClassDecl.h"
-#include "ClassDeclList.h"
-#include "Expr.h"
-#include "ExprList.h"
-#include "GetLenExpr.h"
-#include "GetMtdCallExpr.h"
-#include "Ident.h"
-#include "IdentAccessExpr.h"
-#include "LiterExpr.h"
-#include "MainClassDecl.h"
-#include "MtdDecl.h"
-#include "MtdDeclList.h"
-#include "ObjNewExpr.h"
-#include "Program.h"
-#include "SiOpExpr.h"
-#include "Stmt.h"
-#include "StmtList.h"
-#include "ThisExpr.h"
-#include "Type.h"
-#include "VarArg.h"
-#include "VarArgList.h"
-#include "VarDecl.h"
-#include "VarDeclList.h"
+#include "ast/ArrNewExpr.h"
+#include "ast/BiOpExpr.h"
+#include "ast/ClassDecl.h"
+#include "ast/ClassDeclList.h"
+#include "ast/Expr.h"
+#include "ast/ExprList.h"
+#include "ast/GetLenExpr.h"
+#include "ast/GetMtdCallExpr.h"
+#include "ast/Ident.h"
+#include "ast/IdentAccessExpr.h"
+#include "ast/LiterExpr.h"
+#include "ast/MainClassDecl.h"
+#include "ast/MtdDecl.h"
+#include "ast/MtdDeclList.h"
+#include "ast/ObjNewExpr.h"
+#include "ast/Program.h"
+#include "ast/SiOpExpr.h"
+#include "ast/Stmt.h"
+#include "ast/StmtList.h"
+#include "ast/ThisExpr.h"
+#include "ast/Type.h"
+#include "ast/VarArg.h"
+#include "ast/VarArgList.h"
+#include "ast/VarDecl.h"
+#include "ast/VarDeclList.h"
     Program *programAst; /* the top level root node of our final AST */
 
     extern int yylex();
@@ -80,8 +80,8 @@
 %type <biopexpr> biopexpr
 %type <mainclassdecl> mainclassdecl 
 %type <classdecllist> classdecllist 
-%type <mtddecllist> mtddecllist 
-%type <exprlist> exprlist 
+%type <mtddecllist> mtddecllist
+ %type <exprlist> exprlist 
 %type <stmtlist> stmtlist
 %type <program> program
 %type <classdecl> classdecl 
@@ -103,33 +103,30 @@ program : mainclassdecl classdecllist
          { programAst = new Program( $1 , $2 ) ; }
         ;
 
-mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC
-                TVOID TMAIN TLPAREN TSTRING TLF
-                TRF ident TRPAREN TLBRACE stmtlist
-                TRBRACE TRBRACE
+mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF ident TRPAREN TLBRACE stmtlist TRBRACE TRBRACE
                 { $$ = new MainClassDecl( $2 , $12 , $15 ) ; }
               ;
 
-classdecl : TCLASS ident TEXTENDS ident TLBRACE
-            vardecllist mtddecllist TRBRACE
+classdecl : TCLASS ident TEXTENDS ident TLBRACE vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ;  }
-          | TCLASS ident TLBRACE
-            vardecllist mtddecllist TRBRACE
+          | TCLASS ident TEXTENDS ident TLBRACE vardecllist TRBRACE
+            { $$ = new ClassDecl( $2 , $4 , $6 , new MtdDeclList() ) ;  }
+          | TCLASS ident TLBRACE vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , NULL , $4 , $5 ) ; }
+          | TCLASS ident TLBRACE vardecllist TRBRACE
+            { $$ = new ClassDecl( $2 , NULL , $4 , new MtdDeclList() ) ; }
           ;
 
 vardecl : type ident TSEMICOLON  
-          { $$ = new ValDecl( $1 , $2 ) ; }
+          { $$ = new VarDecl( $1 , $2 ) ; }
         ;
 
 vararg  : type ident 
           { $$ = new VarArg( $1, $2 ) ; } 
         ;
 
-mtddecl : TPUBLIC type ident TLPAREN vararglist
-          TRPAREN TLBRACE stmtlist TRETURN expr 
-          TSEMICOLON TRBRACE
-         { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $10 );}
+mtddecl : TPUBLIC type ident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+         { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $10 ); }
          ;
 
 type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
@@ -146,7 +143,7 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
      | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
        { $$ = new SysOutPrtStmt( $3 ) ; }
      | ident TEQUAL expr TSEMICOLON
-       { $$ = new AssignStmt( $1 , $3 ) ; printf("Assign?\n"); }
+       { $$ = new AssignStmt( $1 , $3 ) ; }
      | ident TLF expr TRF TEQUAL expr TSEMICOLON
        { $$ = new ArrAssignStmt( $1 , $3 , $6 ) ; }
      | type ident TSEMICOLON 
@@ -179,14 +176,13 @@ biopexpr : expr TPLUS expr { $$ = new AddExpr( $1 , $3 ) ; }
          | expr TAND expr { $$ = new AndExpr( $1 , $3 ) ; }
          | expr TMUL expr { $$ = new MultExpr( $1 , $3 ) ; }
 
-stmtlist : /*blank*/ { $$ = new StmtList() ; printf("Stmt?\n"); }
+stmtlist : /*blank*/ { $$ = new StmtList() ; }
          | stmtlist stmt
           { $$ = new StmtList( $1 , $2 ) ; }
          ;
 
-mtddecllist : /*blank*/ { $$ = new MtdDeclList() ; printf("MtdDecl?\n"); }
-         | mtddecllist mtddecl
-           { $$ = new MtdDeclList( $1 , $2 ) ; printf("MtdDecl?\n"); }
+mtddecllist : mtddecllist mtddecl { $$ = new MtdDeclList( $1 , $2 ) ; }
+         | mtddecl { $$ = new MtdDeclList ( new MtdDeclList() , $1 ) ; }
          ;
 
 classdecllist : /*blank*/ { $$ = new ClassDeclList() ; }
@@ -201,15 +197,15 @@ exprlist : /*blank*/ { $$ = new ExprList() ; }
            { $$ = new ExprList( $1 , $3 ) ;}
          ;
 
-vardecllist : /*blank*/ { $$ = new VarDeclList() ; printf("VarDecl?\n"); }
-         | vardecllist { printf("Again?\n"); } vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
+vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
+         | vardecllist vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
 	 ;
 
 vararglist : /*blank*/ { $$ = new VarArgList() ; } 
    	 | vararg { $$ = new VarArgList( new VarArgList() , $1 ) ; }
-    	 | vararglist TCOMMA vararg { $$ = new VarArgList( $1, $3 ) ; } 
+    	 | vararg TCOMMA vararglist { $$ = new VarArgList( $3, $1 ) ; } 
 	 ; 
 
-ident : TIDENT { $$ = new Ident( *$1  ) ; }
+ident : TIDENT { $$ = new Ident( *$1  ) ;  }
 
 %%
