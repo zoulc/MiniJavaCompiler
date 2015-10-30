@@ -1,0 +1,138 @@
+MtdDecl.h:    MtdDecl( MtdIdent& _mI ,
+MtdDecl.h:             Type& _rT ,
+MtdDecl.h:             VarArgList& _vAL ,
+MtdDecl.h:             VarDeclList& _vDL ,
+MtdDecl.h:             StmtList& _sL ,
+MtdDecl.h:             Expr& _rE) :
+lex.yy.c:#if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+lex.yy.c:		for ( n = 0; n < max_size && \
+lex.yy.c:			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
+lex.yy.c:		if ( c == EOF && ferror( yyin ) ) \
+lex.yy.c:		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
+lex.yy.c:		if ( (yy_c_buf_p) <= &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
+lex.yy.c:				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)];
+lex.yy.c:	if ( (yy_c_buf_p) > &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars) + 1] )
+lex.yy.c:			(yy_c_buf_p) = &b->yy_ch_buf[yy_c_buf_p_offset];
+lex.yy.c:		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
+lex.yy.c:	(yytext_ptr) = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[0];
+lex.yy.c:		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
+lex.yy.c:				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
+lex.yy.c:		if ( (yy_c_buf_p) < &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
+lex.yy.c:	b->yy_buf_pos = &b->yy_ch_buf[0];
+StmtList.h:    StmtList( StmtList& _sL ,
+lex.cpp:#if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+lex.cpp:		for ( n = 0; n < max_size && \
+lex.cpp:			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
+lex.cpp:		if ( c == EOF && ferror( yyin ) ) \
+lex.cpp:		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
+lex.cpp:		if ( (yy_c_buf_p) <= &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
+lex.cpp:				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)];
+lex.cpp:	if ( (yy_c_buf_p) > &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars) + 1] )
+lex.cpp:			(yy_c_buf_p) = &b->yy_ch_buf[yy_c_buf_p_offset];
+lex.cpp:		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
+lex.cpp:	(yytext_ptr) = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[0];
+lex.cpp:		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
+lex.cpp:				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
+lex.cpp:		if ( (yy_c_buf_p) < &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars)] )
+lex.cpp:	b->yy_buf_pos = &b->yy_ch_buf[0];
+GetMtdCallExpr.h:                    MtdIdent & _mI ,
+VarArgList.h:    VarArglList( VarArgList& _vAL ,
+VarArgList.h:                   VarArg& _vA )
+Ident.h:    Ident( string & _n ) : name(_n) {} ;  
+MainClassDecl.h:    MainClassDecl( Ident & _mCN , Ident & _iA , StmtList & _sL )
+ClassDeclList.h:    ClassDeclList( ClassDeclList& _cDL ,
+ClassDeclList.h:                   ClassDecl& _cD )
+myParser.tab.h:#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+VarDecl.h:    VarDecl( Type& _vT , VarIdent& _vI )
+myParser.tab.c:#  if defined __cplusplus && 201103L <= __cplusplus
+myParser.tab.c:#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+myParser.tab.c:# if defined YYENABLE_NLS && YYENABLE_NLS
+myParser.tab.c:      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
+myParser.tab.c:     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
+myParser.tab.c:     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
+myParser.tab.c:# if defined _MSC_VER && 1200 <= _MSC_VER
+myParser.tab.c:#if defined __GNUC__ && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
+myParser.tab.c:#    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS
+myParser.tab.c:#  if (defined __cplusplus && ! defined EXIT_SUCCESS \
+myParser.tab.c:       && ! ((defined YYMALLOC || defined malloc) \
+myParser.tab.c:             && (defined YYFREE || defined free)))
+myParser.tab.c:#   if ! defined malloc && ! defined EXIT_SUCCESS
+myParser.tab.c:#   if ! defined free && ! defined EXIT_SUCCESS
+myParser.tab.c:     && (! defined __cplusplus \
+myParser.tab.c:         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+myParser.tab.c:        YYCOPY (&yyptr->Stack_alloc, Stack, yysize);                    \
+myParser.tab.c:        Stack = &yyptr->Stack_alloc;                                    \
+myParser.tab.c:#if defined YYCOPY_NEEDED && YYCOPY_NEEDED
+myParser.tab.c:#  if defined __GNUC__ && 1 < __GNUC__
+myParser.tab.c:                       &(yyvsp[(yyi + 1) - (yynrhs)])
+myParser.tab.c:#  if defined __GLIBC__ && defined _STRING_H
+myParser.tab.c:#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
+myParser.tab.c:            if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR
+myParser.tab.c:                && !yytable_value_is_error (yytable[yyx + yyn]))
+myParser.tab.c:                         && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+myParser.tab.c:    if (! (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+myParser.tab.c:             && *yymsg_alloc <= YYSTACK_ALLOC_MAXIMUM))
+myParser.tab.c:      if (*yyp == '%' && yyformat[1] == 's' && yyi < yycount)
+myParser.tab.c:           these so that the &'s don't force the real ones into
+myParser.tab.c:                    &yyss1, yysize * sizeof (*yyssp),
+myParser.tab.c:                    &yyvs1, yysize * sizeof (*yyvsp),
+myParser.tab.c:                    &yystacksize);
+myParser.tab.c:      YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
+myParser.tab.c:  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
+myParser.tab.c:  YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
+myParser.tab.c:  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+myParser.tab.c:# define YYSYNTAX_ERROR yysyntax_error (&yymsg_alloc, &yymsg, \
+myParser.tab.c:                      yytoken, &yylval);
+myParser.tab.c:          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
+myParser.tab.c:                  yytoken, &yylval);
+ClassDecl.h:    ClassDecl( ClassIdent& _cI ,
+ClassDecl.h:               ClassIdent& _eCI ,
+ClassDecl.h:               VarDeclList& _vDL ,
+ClassDecl.h:               MtdDeclList& _mDL ):
+VarArg.h:    VarArg( Type& _vT , VarIdent& _vI )
+MtdDeclList.h:    MtdDeclList( MtdDeclList& _mDL ,
+MtdDeclList.h:                   MtdDecl& _mD )
+ExprList.h:    ExprList( ExprList& _eL ,
+ExprList.h:                   Expr& _e )
+.git/hooks/update.sample:	echo "Don't run this script from the command line." >&2
+.git/hooks/update.sample:	echo " (if you want, you could supply GIT_DIR then run" >&2
+.git/hooks/update.sample:	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+.git/hooks/update.sample:	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+.git/hooks/update.sample:	echo "*** Project description file hasn't been set" >&2
+.git/hooks/update.sample:			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+.git/hooks/update.sample:			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+.git/hooks/update.sample:			echo "*** Deleting a tag is not allowed in this repository" >&2
+.git/hooks/update.sample:		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+.git/hooks/update.sample:			echo "*** Tag '$refname' already exists." >&2
+.git/hooks/update.sample:			echo "*** Modifying a tag is not allowed in this repository." >&2
+.git/hooks/update.sample:			echo "*** Creating a branch is not allowed in this repository" >&2
+.git/hooks/update.sample:			echo "*** Deleting a branch is not allowed in this repository" >&2
+.git/hooks/update.sample:			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+.git/hooks/update.sample:		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+.git/hooks/pre-rebase.sample:	echo >&2 "No such branch $topic"
+.git/hooks/pre-rebase.sample:	echo >&2 "$topic is fully merged to master; better remove it."
+.git/hooks/pre-rebase.sample:		echo >&2 "$topic is already up-to-date with master"
+.git/hooks/pre-applypatch.sample:test -x "$GIT_DIR/hooks/pre-commit" &&
+.git/hooks/commit-msg.sample:	echo >&2 Duplicate Signed-off-by lines.
+.git/hooks/pre-commit.sample:if git rev-parse --verify HEAD >/dev/null 2>&1
+.git/hooks/pre-commit.sample:exec 1>&2
+.git/hooks/pre-commit.sample:if [ "$allownonascii" != "true" ] &&
+.git/hooks/applypatch-msg.sample:test -x "$GIT_DIR/hooks/commit-msg" &&
+.git/hooks/prepare-commit-msg.sample:#	 if /^#/ && $first++ == 0' "$1" ;;
+.git/objects/61/51addea3fe1d3b5a1c403d16b1344997eaa6f0:‚@…»^ØwB!",‚ ƒ ñ6ÖuHaüaWB|÷VE¬aæœ9ó%T%°?Wë¼”Ô¦ç¼ÒBQ\8[Lƒ²©ÔŸEdŠ],¨E?û=8ûS(ÊÏÎ8“$´†X¨«zCÇYİ&”Ë€3°}j#Ô8O“g£aŠe3øÓ²n(É¿6ğ2lğtŞ„f¦kCMÍ(«Cº,²·ıÍlL©
+.git/objects/af/c79ba07feb2eadca7a742e16e54d824df04696:‚@†;ûb÷èÍ"Í@é¾®ƒ®¬«ÌnToŸ†ëìõ›ùçŸBv…¿ÛoWk¡¸|”à!â§W›:ğşü ÒÒH2­À¥-Ï8ÚØ#ºc$Ô;ƒ‰AQ{à‰)#&%]JP‹¸/
+.git/objects/0a/95fb684aeec7f766a80c85f823d81c99f556a9:ºÊœG3e¼„ß=m®ô=÷÷ü½¥hK8Ÿ.›-Qa*1o•–Œ4	FÿeÏ¨nåj%DßDÖËÀËow"“aía„D)Èu•2*2®4¼1êL)80‚q¬<†		T®pµÜÂá/…;(š4ƒ½¥&ãbæÒ—À"ÑOíOÍCâ~šóñ@gpIØU%¡Ï©Ìãó_@]
+.git/objects/6f/d83b7bc3c8eace45f371af5a2f084f262aa414:xmSQoÚ0Şkü+¼LT	”tôm°jBS_6©›Ä´‡V™Ä€UÇìKiç¿ïP)ŸâÜ}ßİåòy-õšN&··ïù T&«œ¿hX%¾±g6·daOâ'3–›dW–˜ÍùF(Nóß÷¿~|¿ u-Ÿ™L,¡¶ô*¾§òéô‰êø\{WÛø­D§ ¦Èè*€~â
+.git/objects/91/ff93c8504cf4c17fd4c6605f387b5826f9c6b8: ğUæ9ØT¶é‹ôß›™•ƒÁ½ç»÷“‹:‡ Ø.–¼¢¢-x­bD1ú‰£¦V3IˆNnR"Zæ—ÿÀI.7¢4S~é`„DkH¯¢¡:1* Ç¨isÁé#°ïMÎ«ÈiğJ$Û8%j„¼jZª‡ş€»‘&æÚ€Š˜Ù¹0n¯ “ÑÖ¿–‡¶û±\Çà»ywXõì4|3¸eòví¶ıÓFşFåjê
+.git/objects/37/2dbf654fc0842d0526966af06df3c9dd840b42:‚“kIÓ‡^SIÒ.¥ÿn¨ƒzÇsÜ†û»Ã~µ¶ÎğĞ¶Ñ“îNR|áH&öş1İö®y òù+²ëå¦} _>3)¤0¬CÀ¹%1Iñ¶FI´[¥Òu8İª_ê<éÅlP;PK’×®À4£¤˜Sÿ€:„
+.git/objects/76/759b7b44a2d6c7b6d29a56725f567f70fc4b42:xUÏ‚0Ç;ö?<B£Œˆ.&‚×0èäUæ9š)›óşï©ÓZïôøşø¼—‹:‡Óñ¼Zóº`òZµ’‘*Âè'vŒ¶µü“„èªCJ„f~iÎíz'R1é—FQA”‚”ÈX>®ZxcÔè\p`Ãvv¶AÁ¨˜4ŒIr-à².N`gB#ÑÓ™"à™Dğ»cq-wføo,ßhUf9¡Ï±âÍÿôõÃúTO\¨
+.git/objects/84/c51e4963be305cb28d15d656f7ca3733cb8b13:x•KNÄ0DYçŞÍŠ‰ÿí „X æív'1JâÈxF‚Ó€m©Ş+•uÍMåïZeÊF’òš‚AuJƒQÉYÏÃ˜À˜º+oM‘É[©@Zo¢6…b@ üë4ÂHÚH"ÉF9L^#‡"GgP!;—`ìğÚæRÅkÅ¯ó{Ş&ñøÑH~VÌË™Êú$”µ^2ˆ{	RvGz¼iü_®»pXÄŠÍâ”øveskûçCßO¹Í×ø»Ù—ëBı%oùoøRÖ=/\»¥éc/
+.git/objects/5e/80d792d7c336b0607845d1dce5045dd92b4b6c:xUM‚@†;/ìB!º]ô	ºÊº-¹0ëÆ®z‘ş{ëG™s˜wy¦@]ÀşxX­eÅ±y8Kmk#˜ºP2‡­àµ6‹±U»;ÃF„åÿÂK¯3V˜°ô(¡„#³2£Ÿ†)è(y5JQ®R&«¸'ÁÔb:Èo}“¶†Açàa˜ˆIîÏ¶ä*†-,os@0J£ù—ïĞÀ±_3öjß±to÷¡ïs\
+.git/objects/a2/6e00bd879fa397a1f361e55e908054c5d744dd:xmRÑn£0¼WüR*HJÚ>öÒÓé¾¡o¸ÊÀ&±jldÖ¥óï·„H!'?ŒÀ»3³+{
+.git/objects/a2/6e00bd879fa397a1f361e55e908054c5d744dd:©‹ğùéñ[RÔA°3ÌTfrÖµA0œ«ã†I@Cíßé~å¬Gt~LŸs&*P(‚ñ›fò˜LÿgŞx­­™²uq¶Ú¸4ÿu!lX©ëš\‚ {Èö3•¯[­ØpiŒ´MØ¡ğG—ÚpÕf*ºûá“]8²¡k‰#+%o[×ØBŠÒµÈ‘>ZT®æB¹W$¯£#¨ªuĞåğ$ÚåœÉÂ7…Öp…Ö¸Zî…}^úÁlÁu'!a)(µB£¥OƒÆ‚;p’-\Zï“ xr¯}‹PoµÅíùÂäÍ…ØûF×‡œîpq×†W7¿éš¹èãGqä¢„°'ä„0F7ÃËw@¯üîø/„!%¬	ß	?Éãšİ€á¨×cKô{ÂîFÒXU¢¥¨håSmoV´Ê@©J|AåcSz…ÒÙŞÄI8°`ÎYø´c#cSÃ)s¯ï%|ÆÉÔúUt-~
+.git/objects/ad/e91ba248ef418ee4044b70ad36d6412a28f348:Â0@a×9Eö‚ägÒ8 â¼Â$im#!ñôön|ğr]×ÒµsÃ©7f-Ct„äDÆc+9 %f±†ÅÛÔ‹o]“I1&`Á»< XD²ÙGJ~Hpµ^ÑŞçÚô·îKÖ·¥Ğ6åy§íi¥²\r]ïÚ€CÔgs5FõìüUÏV[Ş¬şpS?ğcI˜
+Pogram.h:    Program( MainClass& _mC , ClassDeclList _cD )
+VarDeclList.h:    VarDeclList( VarDeclList& _vDL ,
+VarDeclList.h:                   VarDecl& _vD )
+lex.l:"&&"			return TOKEN(TAND);
+miniJava.flex:"&&"|"<"|"+"|"-"|"*"|"!"|"="		{ printf("operator: %s\n", yytext); }

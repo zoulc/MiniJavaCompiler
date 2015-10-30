@@ -6,8 +6,8 @@
 class VarArgList {
 public:
     vector< class VarArg * > declList ;
-    VarArglList( VarArgList& _vAL ,
-                   VarArg& _vA )
+    VarArglList( VarArgList* _vAL ,
+                   VarArg* _vA )
     : declList(_vAL->declList)
     {
         declList.push_back(_vA);

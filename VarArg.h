@@ -7,6 +7,6 @@ class VarArg {
 public:
     Type varType ;
     VarIdent varIdent ;
-    VarDecl( Type& _vT , VarIdent& _vI )
+    VarArg( Type& _vT , VarIdent& _vI )
     : varType(_vT) , varIdent(_vI) {} ;
 };

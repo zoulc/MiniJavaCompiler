@@ -11,12 +11,12 @@ public:
     VarDeclList varDeclList ;
     StmtList    stmtList ;
     Expr    rtnExpr ;
-    MtdDecl( MtdIdent& _mI ,
-             Type& _rT ,
-             VarArgList& _vAL ,
-             VarDeclList& _vDL ,
-             StmtList& _sL ,
-             Expr& _rE) :
+    MtdDecl( MtdIdent* _mI ,
+             Type* _rT ,
+             VarArgList* _vAL ,
+             VarDeclList* _vDL ,
+             StmtList* _sL ,
+             Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) , varDeclList(_vDL) ,
     stmtList(_sL) , rtnExpr(_rE) {} ; 

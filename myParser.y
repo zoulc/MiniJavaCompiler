@@ -1,6 +1,26 @@
 %{
-//    #include "miniJavaParser.h"
-    Program *MJprogram; /* the top level root node of our final AST */
+    #include "AstStruct.h"
+#include "ArrNewExpr.h"
+#include "BiOpExpr.h"
+#include "ClassDecl.h"
+#include "ClassDeclList.h"
+#include "Expr.h"
+#include "ExprList.h"
+#include "GetLenExpr.h"
+#include "GetMtdCallExpr.h"
+#include "Ident.h"
+#include "IdentAccessExpr.h"
+#include "LiterExpr.h"
+#include "MainClassDecl.h"
+#include "MtdDecl.h"
+#include "MtdDeclList.h"
+#include "ObjNewExpr.h"
+#include "Program.h"
+#include "SiOpExpr.h"
+#include "Stmt.h"
+#include "StmtList.h"
+#include "ThisExpr.h"
+    Program *programAst; /* the top level root node of our final AST */
 
     extern int yylex();
     void yyerror(const char *s) { printf("ERROR: %s\n", s); }
@@ -8,15 +28,26 @@
 
 /* Represents the many different ways we can access our data */
 %union {
-    Node *node;
-    NBlock *block;
-    NExpression *expr;
-    NStatement *stmt;
-    NIdentifier *ident;
-    NVariableDeclaration *var_decl;
-    std::vector *varvec;
-    std::vector *exprvec;
     std::string *string;
+    Ident* ident;
+    Type* type;
+    Expr* expr;
+    Stmt* stmt;
+    BiOpExpr* biopexpr;
+    MainClassDecl * mainclassdecl ; 
+    ClassDeclList * classdecllist ;
+    MtdDeclList * mtddecllist ;
+    ExprList * exprlist ; 
+    StmtList * stmtlist ;
+    Program * program ;
+    ClassDecl * classdecl ;
+    MtdDecl * mtddecl ;
+    VarDeclList * vardecllist ; 
+    VarArgList * vararglist ;
+    ClassDecl * classdecl ;
+    VarDecl * vardecl ; 
+    VarArg * vararg ; 
+    std:string *string ;
     int token;
 }
 /* Define our terminal symbols (tokens). This should
@@ -27,9 +58,12 @@
 %token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token  TSEMICOLON TSYSOUT
-%token  TPLUS TMINUS TMUL TDIV 
+%token  TPLUS TMINUS TMUL TDIV TAND 
 %token  TLF TRF
-%token  TEQUAL
+%token  TCLASS TVOID TPUBLIC TSTATIC TMAIN TSTRING
+%token  TEXTENDS TRETURN 
+%token  TFALSE TTRUE 
+%token  TBOOL TBANG TELSE TIF TLENGT TNEW TTHIS TWHILE  
 
 /* Define the type of node our nonterminal symbols represent.
    The types refer to the %union declaration above. Ex: when
@@ -37,13 +71,24 @@
    calling an (NIdentifier*). It makes the compiler happy.
  */
 
-%type ident 
-%type type
-%type expr stmt
-%type biopexpr
-%type mainclassdecl classdecllist mtddecllist exprlist stmtlist
-%type program
-%type classdecl mtddecl
+%type <ident> ident 
+%type <type> type
+%type <expr> expr 
+%type <stmt> stmt
+%type <biopexpr> biopexpr
+%type <mainclassdecl> mainclassdecl 
+%type <classdecllist> classdecllist 
+%type <mtddecllist> mtddecllist 
+%type <exprlist> exprlist 
+%type <stmtlist> stmtlist
+%type <program> program
+%type <classecl> classdecl 
+%type <mtddecl> mtddecl
+%type <vararglist> vararglist
+%type <vardecllist> vardecllist
+%type <vardecl> vardecl
+%type <vararg> vararg
+%type <string> TNUMBER TIDENT 
 
 %left TPLUS TMINUS
 %left TMUL TDIV
@@ -63,20 +108,24 @@ mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC
                 { $$ = new MainClassDecl( $2 , $12 , $15 ) ; }
               ;
 
-classDecl : TCLASS ident TEXTENDS ident TLBRACE
-            vardecllist mtddeclist TRBRACE
+classdecl : TCLASS ident TEXTENDS ident TLBRACE
+            vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ; }
           | TCLASS ident TLBRACE
-            vardecllist mtddeclist TRBRACE
+            vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , NULL , $4 , $5 ) ; }
           ;
 
 vardecl : type ident TSEMICOLON
           { $$ = new VarDecl( $1 , $2 ) ; }
-          ;
+        ;
 
-mtddecl : TPUBLIC type ident LPAREN vararglist
-          RPAREN LBRACE vardecllist stmtlist TRETUN
+vararg  : type ident 
+          { $$ = new VarArg( $1, $2 ) ; } 
+        ;
+
+mtddecl : TPUBLIC type ident TLPAREN vararglist
+          TRPAREN TLBRACE vardecllist stmtlist TRETURN
           expr TSEMICOLON TRBRACE
          { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $9 , $11 );}
          ;
@@ -87,12 +136,12 @@ type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
      | ident  { $$ = new ClassIdentType( $1 ) ; }
      ;
 
-stmt : LBRACE stmtlist RBRACE { $$ = new BlockStmt($2) ; }
+stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
      | TIF TLPAREN expr TRPAREN stmt TELSE stmt
        { $$ = new IfThenElseStmt( $3 , $5 , $7 ) ; }
-     | TWHILE LPAREN expr RPAREN stmt
+     | TWHILE TLPAREN expr TRPAREN stmt
        { $$ = new WhileStmt( $3 , $5 ) ; }
-     | TSYSOUT LPAREN expr RPAREN TSEMICOLON
+     | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
        { $$ = new SysOutPrtStmt( $3 ) ; }
      | ident TEQUAL expr TSEMICOLON
        { $$ = new AssignStmt( $1 , $3 ) ; }
@@ -101,7 +150,7 @@ stmt : LBRACE stmtlist RBRACE { $$ = new BlockStmt($2) ; }
      ;
 
 expr : biopexpr { $$ = $1 ; }
-     | expr LTF expr RTF { $$ = new ArrAcsExpr( $1 , $2 ) ; }
+     | expr TLF expr TRF { $$ = new ArrAcsExpr( $1 , $3 ) ; }
      | expr TDOT TLENGT { $$ = new GetLenExpr( $1 ) ; }
      | expr TDOT ident TLPAREN exprlist TRPAREN
       { $$ = new GetMtdCallExpr( $1 , $3 , $5 ) ; }
@@ -109,7 +158,7 @@ expr : biopexpr { $$ = $1 ; }
      | TTRUE { $$ = new TrueLiterExpr( ) ; }
      | TFALSE { $$ = new FalseLiterExpr( ) ; }
      | ident { $$ = new IdentAccesExpr( $1 ) ; }
-     | TTHIS { $$ = new ThisExpr( $1 ) ; }
+     | TTHIS { $$ = new ThisExpr( ) ; }
      | TNEW TINT TLF expr TRF
        { $$ = new ArrNewExpr( $4 ) ; }
      | TNEW ident TLPAREN TRPAREN
@@ -123,7 +172,7 @@ expr : biopexpr { $$ = $1 ; }
 biopexpr : expr TPLUS expr { $$ = new AddExpr( $1 , $3 ) ; }
          | expr TMINUS expr { $$ = new SubExpr( $1 , $3 ) ; }
          | expr TCLT expr { $$ = new LessCmpExpr( $1 , $3 ) ; }
-         | expr TAND epxr { $$ = new AndExpr( $1 , $3 ) ; }
+         | expr TAND expr { $$ = new AndExpr( $1 , $3 ) ; }
          | expr TMUL expr { $$ = new MultExpr( $1 , $3 ) ; }
 
 stmtlist : /*blank*/ { $$ = new StmtList() ; }
@@ -148,6 +197,16 @@ exprlist : /*blank*/ { $$ = new ExprList() ; }
            { $$ = new ExprList( $1 , $3 ) ;}
          ;
 
-ident : TIDENT { $$ = new Ident(*$1) ; }
+vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
+         | vardecl { $$ = new VarDeclList( new VarDeclList() , $1 ) ; } 
+         | vardecllist vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
+	 ;
+
+vararglist : /*blank*/ { $$ = new VarArgList() ; } 
+   	 | vararg { $$ = new VarArgList( new VarArgList() , $1 ) ; }
+    	 | vararglist TCOMMA vararglist { $$ = new VarArgList( $1, $3 ) ; } 
+	 ; 
+
+ident : TIDENT { $$ = new Ident( $1 ) ; }
 
 %%

@@ -548,7 +548,7 @@ char *yytext;
 #line 1 "lex.l"
 #line 2 "lex.l"
 #include <string>
-#include "node.h"
+#include "AstStruct.h"
 #include "parser.hpp"
 
 #define SAVE_TOKEN	yylval.string = new std::string(yytext, yyleng)
