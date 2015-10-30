@@ -112,14 +112,14 @@ mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC
 
 classdecl : TCLASS ident TEXTENDS ident TLBRACE
             vardecllist mtddecllist TRBRACE
-            { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ; }
+            { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ;  }
           | TCLASS ident TLBRACE
             vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , NULL , $4 , $5 ) ; }
           ;
 
-vardecl : type ident TSEMICOLON
-          { $$ = new VarDecl( $1 , $2 ) ; }
+vardecl : type ident TSEMICOLON  
+          { $$ = new ValDecl( $1 , $2 ) ; }
         ;
 
 vararg  : type ident 
@@ -127,9 +127,9 @@ vararg  : type ident
         ;
 
 mtddecl : TPUBLIC type ident TLPAREN vararglist
-          TRPAREN TLBRACE vardecllist stmtlist TRETURN
-          expr TSEMICOLON TRBRACE
-         { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $9 , $11 );}
+          TRPAREN TLBRACE stmtlist TRETURN expr 
+          TSEMICOLON TRBRACE
+         { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $10 );}
          ;
 
 type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
@@ -146,9 +146,11 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
      | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
        { $$ = new SysOutPrtStmt( $3 ) ; }
      | ident TEQUAL expr TSEMICOLON
-       { $$ = new AssignStmt( $1 , $3 ) ; }
+       { $$ = new AssignStmt( $1 , $3 ) ; printf("Assign?\n"); }
      | ident TLF expr TRF TEQUAL expr TSEMICOLON
        { $$ = new ArrAssignStmt( $1 , $3 , $6 ) ; }
+     | type ident TSEMICOLON 
+       { $$ = new VarDeclStmt( $1 , $2 ) ; } 
      ;
 
 expr : biopexpr { $$ = $1 ; }
@@ -177,14 +179,14 @@ biopexpr : expr TPLUS expr { $$ = new AddExpr( $1 , $3 ) ; }
          | expr TAND expr { $$ = new AndExpr( $1 , $3 ) ; }
          | expr TMUL expr { $$ = new MultExpr( $1 , $3 ) ; }
 
-stmtlist : /*blank*/ { $$ = new StmtList() ; }
+stmtlist : /*blank*/ { $$ = new StmtList() ; printf("Stmt?\n"); }
          | stmtlist stmt
           { $$ = new StmtList( $1 , $2 ) ; }
          ;
 
-mtddecllist : /*blank*/ { $$ = new MtdDeclList() ; }
+mtddecllist : /*blank*/ { $$ = new MtdDeclList() ; printf("MtdDecl?\n"); }
          | mtddecllist mtddecl
-           { $$ = new MtdDeclList( $1 , $2 ) ; }
+           { $$ = new MtdDeclList( $1 , $2 ) ; printf("MtdDecl?\n"); }
          ;
 
 classdecllist : /*blank*/ { $$ = new ClassDeclList() ; }
@@ -199,9 +201,8 @@ exprlist : /*blank*/ { $$ = new ExprList() ; }
            { $$ = new ExprList( $1 , $3 ) ;}
          ;
 
-vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
-         | vardecl { $$ = new VarDeclList( new VarDeclList() , $1 ) ; } 
-         | vardecllist vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
+vardecllist : /*blank*/ { $$ = new VarDeclList() ; printf("VarDecl?\n"); }
+         | vardecllist { printf("Again?\n"); } vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
 	 ;
 
 vararglist : /*blank*/ { $$ = new VarArgList() ; } 

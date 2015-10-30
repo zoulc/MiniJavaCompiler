@@ -59,3 +59,10 @@ public:
     : arrIdent(_aI) , addressExpr(_aE) ,
     valueExpr(_vE) {} ;
 };
+
+class VarDeclStmt : public Stmt { 
+public:
+    Type * type ; 
+    Ident * varIdent ; 
+    VarDeclStmt( Type* _t , Ident* _i ) : type(_t) , varIdent(_i) {} ; 
+};

@@ -12,17 +12,15 @@ public:
     Ident *mtdIdent ;
     Type  *rtnType ;
     VarArgList varArgList ;
-    VarDeclList varDeclList ;
     StmtList    stmtList ;
     Expr    *rtnExpr ;
     MtdDecl( Type* _rT ,
              Ident* _mI ,
              VarArgList* _vAL ,
-             VarDeclList* _vDL ,
              StmtList* _sL ,
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
-    varArgList(_vAL) , varDeclList(_vDL) ,
+    varArgList(_vAL) , 
     stmtList(*_sL) , rtnExpr(_rE) {} ; 
 };
 #endif
