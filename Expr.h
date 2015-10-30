@@ -1,8 +1,10 @@
+#ifndef EXPR_H
+#define EXPR_H
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
 
 class Expr {
 public:
 };
+#endif

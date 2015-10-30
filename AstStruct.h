@@ -1,26 +1,24 @@
-#include "ArrNewExpr.h"
-#include "BiOpExpr.h"
-#include "ClassDecl.h"
-#include "ClassDeclList.h"
-#include "Expr.h"
-#include "ExprList.h"
-#include "GetLenExpr.h"
-#include "GetMtdCallExpr.h"
-#include "Ident.h"
-#include "IdentAccessExpr.h"
-#include "LiterExpr.h"
-#include "MainClassDecl.h"
-#include "MtdDecl.h"
-#include "MtdDeclList.h"
-#include "ObjNewExpr.h"
-#include "Program.h"
-#include "SiOpExpr.h"
-#include "Stmt.h"
-#include "StmtList.h"
-#include "ThisExpr.h"
-#include "Type.h"
-#include "VarArg.h"
-#include "VarArgList.h"
-#include "VarDecl.h"
-#include "VarDeclList.h"
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <cstdio>
 
+class Ident;
+class Type;
+class Expr;
+class Stmt;
+class MtdDecl;
+class ClassDecl;
+class VarArg;
+class VarDecl;
+class StmtList ;
+class ExprList ; 
+class MtdDeclList ; 
+class ClassDeclList ; 
+class VarArgList ; 
+class VarDeclList ; 
+class Program;
+class MainClassDecl ;
+class BiOpExpr;

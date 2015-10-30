@@ -97,9 +97,8 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 30 "myParser.y" /* yacc.c:1909  */
+#line 34 "parser.y" /* yacc.c:1909  */
 
-    std::string *string;
     Ident* ident;
     Type* type;
     Expr* expr;
@@ -115,13 +114,12 @@ union YYSTYPE
     MtdDecl * mtddecl ;
     VarDeclList * vardecllist ; 
     VarArgList * vararglist ;
-    ClassDecl * classdecl ;
     VarDecl * vardecl ; 
     VarArg * vararg ; 
-    std:string *string ;
+    std::string *string ;
     int token;
 
-#line 125 "parser.hpp" /* yacc.c:1909  */
+#line 123 "parser.hpp" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

@@ -1,11 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "Expr.h"
+#include "Ident.h"
 
 class IdentAccessExpr : public Expr {
 public:
     Ident * tarIdent ;
-    IdentAccesExpr( Ident * _tI )
+    IdentAccessExpr( Ident * _tI )
     : tarIdent(_tI) {} ; 
-}
+};

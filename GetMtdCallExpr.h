@@ -1,15 +1,15 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "AstStruct.h"
 
 class GetMtdCallExpr : public Expr{
 public:
-    Expr * tarExpr ;
-    MtdIdent mtdIdent ;
+    Expr *tarExpr ;
+    Ident *mtdIdent ;
     ExprList fillList ;
     GetMtdCallExpr( Expr * _tE ,
-                    MtdIdent & _mI ,
-                    ExprList _fL )
+                    Ident * _mI ,
+                    ExprList * _fL )
     : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ; 
 };

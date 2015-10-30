@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "Expr.h"
 
 class ObjNewExpr : public Expr {
 public:
     Ident * tarIdent ;
     ObjNewExpr( Ident * _tI )
-    : sizeExpr(_tI) {} ;
-}
+    : tarIdent(_tI) {} ;
+};

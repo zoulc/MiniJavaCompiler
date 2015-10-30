@@ -1,5 +1,4 @@
 %{
-    #include "AstStruct.h"
 #include "ArrNewExpr.h"
 #include "BiOpExpr.h"
 #include "ClassDecl.h"
@@ -20,6 +19,11 @@
 #include "Stmt.h"
 #include "StmtList.h"
 #include "ThisExpr.h"
+#include "Type.h"
+#include "VarArg.h"
+#include "VarArgList.h"
+#include "VarDecl.h"
+#include "VarDeclList.h"
     Program *programAst; /* the top level root node of our final AST */
 
     extern int yylex();
@@ -28,7 +32,6 @@
 
 /* Represents the many different ways we can access our data */
 %union {
-    std::string *string;
     Ident* ident;
     Type* type;
     Expr* expr;
@@ -44,10 +47,9 @@
     MtdDecl * mtddecl ;
     VarDeclList * vardecllist ; 
     VarArgList * vararglist ;
-    ClassDecl * classdecl ;
     VarDecl * vardecl ; 
     VarArg * vararg ; 
-    std:string *string ;
+    std::string *string ;
     int token;
 }
 /* Define our terminal symbols (tokens). This should
@@ -82,7 +84,7 @@
 %type <exprlist> exprlist 
 %type <stmtlist> stmtlist
 %type <program> program
-%type <classecl> classdecl 
+%type <classdecl> classdecl 
 %type <mtddecl> mtddecl
 %type <vararglist> vararglist
 %type <vardecllist> vardecllist
@@ -98,7 +100,7 @@
 %%
 
 program : mainclassdecl classdecllist
-         { MJprogram = new Program( $1 , $2 ) ; }
+         { programAst = new Program( $1 , $2 ) ; }
         ;
 
 mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC
@@ -157,7 +159,7 @@ expr : biopexpr { $$ = $1 ; }
      | TNUMBER { $$ = new IntLiterExpr( atol($1->c_str()) ) ; }
      | TTRUE { $$ = new TrueLiterExpr( ) ; }
      | TFALSE { $$ = new FalseLiterExpr( ) ; }
-     | ident { $$ = new IdentAccesExpr( $1 ) ; }
+     | ident { $$ = new IdentAccessExpr( $1 ) ; }
      | TTHIS { $$ = new ThisExpr( ) ; }
      | TNEW TINT TLF expr TRF
        { $$ = new ArrNewExpr( $4 ) ; }
@@ -204,9 +206,9 @@ vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
 
 vararglist : /*blank*/ { $$ = new VarArgList() ; } 
    	 | vararg { $$ = new VarArgList( new VarArgList() , $1 ) ; }
-    	 | vararglist TCOMMA vararglist { $$ = new VarArgList( $1, $3 ) ; } 
+    	 | vararglist TCOMMA vararg { $$ = new VarArgList( $1, $3 ) ; } 
 	 ; 
 
-ident : TIDENT { $$ = new Ident( $1 ) ; }
+ident : TIDENT { $$ = new Ident( *$1  ) ; }
 
 %%

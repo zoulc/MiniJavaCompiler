@@ -1,13 +1,16 @@
+#ifndef MAINCLASSDECL_H
+#define MAINCLASSDECL_H
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "StmtList.h"
 
 class MainClassDecl {
 public:
-    ClassIdent *mainClassName;
-    VarIdent inputArgs;
-    StmtList *stmtList ;
-    MainClassDecl( Ident & _mCN , Ident & _iA , StmtList & _sL )
+    Ident *mainClassName;
+    Ident *inputArgs;
+    StmtList stmtList ;
+    MainClassDecl( Ident * _mCN , Ident * _iA , StmtList * _sL )
     : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL) {};
 };
+#endif

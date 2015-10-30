@@ -1,15 +1,20 @@
+#ifndef STMTLIST_H
+#define STMTLIST_H
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
 
 class StmtList {
 public:
-    vector<class Stmt *> stmtList;
-    StmtList( StmtList& _sL ,
+    std::vector<class Stmt *> stmtList;
+    StmtList(){}
+    StmtList( StmtList* _sL ,
               Stmt * _s )
-    : declList(_sL->stmtList)
+    : stmtList(_sL->stmtList)
     {
-        declList.push_back(_s);
+        stmtList.push_back(_s);
     }
+    StmtList( StmtList & _sL ) : stmtList(_sL.stmtList) {} ;  
+    StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ; 
 } ;
+#endif

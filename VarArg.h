@@ -1,12 +1,11 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
 
 class VarArg {
 public:
-    Type varType ;
-    VarIdent varIdent ;
-    VarArg( Type& _vT , VarIdent& _vI )
+    Type * varType ;
+    Ident * varIdent ;
+    VarArg( Type* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ;
 };

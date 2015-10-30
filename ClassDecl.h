@@ -1,18 +1,19 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "VarDeclList.h"
+#include "MtdDeclList.h"
 
 class ClassDecl {
 public:
-    ClassIdent classIdent ;
-    ClassIdent extClassIdent ;
+    Ident * classIdent ;
+    Ident * extClassIdent ;
     VarDeclList varDeclList ;
     MtdDeclList mtdDeclList ;
-    ClassDecl( ClassIdent& _cI ,
-               ClassIdent& _eCI ,
-               VarDeclList& _vDL ,
-               MtdDeclList& _mDL ):
+    ClassDecl( Ident* _cI ,
+               Ident* _eCI ,
+               VarDeclList* _vDL ,
+               MtdDeclList* _mDL ):
     classIdent(_cI) , extClassIdent(_eCI) ,
-    varDeclList(_vDL) , MthDeclList(_mDL) {};
-}
+    varDeclList(_vDL) , mtdDeclList(_mDL) {};
+};

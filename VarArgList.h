@@ -1,15 +1,22 @@
+#ifndef VARARGLIST_H
+#define VARARGLIST_H
+
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
 
 class VarArgList {
 public:
-    vector< class VarArg * > declList ;
-    VarArglList( VarArgList* _vAL ,
+    std::vector< class VarArg * > declList ;
+    VarArgList(){};
+    VarArgList( VarArgList* _vAL ,
                    VarArg* _vA )
     : declList(_vAL->declList)
     {
         declList.push_back(_vA);
     }
+    VarArgList( VarArgList & _vAL ) : declList(_vAL.declList) {} ; 
+    VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ; 
 };
+
+#endif

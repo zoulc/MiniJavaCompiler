@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "StmtList.h"
 
 class Stmt {
 public:
@@ -10,14 +10,14 @@ public:
 class BlockStmt : public Stmt{
 public:
     StmtList stmtList ;
-    BlockStmt( StmtList _sL )
+    BlockStmt( StmtList *_sL )
     : stmtList(_sL) {} ;
 };
 
 class IfThenElseStmt : public Stmt {
 public:
     Expr* condExpr ;
-    Stmt* thenStmt , elseStmt ;
+    Stmt* thenStmt ,*elseStmt ;
     IfThenElseStmt( Expr * _cE ,
                     Stmt * _tS ,
                     Stmt * _eS )
@@ -41,19 +41,19 @@ public :
 
 class AssignStmt : public Stmt {
 public :
-    VarIdent * assignIdent ;
+    Ident * assignIdent ;
     Expr *     valueExpr ;
-    AssignStmt( VarIdent * _aI ,
+    AssignStmt( Ident * _aI ,
                 Expr * _vE )
-    : assignIdent(_aI) , valueExpr(_vE) ;
+    : assignIdent(_aI) , valueExpr(_vE) {};
 };
 
 class ArrAssignStmt : public Stmt {
 public:
-    ArrIdent * arrIdent ;
+    Ident * arrIdent ;
     Expr *     valueExpr ;
     Expr *     addressExpr ;
-    ArrAssignStmt( ArrIdent * _aI ,
+    ArrAssignStmt( Ident * _aI ,
                    Expr * _aE ,
                    Expr * _vE )
     : arrIdent(_aI) , addressExpr(_aE) ,

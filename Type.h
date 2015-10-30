@@ -1,33 +1,36 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "AstStruct.h"
 
 class Type {
 public:
     std::string typeName ;
+    Type(){};
+    Type( std::string _tN ) : typeName(_tN) {} ; 
+    Type( Type * _t ) : typeName(_t->typeName) {} ; 
 };
 
 class IntType : public Type {
 public:
-    IntType() : typeName("int") {} ;
+    IntType() : Type("int") {} ;
 };
 
 class ArrType : public Type {
 public:
     Type* elemType ;
     ArrType( Type* _e )
-    : elemType(_e) {} ;
+    : elemType(_e) , Type("Arr") {} ;
 };
 
 class BoolType : public Type {
 public:
-    BoolType() : typeName("boolean") {} ;
+    BoolType() : Type("boolean") { } ;
 };
 
 class ClassIdentType : public Type {
 public:
     Ident * classIdent ;
-    ClassIdentType( ClassIdent _cI )
-    : classIdent(_CI) {} ;
+    ClassIdentType(Ident *_cI )
+    : classIdent(_cI) , Type("Class") {} ;
 };

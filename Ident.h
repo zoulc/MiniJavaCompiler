@@ -1,10 +1,14 @@
+#ifndef IDENT_H
+#define IDENT_H
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "AstStruct.h"
 
 class Ident {
 public:
     std::string name ;
-    Ident( string & _n ) : name(_n) {} ;  
+    Ident(){};
+    Ident( std::string & _n ) : name(_n) {} ;  
 };
+#endif

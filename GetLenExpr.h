@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "AstStruct.h"
 
 class GetLenExpr : public Expr{
 public:

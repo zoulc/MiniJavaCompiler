@@ -1,12 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "AstStruct.h"
 
 class VarDecl {
 public:
-    Type varType ;
-    VarIdent varIdent ;
-    VarDecl( Type& _vT , VarIdent& _vI )
+    Type* varType ;
+    Ident* varIdent ;
+    VarDecl( Type* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ; 
 };

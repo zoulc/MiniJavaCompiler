@@ -1,23 +1,28 @@
+#ifndef MTDECL_H
+#define MTDECL_H
 #include <iostream>
 #include <vector>
-#include <llvm/Value.h>
-#include "MJParser.h"
+#include "AstStruct.h"
+#include "StmtList.h"
+#include "VarArgList.h"
+#include "VarDeclList.h"
 
 class MtdDecl {
 public:
-    MtdIdent mtdIdent ;
-    Type     rtnType ;
+    Ident *mtdIdent ;
+    Type  *rtnType ;
     VarArgList varArgList ;
     VarDeclList varDeclList ;
     StmtList    stmtList ;
-    Expr    rtnExpr ;
-    MtdDecl( MtdIdent* _mI ,
-             Type* _rT ,
+    Expr    *rtnExpr ;
+    MtdDecl( Type* _rT ,
+             Ident* _mI ,
              VarArgList* _vAL ,
              VarDeclList* _vDL ,
              StmtList* _sL ,
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) , varDeclList(_vDL) ,
-    stmtList(_sL) , rtnExpr(_rE) {} ; 
+    stmtList(*_sL) , rtnExpr(_rE) {} ; 
 };
+#endif
