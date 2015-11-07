@@ -26,7 +26,9 @@ static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());
 static std::map<std::string, Value*> NamedValues;
 
-Value *MainClassDecl::codegen() {
+#include "codegen.cpp"
+
+Value *MainClassDecl::codeGen() {
   std::vector<Type*> Args;
 
   NamedValues.clear();
@@ -39,7 +41,7 @@ Value *MainClassDecl::codegen() {
   BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", MainFunction);
   Builder.SetInsertPoint(BB);
 
-  // StmtList.codegen();
+  // StmtList.codeGen();
 
   if (Value *RetVal = ConstantInt::get(getGlobalContext(), APInt(32, 0, false))) {
     // Finish off the function
@@ -54,8 +56,8 @@ Value *MainClassDecl::codegen() {
     cerr << "Main function generation failed!" << endl;
 }
 
-Value *Program::codegen() {
-  return mainClassDecl->codegen();
+Value *Program::codeGen() {
+  return mainClassDecl->codeGen();
 }
 
 //===----------------------------------------------------------------------===//
@@ -74,7 +76,7 @@ int main() {
   // Make the module, which holds all the code.
   TheModule = new Module("my cool mini-java", Context);
 
-  if (Value *PROG = programAst->codegen()) {
+  if (Value *PROG = programAst->codeGen()) {
     cerr << "Codegen result for Main Function(programAst):" << endl;
     PROG->dump();
   }

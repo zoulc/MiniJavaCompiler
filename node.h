@@ -297,7 +297,7 @@ public:
     MainClassDecl( Ident * _mCN , Ident * _iA , StmtList * _sL )
     : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL) {};
 
-    virtual Value *codegen();
+    virtual Value *codeGen();
 };
 
 class ObjNewExpr : public Expr {
@@ -314,7 +314,7 @@ public:
     Program( MainClassDecl* _mC , ClassDeclList *_cD )
     : mainClassDecl(_mC) , classDeclList(_cD) {};
 
-    virtual Value *codegen();
+    virtual Value *codeGen();
 };
 
 class SiOpExpr : public Expr{
