@@ -29,10 +29,12 @@ class BiOpExpr;
 
 class Stmt {
 public:
+	virtual llvm::Value* codeGen(); 
 };
 
 class Expr {
 public:
+	virtual llvm::Value* codeGen();
 };
 
 class StmtList {
@@ -372,7 +374,6 @@ public :
     Expr * prtExpr ;
     SysOutPrtStmt( Expr * _pE )
     : prtExpr(_pE) {} ;
-    virtual llvm::Value* codeGen(); 
 };
 
 class AssignStmt : public Stmt {
@@ -402,7 +403,7 @@ public:
     TypeInfo * type ;
     Ident * varIdent ;
     VarDeclStmt( TypeInfo* _t , Ident* _i ) : type(_t) , varIdent(_i) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class ThisExpr : public Expr {
@@ -416,13 +417,13 @@ public:
     TypeInfo(){};
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
-    virtual llvm::Value* typeGen(); 
+    virtual llvm::Type* typeGen(); 
 };
 
 class IntType : public TypeInfo {
 public:
     IntType() : TypeInfo("int") {} ;
-    virtual llvm::Value* typeGen(); 
+    virtual llvm::Type* typeGen(); 
 };
 
 class ArrType : public TypeInfo {
@@ -435,7 +436,7 @@ public:
 class BoolType : public TypeInfo {
 public:
     BoolType() : TypeInfo("boolean") { } ;
-    virtual llvm::Value* typeGen(); 
+    virtual llvm::Type* typeGen(); 
 };
 
 class ClassIdentType : public TypeInfo {

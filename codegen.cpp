@@ -1,5 +1,13 @@
 
 /* LiterExpr.h */
+Value* Ident :: codeGen() { return NULL ; } 
+
+Type* TypeInfo::typeGen() { return NULL ; } 
+
+Value*  Expr :: codeGen() { return NULL ; }
+
+Value*  Stmt :: codeGen() { return NULL ; }
+
 
 Value*  IntLiterExpr :: codeGen()
 {
@@ -24,23 +32,23 @@ Value*  FalseLiterExpr :: codeGen()
 Value* NegExpr::codeGen()
 {
 	std::cout << "Creating single operation Neg " << endl;
-	return Builder.CreateISub(
+	return Builder.CreateSub(
 		ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true),
-							  tarExpr->codeGen(context),
+							  tarExpr->codeGen(),
 							  "");
 }
 
 Value* ParenExpr::codeGen()
 {
 	std::cout << "Creating single operation Paren " << endl;
-	return tarExpr->codeGen(context);
+	return tarExpr->codeGen();
 }
 
 /* Stmt.h */
 
-Value* IfThenElseStmt::codegen()
+Value* IfThenElseStmt::codeGen()
 {
-	Value *CondV = condExpr->codegen();
+	Value *CondV = condExpr->codeGen();
 	if (!CondV)
 		return nullptr;
 	
@@ -64,7 +72,7 @@ Value* IfThenElseStmt::codegen()
 	// Emit then value.
 	Builder.SetInsertPoint(ThenBB);
 	
-	Value *ThenV = thenStmt->codegen();
+	Value *ThenV = thenStmt->codeGen();
 	if (!ThenV)
 		return nullptr;
 	
@@ -76,7 +84,7 @@ Value* IfThenElseStmt::codegen()
 	TheFunction->getBasicBlockList().push_back(ElseBB);
 	Builder.SetInsertPoint(ElseBB);
 	
-	Value *ElseV = elseStmt->codegen();
+	Value *ElseV = elseStmt->codeGen();
 	if (!ElseV)
 		return nullptr;
 	
@@ -95,25 +103,25 @@ Value* IfThenElseStmt::codegen()
 	return PN;
 }
 
-Value* AssignStmt::codegen()
+Value* AssignStmt::codeGen()
 {
-	if(NamedValues[assignIdent]==0)
+	if(NamedValues[assignIdent->name]==0)
 	{
 		std::cout<<"Undefined Value\n";
 		return nullptr;
 	}
-	Value * rval=valueExpr.codegen();
+	Value * rval=valueExpr->codeGen();
 	Builder.CreateStore(rval,NamedValues[assignIdent->name]);
 }
 
 /* StmtList.h*/
 
-Value * StmtList::codegen()
+Value * StmtList::codeGen()
 {
-	std::vector <class Stmt * > i;
+	std::vector <class Stmt * >::iterator i;
 	Value * res=NULL;
 	for(i=stmtList.begin();i!=stmtList.end();i++)
-		res=i->codegen();
+		res=(*i)->codeGen();
 	return res;
 }
 
@@ -121,7 +129,7 @@ Value * StmtList::codegen()
 llvm::Value* BiOpExpr::codeGen()
 {
     /* TODO : Some Default check , because Binary Operation should not have an instance.*/
-    llvm::errs()<<" BiOpExpr Error : An Instance occured!\n" ;
+    cout<<" BiOpExpr Error : An Instance occured!\n" ;
 }
 
 llvm::Value* AddExpr::codeGen()
@@ -137,7 +145,7 @@ llvm::Value* LessCmpExpr::codeGen()
 
 llvm::Value* AndExpr::codeGen()
 {
-    return Builder.CreateAnd( leftExpr->codeGen() , rightExpr->codGen() , "andtmp");
+    return Builder.CreateAnd( leftExpr->codeGen() , rightExpr->codeGen() , "andtmp");
 }
 
 llvm::Value* SubExpr::codeGen()
@@ -148,12 +156,6 @@ llvm::Value* SubExpr::codeGen()
 llvm::Value* MultExpr::codeGen()
 {
     return Builder.CreateMul( leftExpr->codeGen() , rightExpr->codeGen() , "multmp" );
-}
-
-llvm::Value* ArrAcsExpr::codeGen()
-{
-    /* TODO : should lookup the tutorial book to the definitions */
-    return NULL ;
 }
 
 llvm::Type* IntType::typeGen()
@@ -191,7 +193,7 @@ llvm::Value* WhileStmt::codeGen() {
     if ( firstCond == NULL)
       return NULL;
 
-    Value * firstCond = Builder.CreateICmpNE(
+    firstCond = Builder.CreateICmpNE(
   		firstCond,
   		ConstantInt::get(Type::getInt1Ty(getGlobalContext()), 0, false),
   	   	"whilefirstcondexpr");
@@ -201,7 +203,7 @@ llvm::Value* WhileStmt::codeGen() {
     BasicBlock *AfterBB =
         BasicBlock::Create(getGlobalContext(), "afterloop" );
 
-    Builder.CreateBr( firstCond , BodyBB , AfterBB );
+    Builder.CreateCondBr( firstCond , BodyBB , AfterBB );
 
     TheFunction->getBasicBlockList().push_back( BodyBB );
     Builder.SetInsertPoint( BodyBB );
@@ -222,10 +224,10 @@ llvm::Value* WhileStmt::codeGen() {
     return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
 }
 
-llvm::Value* VarDeclStmt::codGen()
+llvm::Value* VarDeclStmt::codeGen()
 {
     /* TODO : TypeInfo's virtual method typeGen need implementation.*/
-    Type* tarType = type.typeGen() ;
+    Type* tarType = type->typeGen() ;
     if ( ! ( NamedValues[varIdent->name] == 0 ) ) {
         cout<<"VarDeclStmt : Redefinition of the same name."<<endl;
         return NULL ;
