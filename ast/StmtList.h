@@ -17,4 +17,14 @@ public:
     StmtList( StmtList & _sL ) : stmtList(_sL.stmtList) {} ;  
     StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ; 
 } ;
+
+Value * StmtList::codegen()
+{
+	std::vector <class Stmt * > i;
+	Value * res=NULL;
+	for(i=stmtList.begin();i!=stmtList.end();i++)
+		res=i->codegen();
+	return res;
+}
+
 #endif

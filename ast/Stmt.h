@@ -33,7 +33,7 @@ Value* IfThenElseStmt::codegen()
 	// Convert condition to a bool by comparing equal to 0.0.
 	CondV = Builder.CreateICmpNE(
 		CondV,
-		ConstantInt::get(Type::getInt1Ty(getGlobalContext()), 0, false),
+		ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, false),
 	   	"ifcond");
 	
 	Function *TheFunction = Builder.GetInsertBlock()->getParent();
@@ -104,6 +104,18 @@ public :
                 Expr * _vE )
     : assignIdent(_aI) , valueExpr(_vE) {};
 };
+
+Value* AssignStmt::codegen()
+{
+	if(NamedValues[assignIdent]==0)
+	{
+		std::cout<<"Undefined Value\n";
+		return nullptr;
+	}
+	Value * rval=valueExpr.codegen();
+	Builder.CreateStore(rval,NamedValues[assignIdent->name]);
+}
+
 
 class ArrAssignStmt : public Stmt {
 public:

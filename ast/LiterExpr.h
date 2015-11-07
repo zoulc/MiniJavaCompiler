@@ -33,11 +33,11 @@ Value*  IntLiterExpr :: codeGen()
 Value*  TrueLiterExpr :: codeGen()
 {
 	std::cout << "Creating bool literature: " << value << endl;
-	return ConstantInt::get(Type::getInt1Ty(getGlobalContext()), value, false);
+	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
 }
 
 Value*  FalseLiterExpr :: codeGen()
 {
 	std::cout << "Creating bool literature: " << value << endl;
-	return ConstantInt::get(Type::getInt1Ty(getGlobalContext()), value, false);
+	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
 }
