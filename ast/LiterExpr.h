@@ -23,21 +23,3 @@ public:
     FalseLiterExpr()
     : value(false) {} ;
 };
-
-Value*  IntLiterExpr :: codeGen()
-{
-	std::cout << "Creating integer literature: " << value << endl;
-	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, true);
-}
-
-Value*  TrueLiterExpr :: codeGen()
-{
-	std::cout << "Creating bool literature: " << value << endl;
-	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
-}
-
-Value*  FalseLiterExpr :: codeGen()
-{
-	std::cout << "Creating bool literature: " << value << endl;
-	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
-}

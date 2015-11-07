@@ -5,6 +5,7 @@
 #include "AstStruct.h"
 
 class Expr {
-public:
+	public:  
+		virtual 	Value * codegen();
 };
 #endif
