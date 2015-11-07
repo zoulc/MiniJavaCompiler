@@ -1,6 +1,6 @@
 %{
 #include <string>
-#include "ast/AstStruct.h"
+#include "AstStruct.h"
 #include "parser.hpp"
 
 #define SAVE_TOKEN	yylval.string = new std::string(yytext, yyleng)

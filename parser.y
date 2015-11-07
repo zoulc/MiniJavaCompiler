@@ -1,4 +1,5 @@
 %{
+/*
 #include "ast/ArrNewExpr.h"
 #include "ast/BiOpExpr.h"
 #include "ast/ClassDecl.h"
@@ -24,6 +25,8 @@
 #include "ast/VarArgList.h"
 #include "ast/VarDecl.h"
 #include "ast/VarDeclList.h"
+*/
+#include "node.h"
     Program *programAst; /* the top level root node of our final AST */
 
     extern int yylex();
@@ -33,7 +36,7 @@
 /* Represents the many different ways we can access our data */
 %union {
     Ident* ident;
-    Type* type;
+    TypeInfo* type;
     Expr* expr;
     Stmt* stmt;
     BiOpExpr* biopexpr;
