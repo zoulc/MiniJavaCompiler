@@ -41,7 +41,7 @@ Value *MainClassDecl::codeGen() {
   BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", MainFunction);
   Builder.SetInsertPoint(BB);
 
-  // StmtList.codeGen();
+  stmtList.codeGen();
 
   if (Value *RetVal = ConstantInt::get(getGlobalContext(), APInt(32, 0, false))) {
     // Finish off the function
@@ -54,6 +54,7 @@ Value *MainClassDecl::codeGen() {
   }
   else
     cerr << "Main function generation failed!" << endl;
+  return NULL;
 }
 
 Value *Program::codeGen() {

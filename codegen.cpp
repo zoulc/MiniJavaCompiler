@@ -55,7 +55,7 @@ Value* IfThenElseStmt::codeGen()
 	// Convert condition to a bool by comparing equal to 0.0.
 	CondV = Builder.CreateICmpNE(
 		CondV,
-		ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, false),
+		ConstantInt::get(Type::getInt1Ty(getGlobalContext()), 0, false),
 								 "ifcond");
 	
 	Function *TheFunction = Builder.GetInsertBlock()->getParent();
@@ -95,12 +95,13 @@ Value* IfThenElseStmt::codeGen()
 	// Emit merge block.
 	TheFunction->getBasicBlockList().push_back(MergeBB);
 	Builder.SetInsertPoint(MergeBB);
-	PHINode *PN =
-	Builder.CreatePHI(Type::getDoubleTy(getGlobalContext()), 2, "iftmp");
+	/*PHINode *PN =
+	Builder.CreatePHI(Type::getInt64Ty(getGlobalContext()), 2, "iftmp");
 	
 	PN->addIncoming(ThenV, ThenBB);
 	PN->addIncoming(ElseV, ElseBB);
-	return PN;
+	return PN;*/
+	return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
 }
 
 Value* AssignStmt::codeGen()
@@ -111,7 +112,9 @@ Value* AssignStmt::codeGen()
 		return nullptr;
 	}
 	Value * rval=valueExpr->codeGen();
-	Builder.CreateStore(rval,NamedValues[assignIdent->name]);
+	std::cout << "Creating Assignment statement" << endl;
+	return Builder.CreateStore(rval,NamedValues[assignIdent->name]);
+	std::cout << "Store instruction created" << endl;
 }
 
 /* StmtList.h*/
@@ -119,7 +122,7 @@ Value* AssignStmt::codeGen()
 Value * StmtList::codeGen()
 {
 	std::vector <class Stmt * >::iterator i;
-	Value * res=NULL;
+	Value * res=Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
 	for(i=stmtList.begin();i!=stmtList.end();i++)
 		res=(*i)->codeGen();
 	return res;
@@ -130,6 +133,7 @@ llvm::Value* BiOpExpr::codeGen()
 {
     /* TODO : Some Default check , because Binary Operation should not have an instance.*/
     cout<<" BiOpExpr Error : An Instance occured!\n" ;
+    return NULL;
 }
 
 llvm::Value* AddExpr::codeGen()
@@ -221,7 +225,7 @@ llvm::Value* WhileStmt::codeGen() {
     TheFunction->getBasicBlockList().push_back( AfterBB );
     Builder.SetInsertPoint(AfterBB);
 
-    return Constant::getNullValue(Type::getDoubleTy(getGlobalContext()));
+    return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
 }
 
 llvm::Value* VarDeclStmt::codeGen()
