@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -97,10 +97,10 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 34 "parser.y" /* yacc.c:1909  */
+#line 37 "parser.y" /* yacc.c:1909  */
 
     Ident* ident;
-    Type* type;
+    TypeInfo* type;
     Expr* expr;
     Stmt* stmt;
     BiOpExpr* biopexpr;
