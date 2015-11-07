@@ -5,6 +5,9 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+#include "llvm/IR/Value.h"
+
+using namespace llvm;
 
 class Ident;
 class TypeInfo;
@@ -23,7 +26,6 @@ class VarDeclList ;
 class Program;
 class MainClassDecl ;
 class BiOpExpr;
-
 
 class Stmt {
 public:
@@ -282,6 +284,8 @@ public:
     StmtList stmtList ;
     MainClassDecl( Ident * _mCN , Ident * _iA , StmtList * _sL )
     : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL) {};
+
+    virtual Value *codegen();
 };
 
 class ObjNewExpr : public Expr {
@@ -297,6 +301,8 @@ public:
     ClassDeclList classDeclList ;
     Program( MainClassDecl* _mC , ClassDeclList *_cD )
     : mainClassDecl(_mC) , classDeclList(_cD) {};
+
+    virtual Value *codegen();
 };
 
 class SiOpExpr : public Expr{
