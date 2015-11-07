@@ -16,5 +16,8 @@ public:
     }
     StmtList( StmtList & _sL ) : stmtList(_sL.stmtList) {} ;  
     StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ; 
+	virtual 	Value * codegen();
 } ;
+
+
 #endif
