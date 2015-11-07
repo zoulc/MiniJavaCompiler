@@ -21,3 +21,19 @@ public:
     ParenExpr ( Expr * _tE)
     : SiOpExpr( _tE ) {} ; 
 };
+
+Value* NegExpr::codeGen()
+{
+	std::cout << "Creating single operation Neg " << endl;
+	return Builder.CreateISub(
+				ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true),
+				tarExpr->codeGen(context),
+				"");
+}
+
+Value* ParenExpr::codeGen()
+{
+	std::cout << "Creating single operation Paren " << endl;
+	return tarExpr->codeGen(context);
+}
+
