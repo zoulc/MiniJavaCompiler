@@ -3,6 +3,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/ArrayRef.h"
 #include <cctype>
 #include <cstdio>
 #include <map>
@@ -21,6 +22,9 @@ extern int yyparse();
 //===----------------------------------------------------------------------===//
 // Code Generation
 //===----------------------------------------------------------------------===//
+
+static std::map<std::string, Value*> NamedClassTypes ; 
+static std::map<std::string, ClassDecl*> NamedClassDecls ; 
 
 static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());

@@ -80,6 +80,7 @@ public:
     Ident* varIdent ;
     VarDecl( TypeInfo* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ;
+    llvm::Type* declType();
 };
 
 class VarDeclList {
@@ -203,6 +204,11 @@ public:
                MtdDeclList* _mDL ):
     classIdent(_cI) , extClassIdent(_eCI) ,
     varDeclList(_vDL) , mtdDeclList(_mDL) {};
+    llvm::Type* GenerateType() ;
+    ClassDecl * baseClass ;
+    llvm::Value* classType ; 
+    ClassDecl * getBaseClass() { return baseClass ; } 
+    llvm::ArrayRef<Type*> elemsTypes;  
 };
 
 class ClassDeclList {
@@ -315,8 +321,8 @@ public:
     ClassDeclList classDeclList ;
     Program( MainClassDecl* _mC , ClassDeclList *_cD )
     : mainClassDecl(_mC) , classDeclList(_cD) {};
-
     virtual Value *codeGen();
+    void ClassInitial();
 };
 
 class SiOpExpr : public Expr{
@@ -414,6 +420,7 @@ public:
 class TypeInfo {
 public:
     std::string typeName ;
+    llvm::Type* tarType ; 
     TypeInfo(){};
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
@@ -445,4 +452,5 @@ public:
     ClassIdentType(Ident *_cI )
     : classIdent(_cI) , TypeInfo("Class") {} ;
 };
+
 

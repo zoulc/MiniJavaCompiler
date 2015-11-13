@@ -2,7 +2,10 @@
 /* LiterExpr.h */
 Value* Ident :: codeGen() { return NULL ; } 
 
-Type* TypeInfo::typeGen() { return NULL ; } 
+Type* TypeInfo::typeGen() { 
+	tarType = NULL ; 
+	return NULL ; 
+} 
 
 Value*  Expr :: codeGen() { return NULL ; }
 
@@ -164,11 +167,13 @@ llvm::Value* MultExpr::codeGen()
 
 llvm::Type* IntType::typeGen()
 {
+	tarType = Type::getInt64Ty(getGlobalContext());
     return Type::getInt64Ty(getGlobalContext()) ;
 }
 
 llvm::Type* BoolType::typeGen()
 {
+	tarType = Type::getInt64Ty(getGlobalContext());
     return Type::getInt64Ty(getGlobalContext());
 }
 
@@ -233,7 +238,7 @@ llvm::Value* VarDeclStmt::codeGen()
     /* TODO : TypeInfo's virtual method typeGen need implementation.*/
     Type* tarType = type->typeGen() ;
     if ( ! ( NamedValues[varIdent->name] == 0 ) ) {
-        cout<<"VarDeclStmt : Redefinition of the same name."<<endl;
+        std::cout<<"VarDeclStmt : Redefinition of the same name."<<std::endl;
         return NULL ;
     }
     Value * targetValue =
@@ -244,8 +249,45 @@ llvm::Value* VarDeclStmt::codeGen()
 
 llvm::Value* IdentAccessExpr::codeGen() {
     if ( NamedValues[tarIdent->name] == 0 ) {
-        printf(" IdentAccessExpr : Value Not Defined.") ;
+        std::cout<<" [Generate] IdentAccessExpr : Value Not Defined."<<std::endl ;
     }
     return Builder.CreateLoad( NamedValues[tarIdent->name] , "loadvar" );
+}
+
+llvm::Type* VarDecl::DeclType()
+{	
+	return this->varType->typeGen();	
+}
+
+void Program::ClassInitial() {
+
+}
+
+llvm::Type* ClassDecl::GenerateType() {
+	std::vector<llvm::Type*> classTypeVec;
+	std::string className = classIdent->name ; 
+	if ( NamedClassDecls[className] != 0 ) {
+		std::cout<<" [Check] Class "<<className<<" have multiple difintion."<<std::endl;
+		return NULL ; 
+	}
+	std::vector<Type*> classType ; 	
+	if ( extClassIdent != NULL ) {
+		std::string extClassName = extClassIdent->name ; 
+		if ( NamedClassDecls[extClassName] == 0 ) {
+			std::cout<<" [Check] Class "<<className<<"'s base class hasn't been defined."<<std::endl;
+			return NULL ; 
+		}
+		baseClass = NamedClassDecls[extClassName] ; 
+		classTypeVec = (baseClass->elemsTypes).vec();		
+	}
+	std::vector<class VarDecl*>::iterator it;
+	for( it = varDeclList.begin() ; it != varDeclList.end() ; it++ ) {
+		llvm::Type* itType = (*it)->DeclType();
+		if ( itType == NULL ) return NULL ; 
+		classTypeVec.push_back( itType ) ;  					
+	}
+	elemsTypes.copy( llvm::ArrayRef<Type*>( classTypeVec ) ) ;  
+	classType = StructType::create( elemsTypes ) ; 	
+	return classType ;
 }
 

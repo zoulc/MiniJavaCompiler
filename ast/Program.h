@@ -10,4 +10,5 @@ public:
     ClassDeclList classDeclList ;
     Program( MainClassDecl* _mC , ClassDeclList *_cD )
     : mainClassDecl(_mC) , classDeclList(_cD) {};
+    void ClassInitial();
 };
