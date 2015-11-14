@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 #include "llvm/IR/Value.h"
+#include <map>
+#include <queue>
 
 using namespace llvm;
 
@@ -29,7 +31,7 @@ class BiOpExpr;
 
 class Stmt {
 public:
-	virtual llvm::Value* codeGen(); 
+	virtual llvm::Value* codeGen();
 };
 
 class Expr {
@@ -49,7 +51,7 @@ public:
     }
     StmtList( StmtList & _sL ) : stmtList(_sL.stmtList) {} ;
     StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 } ;
 
 class VarArg {
@@ -63,15 +65,22 @@ public:
 class VarArgList {
 public:
     std::vector< class VarArg * > declList ;
-    VarArgList(){};
+	bool __codeGen;
+	ArrayRef<Type*> TypeArray; 
+	
+	VarArgList(){};
     VarArgList( VarArgList* _vAL ,
                    VarArg* _vA )
     : declList(_vAL->declList)
     {
         declList.push_back(_vA);
     }
-    VarArgList( VarArgList & _vAL ) : declList(_vAL.declList) {} ;
-    VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ;
+    VarArgList( VarArgList & _vAL ) : declList(_vAL.declList) {} ; 
+    VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ; 
+
+	ArrayRef<Type*>* getTypeArray(Type*);
+	void codeGen(Tyep*);
+	void setNamedValues();
 };
 
 class VarDecl {
@@ -80,7 +89,8 @@ public:
     Ident* varIdent ;
     VarDecl( TypeInfo* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ;
-    llvm::Type* declType();
+	llvm::Type* llvmType;
+    llvm::Type* getLLvmType();
 };
 
 class VarDeclList {
@@ -98,20 +108,25 @@ public:
 };
 
 class MtdDecl {
+private:
+	Function * func;
 public:
     Ident *mtdIdent ;
-    TypeInfo  *rtnType ;
+    Type  *rtnType ;
+	Function  *func;
     VarArgList varArgList ;
     StmtList    stmtList ;
     Expr    *rtnExpr ;
-    MtdDecl( TypeInfo* _rT ,
+    MtdDecl( Type* _rT ,
              Ident* _mI ,
              VarArgList* _vAL ,
              StmtList* _sL ,
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
-    varArgList(_vAL) ,
-    stmtList(*_sL) , rtnExpr(_rE) {} ;
+    varArgList(_vAL) , 
+    stmtList(*_sL) , rtnExpr(_rE) , func(NULL) {} ; 
+	FunctionType * getFunctionType();
+	Function * codeGen();
 };
 
 class MtdDeclList {
@@ -142,7 +157,7 @@ public:
     BiOpExpr( Expr * _lE ,
               Expr * _rE )
     : leftExpr(_lE), rightExpr(_rE) {};
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class AddExpr : public BiOpExpr {
@@ -150,7 +165,7 @@ public:
     AddExpr ( Expr * lE ,
               Expr *  rE )
         :BiOpExpr( lE , rE ) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class LessCmpExpr : public BiOpExpr {
@@ -158,7 +173,7 @@ public:
     LessCmpExpr ( Expr * lE ,
                   Expr *  rE )
         :BiOpExpr( lE , rE ) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class AndExpr : public BiOpExpr {
@@ -166,7 +181,7 @@ public:
     AndExpr ( Expr * lE ,
                   Expr *  rE )
         :BiOpExpr( lE , rE ) {};
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class SubExpr : public BiOpExpr {
@@ -174,7 +189,7 @@ public:
     SubExpr ( Expr * lE ,
                   Expr *  rE )
         :BiOpExpr( lE , rE ) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class MultExpr : public BiOpExpr {
@@ -182,7 +197,7 @@ public:
     MultExpr ( Expr * lE ,
                   Expr *  rE )
         :BiOpExpr( lE , rE ){} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class ArrAcsExpr : public BiOpExpr{
@@ -204,11 +219,37 @@ public:
                MtdDeclList* _mDL ):
     classIdent(_cI) , extClassIdent(_eCI) ,
     varDeclList(_vDL) , mtdDeclList(_mDL) {};
-    llvm::Type* GenerateType() ;
-    ClassDecl * baseClass ;
-    llvm::Value* classType ; 
-    ClassDecl * getBaseClass() { return baseClass ; } 
-    llvm::ArrayRef<Type*> elemsTypes;  
+
+	/*
+	The baisc Field of the ClassDecl:
+	*/
+	llvm::Type* getClassLLVMType() ;
+	llvm::Type* classLLVMType;
+
+	//Field
+	std::vector<class VarDecl*> fieldDecl;
+	std::map<std::string , int>	fieldName2Pos;
+	void setNamedField(llvm::Value* thisClass );
+
+	//Method
+	std::vector<class MtdDecl*> mtdDecl;
+	std::map<std::string , int> mtdName2Pos;
+	int getMethodId(std::string mtdName);
+	llvm::Type* getMethodType(std::string mtdName);
+
+	//Base Class.
+	ClassDecl * baseClass ;
+    ClassDecl * getBaseClass();
+
+	//VTable
+	llvm::Type* vtableType;
+	llvm::Type* getVTableType();
+	llvm::Value* vtableLoc;
+	llvm::Value* getVTableLoc();
+
+	//codeGen
+	llvm::Value* codeGen();
+
 };
 
 class ClassDeclList {
@@ -262,7 +303,7 @@ public:
     Ident * tarIdent ;
     IdentAccessExpr( Ident * _tI )
     : tarIdent(_tI) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class Ident {
@@ -270,7 +311,7 @@ public:
     std::string name ;
     Ident(){};
     Ident( std::string & _n ) : name(_n) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class IntLiterExpr : public Expr {
@@ -278,7 +319,7 @@ public:
     long long int value;
     IntLiterExpr( long long int _v )
     : value(_v) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class TrueLiterExpr : public Expr {
@@ -286,7 +327,7 @@ public:
     bool value ;
     TrueLiterExpr()
     : value(true) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class FalseLiterExpr : public Expr {
@@ -294,7 +335,7 @@ public:
     bool value ;
     FalseLiterExpr()
     : value(false) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class MainClassDecl {
@@ -330,21 +371,21 @@ public:
     Expr * tarExpr ;
     SiOpExpr( Expr * _tE )
     : tarExpr ( _tE)  {};
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class NegExpr : public SiOpExpr {
 public:
     NegExpr ( Expr * _tE )
     : SiOpExpr( _tE) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class ParenExpr : public SiOpExpr {
 public:
     ParenExpr ( Expr * _tE)
     : SiOpExpr( _tE ) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class BlockStmt : public Stmt{
@@ -352,7 +393,7 @@ public:
     StmtList stmtList ;
     BlockStmt( StmtList *_sL )
     : stmtList(_sL) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class IfThenElseStmt : public Stmt {
@@ -363,7 +404,7 @@ public:
                     Stmt * _tS ,
                     Stmt * _eS )
     : condExpr(_cE) , thenStmt(_tS) , elseStmt(_eS) {};
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class WhileStmt : public Stmt {
@@ -372,7 +413,7 @@ public:
     Stmt* bodyStmt ;
     WhileStmt( Expr * _cE , Stmt * _bS )
     : condExpr(_cE) , bodyStmt(_bS) {} ;
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class SysOutPrtStmt : public Stmt {
@@ -389,7 +430,7 @@ public :
     AssignStmt( Ident * _aI ,
                 Expr * _vE )
     : assignIdent(_aI) , valueExpr(_vE) {};
-    virtual llvm::Value* codeGen(); 
+    virtual llvm::Value* codeGen();
 };
 
 class ArrAssignStmt : public Stmt {
@@ -420,17 +461,17 @@ public:
 class TypeInfo {
 public:
     std::string typeName ;
-    llvm::Type* tarType ; 
+    llvm::Type* tarType ;
     TypeInfo(){};
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
-    virtual llvm::Type* typeGen(); 
+    virtual llvm::Type* typeGen();
 };
 
 class IntType : public TypeInfo {
 public:
     IntType() : TypeInfo("int") {} ;
-    virtual llvm::Type* typeGen(); 
+    virtual llvm::Type* typeGen();
 };
 
 class ArrType : public TypeInfo {
@@ -443,7 +484,7 @@ public:
 class BoolType : public TypeInfo {
 public:
     BoolType() : TypeInfo("boolean") { } ;
-    virtual llvm::Type* typeGen(); 
+    virtual llvm::Type* typeGen();
 };
 
 class ClassIdentType : public TypeInfo {
@@ -452,5 +493,3 @@ public:
     ClassIdentType(Ident *_cI )
     : classIdent(_cI) , TypeInfo("Class") {} ;
 };
-
-

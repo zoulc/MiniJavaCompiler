@@ -1,11 +1,11 @@
 
 /* LiterExpr.h */
-Value* Ident :: codeGen() { return NULL ; } 
+Value* Ident :: codeGen() { return NULL ; }
 
-Type* TypeInfo::typeGen() { 
-	tarType = NULL ; 
-	return NULL ; 
-} 
+Type* TypeInfo::typeGen() {
+	tarType = NULL ;
+	return NULL ;
+}
 
 Value*  Expr :: codeGen() { return NULL ; }
 
@@ -54,53 +54,53 @@ Value* IfThenElseStmt::codeGen()
 	Value *CondV = condExpr->codeGen();
 	if (!CondV)
 		return nullptr;
-	
+
 	// Convert condition to a bool by comparing equal to 0.0.
 	CondV = Builder.CreateICmpNE(
 		CondV,
 		ConstantInt::get(Type::getInt1Ty(getGlobalContext()), 0, false),
 								 "ifcond");
-	
+
 	Function *TheFunction = Builder.GetInsertBlock()->getParent();
-	
+
 	// Create blocks for the then and else cases.  Insert the 'then' block at the
 	// end of the function.
 	BasicBlock *ThenBB =
 	BasicBlock::Create(getGlobalContext(), "then", TheFunction);
 	BasicBlock *ElseBB = BasicBlock::Create(getGlobalContext(), "else");
 	BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext(), "ifcont");
-	
+
 	Builder.CreateCondBr(CondV, ThenBB, ElseBB);
-	
+
 	// Emit then value.
 	Builder.SetInsertPoint(ThenBB);
-	
+
 	Value *ThenV = thenStmt->codeGen();
 	if (!ThenV)
 		return nullptr;
-	
+
 	Builder.CreateBr(MergeBB);
-	// Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+	// codeGen of 'Then' can change the current block, update ThenBB for the PHI.
 	ThenBB = Builder.GetInsertBlock();
-	
+
 	// Emit else block.
 	TheFunction->getBasicBlockList().push_back(ElseBB);
 	Builder.SetInsertPoint(ElseBB);
-	
+
 	Value *ElseV = elseStmt->codeGen();
 	if (!ElseV)
 		return nullptr;
-	
+
 	Builder.CreateBr(MergeBB);
-	// Codegen of 'Else' can change the current block, update ElseBB for the PHI.
+	// codeGen of 'Else' can change the current block, update ElseBB for the PHI.
 	ElseBB = Builder.GetInsertBlock();
-	
+
 	// Emit merge block.
 	TheFunction->getBasicBlockList().push_back(MergeBB);
 	Builder.SetInsertPoint(MergeBB);
 	/*PHINode *PN =
 	Builder.CreatePHI(Type::getInt64Ty(getGlobalContext()), 2, "iftmp");
-	
+
 	PN->addIncoming(ThenV, ThenBB);
 	PN->addIncoming(ElseV, ElseBB);
 	return PN;*/
@@ -254,40 +254,274 @@ llvm::Value* IdentAccessExpr::codeGen() {
     return Builder.CreateLoad( NamedValues[tarIdent->name] , "loadvar" );
 }
 
-llvm::Type* VarDecl::DeclType()
-{	
-	return this->varType->typeGen();	
+llvm::Type* VarDecl::getLLvmType()
+{
+	if (llvmType) return llvmType ;
+	llvmType = varType->typeGen();
+	return llvmType ;
 }
 
 void Program::ClassInitial() {
-
+	std::vector<class ClassDecl*>::iterator cit ;
+	for ( cit = declList.begin() ;
+		  cit != declList.end() ; cit ++ ) {
+		(*cit)->codeGen();
+ 	}
 }
 
-llvm::Type* ClassDecl::GenerateType() {
-	std::vector<llvm::Type*> classTypeVec;
-	std::string className = classIdent->name ; 
+
+ClassDecl* ClassDecl::getBaseClass() {
+	if ( extClassIdent == NULL ) return NULL ;
+	if ( baseClass ) return baseClass ;
+	if ( extClassIdent != NULL ) {
+		std::string extClassName = extClassIdent->name ;
+		if ( NamedClassDecls[extClassName] == 0 ) {
+			std::cout<<" [Check] ClassDecl "<<classIdent->name<<"'s base class hasn't been defined."<<std::endl;
+			return NULL ;
+		}
+		baseClass = NamedClassDecls[extClassName] ;
+		std::vector<class VarDecl*>::iterator vit;
+		for( vit = (baseClass->fieldDecl).begin() ;
+			 vit !=(baseClass->fieldDecl).end() ; vit++ ) {
+			fieldDecl.push_back((*vit));
+			llvm::Type* itType = (*vit)->getLLVMType();
+			if ( itType == NULL ) {
+				std::cout<<" [Check] ClassDecl "<<classIdent->name<<
+				"'s field which named "<< (*vit)->varIdent->name << std::endl;
+				return NULL ;
+			}
+			fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
+		}
+
+		std::vector<class MtdDecl*>::iterator mit;
+		for( mit = (baseClass->mtdDecl).begin() ;
+			 mit !=(baseClass->mtdDecl).end() ; mit++ ) {
+			if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
+				mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
+				mtdDecl.push_back((*mit));
+				continue ;
+			}
+			int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
+			mtdDecl[mtd_it] = ((*mit));
+		}
+	}
+	return NULL ;
+}
+
+llvm::Type* ClassDecl::getClassLLVMType() {
+	if ( classLLVMType ) return classLLVMType ;
+	getBaseClass();
+	std::string className = classIdent->name ;
 	if ( NamedClassDecls[className] != 0 ) {
 		std::cout<<" [Check] Class "<<className<<" have multiple difintion."<<std::endl;
-		return NULL ; 
+		return NULL ;
 	}
-	std::vector<Type*> classType ; 	
-	if ( extClassIdent != NULL ) {
-		std::string extClassName = extClassIdent->name ; 
-		if ( NamedClassDecls[extClassName] == 0 ) {
-			std::cout<<" [Check] Class "<<className<<"'s base class hasn't been defined."<<std::endl;
-			return NULL ; 
+	NamedClassDecls[className] = this ;
+
+	//make an oblique identified class type , then fill some thing into it.
+	classLLVMType = StructType::create(Builder.getContext() , classname );
+
+	std::vector<class VarDecl*>::iterator vit;
+	for( vit = (varDeclList.declList).begin() ;
+	     vit != (varDeclList.declLIst).end() ; vit++ ) {
+		llvm::Type* itType = (*vit)->getLLVMType();
+		if ( itType == NULL ) {
+			std::cout<<" [Check] ClassDecl "<<classIdent->name<<
+			"'s field which named "<< (*vit)->varIdent->name << std::endl;
+			return NULL ;
 		}
-		baseClass = NamedClassDecls[extClassName] ; 
-		classTypeVec = (baseClass->elemsTypes).vec();		
+		fieldDecl.push_back((*vit));
+		fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
 	}
+
+	std::vector<class MtdDecl*>::iterator mit;
+	for( mit = (mtdDeclList.declList).begin() ;
+		 mit !=(mtdDeclList.declList).end() ; mit++ ) {
+	    if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
+			mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
+ 			mtdDecl.push_back((*mit));
+ 			continue ;
+ 		}
+ 		int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
+ 		mtdDecl[mtd_it] = ((*mit));
+	}
+
+	std::vector<llvm::Type*> classTypeVec;
+	classTypeVec.clear();
+
+	//push the VTable of Function into the classTypeVec
+	classTypeVec.push_back( getVTableType().getPointerTo() );
+
+	//push the fields' types into the class TypeVec
 	std::vector<class VarDecl*>::iterator it;
-	for( it = varDeclList.begin() ; it != varDeclList.end() ; it++ ) {
-		llvm::Type* itType = (*it)->DeclType();
-		if ( itType == NULL ) return NULL ; 
-		classTypeVec.push_back( itType ) ;  					
+	for( it = (fieldDecl.declList).begin() ;
+	     it != (fieldDecl.declLIst).end() ; it++ ) {
+		llvm::Type* itType = (*it)->getLLVMType();
+		classTypeVec.push_back( itType ) ;
 	}
-	elemsTypes.copy( llvm::ArrayRef<Type*>( classTypeVec ) ) ;  
-	classType = StructType::create( elemsTypes ) ; 	
-	return classType ;
+
+	classLLVMType->setBody( classTypeVec ) ;
+	return classLLVMType ;
 }
+
+llvm::Type* ClassDecl::getVTableType(){
+	if ( vtableType ) return vtableType ;
+	getBaseClass();
+	//make an oblique identified class type , then fill some thing into it.
+	vtableType = StructType::create(Builder.getContext() , (classIdent->name) + std::string("_vtable"));
+
+	std::vector<llvm::Type*> vtableTypeVec;
+	std::vector<class MtdDecl*>::iterator mit;
+	for( mit = mtdDecl.begin() ;
+		 mit != mtdDecl.end() ; mit++ ) {
+		vtableTypeVec.push_back( (*mit)->getFunctionType() );
+	}
+	vtableType->setBody( vtableTypeVec );
+	return vtableType ;
+}
+
+void ClassDecl::setNamedField( llvm::Value* thisClass )
+{
+	Value * selClass = Builder.CreateLoad( thisClass ) ;
+	std::vector<class VarDecl*>::iterator it;
+	for( it = (fieldDecl.declList).begin() ;
+	     it != (fieldDecl.declLIst).end() ; it++ ) {
+		NamedValues[ (*it)->varIdent->name ]
+			= Builder.CreateStructGEP( (*it)->getLLVMType() , selClass ,
+									   fieldName2Pos[(*it)->varIdent->name] );
+	}
+}
+
+int getMethodId(std::string mtdName)
+{
+	if ( mtdName2Pos.count(mtdName) == 0 ) {
+		std::cout<<" [ Check ] getMethodId : "<<mtdName<<" is not a valid method."<<std::endl;
+		return -1 ;
+	}
+	return mtdName2Pos[mtdName];
+}
+
+llvm::Type* getMethodType(std::string mtdName)
+{
+	if ( mtdName2Pos.count(mtdName) == 0 ) {
+		std::cout<<" [ Check ] getMethodId : "<<mtdName<<" is not a valid method."<<std::endl;
+		return -1 ;
+	}
+	int mtd_id = mtdName2Pos[mtdName];
+	return mtdDecl[mtd_id]->getFunctionType();
+}
+
+void ClassDecl::getVTableLoc()
+{
+	if (vtableLoc) return vtableLoc ;
+	getVTableType();
+
+	std::vector< Constant* > vtableFuncVec ;
+
+	std::vector<class MtdDecl*>::iterator mit;
+	for( mit = mtdDecl.begin() ;
+		 mit != mtdDecl.end() ; mit++ ) {
+		vtableFucnVec.push_back( (*mit)->getFunction() );
+	}
+
+	llvm::ArrayRef< Constant* > vtableInitial(vtableFuncVec);
+
+	vtableLoc = new GlobalVariable( *TheModule,
+		getVTableType(), true, GlobalValue::ExternalLinkage ,
+		ConstantStruct::get( getVTableType , vtableInitial ) ,
+		classIdent->name + std::string("_vatble_loc") );
+
+	return vtableLoc;
+}
+
+llvm::Value* ClassDecl::codeGen()
+{
+	std::vector<class MtdDecl*>::iterator mit;
+	for( mit = (mtdDeclList.declList).begin() ;
+		 mit != (mtdDeclList.declList).end() ; mit++ ) {
+		(*mit)->codeGen();
+	}
+    return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
+}
+
+
+
+
+Value * GetMtdCallExpr::codeGen()
+{
+	vector <Value*> arg;
+	arg.push_back(tarExpr->codeGen());
+	int i;
+	for(i=0;i<(fillList.fillList.size());i++)
+		arg.push_back(fillList.fillList[i]->codeGen());
+	ArrayRef<Value*> argRef(arg);
+	Value *MtdType=NamedClassDecl[arg[0]->getType()->getStructName]->getMethodType(mtdIdent->name);
+	Value *MtdId=NamedClassDecl[arg[0]->getType()->getStructName]->getMethodId(mtdIdent->name);
+	Value * my_vtable=Builder.CreateLoad(MtdType.getPointTo(),arg[0]);
+	Value * my_func_p=Builder.CreateGEP(my_vtable,MtdId);
+	Value * my_func=Builder.CreateLoad(my_func_p);
+	return Build.CreateCall(my_func,argRef);
+}
+
+Type * MtdDecl::getFunctionType()
+{
+	if(func==NULL)
+		func=Function::Create(FunctionType::get(rtnType,varArgList.getTypeArray(Owner->getClassLLVMType()),false),Function::ExternalLinkage,mtdIdent->name,TheModule);
+	return func->getFunctionType();	
+}
+
+Function * MtdDecl::codeGen()
+{
+	BasicBlock * OldBB=Builder.GetInsertBlock();
+	BasicBlock * func_entry=
+        BasicBlock::Create(getGlobalContext(),"", func);
+	NamedValues.clear();
+	ArgumentListType & ArgL=func->getArgumentList();
+	ArgumentListType::iterator Argi=ArgL.begin();
+	setNamedField(ArgL[0]);
+	int j=0;
+	for(Argi=ArgL.begin()+1;Argi!=ArgL.end();j++,Argi++)
+		NamedValues[varArgList->declList[i]->varIdent->name]=Argi;
+	StmtList.codeGen();
+	Value * retval;
+	retval=rtnExpr->codeGen();
+	Builder.CreateRet(retval);
+	Builder.SetInsertPoint(OldBB);
+}
+
+Function * MtdDecl::getFunction()
+{
+	getFunctionType();
+	codeGen();
+	return func;
+}
+
+Value* ObjNewExpr::codeGen()
+{
+	Value *var = new GlobalVariable(TheModule,type,false,GlobalValue::ExternalLinkage);
+	Build.CreateLoad(NamedClassDecl[tarIdent->name]->getVTableLoc(),var);
+	return var;
+}
+
+void VarArgList::codeGen(Type* ClassType)
+{
+	if(!__codeGen)return 0;
+	vector<Type*> t;
+	t.clear();
+	t.push_back(ClassType);
+	int i,n=declList.size();
+	for(;i<n;i++)
+		t.push_back(declList[i]->varType);
+	TypeArray.copy(t);
+	__codeGen=1;
+}
+
+ArrayRef<Type*>* VarArgList::getTypeArray(Type * ClassType)
+{
+	codeGen(ClassType);
+	return &TypeArray;
+}
+
+
+
 
