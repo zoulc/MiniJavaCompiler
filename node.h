@@ -6,6 +6,17 @@
 #include <iostream>
 #include <vector>
 #include "llvm/IR/Value.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/Function.h"
+
+
 #include <map>
 #include <queue>
 
@@ -79,7 +90,7 @@ public:
     VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ; 
 
 	ArrayRef<Type*>* getTypeArray(Type*);
-	void codeGen(Tyep*);
+	void codeGen();
 	void setNamedValues();
 };
 
@@ -90,7 +101,7 @@ public:
     VarDecl( TypeInfo* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ;
 	llvm::Type* llvmType;
-    llvm::Type* getLLvmType();
+    llvm::Type* getLLVMType();
 };
 
 class VarDeclList {
@@ -112,12 +123,12 @@ private:
 	Function * func;
 public:
     Ident *mtdIdent ;
-    Type  *rtnType ;
-	Function  *func;
+    ClassDecl* Owner;
+    TypeInfo  *rtnType ;
     VarArgList varArgList ;
     StmtList    stmtList ;
     Expr    *rtnExpr ;
-    MtdDecl( Type* _rT ,
+    MtdDecl( TypeInfo* _rT ,
              Ident* _mI ,
              VarArgList* _vAL ,
              StmtList* _sL ,
@@ -125,8 +136,9 @@ public:
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) , 
     stmtList(*_sL) , rtnExpr(_rE) , func(NULL) {} ; 
-	FunctionType * getFunctionType();
-	Function * codeGen();
+    llvm::Type * getFunctionType();
+    Function * codeGen();
+    Function * getFunction();
 };
 
 class MtdDeclList {
@@ -295,7 +307,8 @@ public:
     GetMtdCallExpr( Expr * _tE ,
                     Ident * _mI ,
                     ExprList * _fL )
-    : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ;
+    : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ; 
+    virtual llvm::Value* codeGen();
 };
 
 class IdentAccessExpr : public Expr {

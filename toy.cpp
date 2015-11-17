@@ -4,6 +4,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/Constant.h"
 #include <cctype>
 #include <cstdio>
 #include <map>
