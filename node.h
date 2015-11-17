@@ -15,7 +15,7 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/Function.h"
-
+#include "llvm/IR/BasicBlock.h"
 
 #include <map>
 #include <queue>
@@ -71,6 +71,8 @@ public:
     Ident * varIdent ;
     VarArg( TypeInfo* _vT , Ident* _vI )
     : varType(_vT) , varIdent(_vI) {} ;
+    llvm::Type* llvmType;
+    llvm::Type* getLLVMType();
 };
 
 class VarArgList {
@@ -90,7 +92,7 @@ public:
     VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ; 
 
 	ArrayRef<Type*>* getTypeArray(Type*);
-	void codeGen();
+	void codeGen(llvm::Type* ClassType);
 	void setNamedValues();
 };
 
@@ -120,7 +122,7 @@ public:
 
 class MtdDecl {
 private:
-	Function * func;
+    Function * func ; 
 public:
     Ident *mtdIdent ;
     ClassDecl* Owner;
@@ -136,8 +138,10 @@ public:
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) , 
     stmtList(*_sL) , rtnExpr(_rE) , func(NULL) {} ; 
+    llvm::Type * llvmType; 
     llvm::Type * getFunctionType();
     Function * codeGen();
+    Function * llvmFunc;
     Function * getFunction();
 };
 
@@ -367,6 +371,7 @@ public:
     Ident * tarIdent ;
     ObjNewExpr( Ident * _tI )
     : tarIdent(_tI) {} ;
+    virtual llvm::Value* codeGen();
 };
 
 class Program {
@@ -505,4 +510,5 @@ public:
     Ident * classIdent ;
     ClassIdentType(Ident *_cI )
     : classIdent(_cI) , TypeInfo("Class") {} ;
+    virtual llvm::Type* typeGen();
 };

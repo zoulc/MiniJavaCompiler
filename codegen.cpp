@@ -457,7 +457,7 @@ Value * GetMtdCallExpr::codeGen()
 	ArrayRef<Value*> argRef(arg);
 	Type * MtdType=NamedClassDecls[arg[0]->getType()->getStructName()]->getMethodType(mtdIdent->name);
 	Value * MtdId=ConstantInt::get(Type::getInt64Ty(getGlobalContext()),NamedClassDecls[arg[0]->getType()->getStructName()]->getMethodId(mtdIdent->name), true);
-	Value * my_vtable=Builder.CreateLoad(MtdType->getPointTo(),arg[0]);
+	Value * my_vtable=Builder.CreateLoad(MtdType->getPointerTo(),arg[0]);
 	Value * my_func_p=Builder.CreateGEP(my_vtable,MtdId);
 	Value * my_func=Builder.CreateLoad(my_func_p);
 	return Builder.CreateCall(my_func,argRef);
@@ -465,24 +465,44 @@ Value * GetMtdCallExpr::codeGen()
 
 Type * MtdDecl::getFunctionType()
 {
-	if(func==NULL)
-		func=Function::Create(FunctionType::get(rtnType,varArgList.getTypeArray(Owner->getClassLLVMType()),false),Function::ExternalLinkage,mtdIdent->name,TheModule);
-	return func->getFunctionType();	
+	if(func==NULL) {
+		func=Function::Create(FunctionType::get(rtnType->typeGen(),*(varArgList.getTypeArray(Owner->getClassLLVMType()->getPointerTo())),false),Function::ExternalLinkage,mtdIdent->name,TheModule);
+		llvmType = func->getFunctionType();
+	}
+	return llvmType;	
 }
 
 Function * MtdDecl::codeGen()
 {
-	BasicBlock * OldBB=Builder.GetInsertBlock();
-	BasicBlock * func_entry=
-        BasicBlock::Create(getGlobalContext(),"", func);
+	BasicBlock * OldBB = Builder.GetInsertBlock();
+	//Store the old blocks
+	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , mtdIdent->name + std::string("_entry") , llvmFunc);
+	//Create a new Function 
 	NamedValues.clear();
-	Function::ArgumentListType & ArgL=func->getArgumentList();
-	Function::ArgumentListType::iterator Argi=ArgL.begin();
-	setNamedField(*(ArgL.begin()));
-	int j=0;
-	for(Argi=ArgL.begin(),Argi++;Argi!=ArgL.end();j++,Argi++)
-		NamedValues[varArgList.declList[j]->varIdent->name]=Argi;
-	StmtList.codeGen();
+	
+	Function::ArgumentListType & argList = llvmFunc->getArgumentList();
+	Function::ArgumentListType & ArgL = llvmFunc->getArgumentList();
+	
+	Function::ArgumentListType::iterator ait = argList.begin();
+	Function::arg_iterator Argi = argList.begin();
+
+		
+//	Owner->setNamedField( (Value*)(ArgL.begin()) );
+	
+//	std::vector< class VarArg * > vit ; 
+	
+//	NamedValuse[std::string("this")] = Builder.CreateStore(
+
+	int j ; 
+	for( Argi = ArgL.begin() , Argi++ ; Argi != ArgL.end() ; j++ , Argi++ ) {
+		Value * Alloca = Builder.CreateAlloca( varArgList.declList[j]->getLLVMType() ) ; 		 
+		Builder.CreateStore( Argi , Alloca ) 
+		NamedValues[varArgList.declList[j]->varIdent->name] = Alloca ;
+	}
+	
+
+	
+	stmtList.codeGen();
 	Value * retval;
 	retval=rtnExpr->codeGen();
 	Builder.CreateRet(retval);
@@ -498,8 +518,9 @@ Function * MtdDecl::getFunction()
 
 Value* ObjNewExpr::codeGen()
 {
-	Value *var = new GlobalVariable(TheModule,NamedClassDecls[tarIden->name]->getClassLLVMType(),false,GlobalValue::ExternalLinkage);
-	Build.CreateLoad(NamedClassDecls[tarIdent->name]->getVTableLoc(),var);
+	Value *var = new GlobalVariable(*TheModule,NamedClassDecls[tarIdent->name]->getClassLLVMType(),false,GlobalValue::ExternalLinkage,nullptr);
+	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;	
+	Builder.CreateStore(NamedClassDecls[tarIdent->name]->getVTableLoc(),vtableField);
 	return var;
 }
 
@@ -511,8 +532,8 @@ void VarArgList::codeGen(Type* ClassType)
 	t.push_back(ClassType);
 	int i,n=declList.size();
 	for(;i<n;i++)
-		t.push_back(declList[i]->varType);
-	TypeArray.copy(t);
+		t.push_back(declList[i]->getLLVMType());
+	TypeArray = t ; 
 	__codeGen=1;
 }
 
@@ -522,6 +543,23 @@ ArrayRef<Type*>* VarArgList::getTypeArray(Type * ClassType)
 	return &TypeArray;
 }
 
+llvm::Type* ClassIdentType::typeGen() {
+	if (tarType) return tarType;
+	if ( NamedClassDecls.count( classIdent->name ) == 0 ) {
+		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
+		return NULL;	
+	}	
+	ClassDecl* tarClassDecl = NamedClassDecls[classIdent->name] ; 
+	if ( tarClassDecl == NULL ) {
+		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
+		return NULL;		
+	}
+	tarType = tarClassDecl->getClassLLVMType();
+	return tarType;		
+}
 
-
-
+llvm::Type* VarArg::getLLVMType(){
+    	if ( llvmType ) return llvmType ; 
+	llvmType = varType->typeGen();
+	return llvmType;
+}
