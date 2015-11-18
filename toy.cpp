@@ -26,6 +26,9 @@ extern int yyparse();
 
 static std::map<std::string, Value*> NamedClassTypes ; 
 static std::map<std::string, ClassDecl*> NamedClassDecls ; 
+static std::map<std::string, ClassDecl*> TypeNamedClassDecls ;
+static std::map<std::string, TypeInfo*> TypeNamedValues ; 
+
 
 static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -63,7 +66,10 @@ Value *MainClassDecl::codeGen() {
 }
 
 Value *Program::codeGen() {
-  ClassInitial();
+  std::cout<<" Reached CodeGen. "<<std::endl;
+  this->typeCheck();
+  std::cout<<" All Classes have been checked successfully. "<<std::endl;
+  this->ClassInitial();
   std::cout<<" All Classes have been initialized successfully. "<<std::endl;
   return mainClassDecl->codeGen();
 }
