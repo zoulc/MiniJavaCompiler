@@ -63,6 +63,8 @@ Value *MainClassDecl::codeGen() {
 }
 
 Value *Program::codeGen() {
+  ClassInitial();
+  std::cout<<" All Classes have been initialized successfully. "<<std::endl;
   return mainClassDecl->codeGen();
 }
 

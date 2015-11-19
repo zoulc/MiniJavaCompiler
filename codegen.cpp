@@ -1,8 +1,17 @@
+/* Type Checking*/
+
+
+
+
+
+
+
+
 
 /* LiterExpr.h */
 Value* Ident :: codeGen() { return NULL ; }
 
-Type* TypeInfo::typeGen() {
+Type* TypeInfo::llvmTypeGen() {
 	tarType = NULL ;
 	return NULL ;
 }
@@ -165,13 +174,13 @@ llvm::Value* MultExpr::codeGen()
     return Builder.CreateMul( leftExpr->codeGen() , rightExpr->codeGen() , "multmp" );
 }
 
-llvm::Type* IntType::typeGen()
+llvm::Type* IntType::llvmTypeGen()
 {
 	tarType = Type::getInt64Ty(getGlobalContext());
     return Type::getInt64Ty(getGlobalContext()) ;
 }
 
-llvm::Type* BoolType::typeGen()
+llvm::Type* BoolType::llvmTypeGen()
 {
 	tarType = Type::getInt64Ty(getGlobalContext());
     return Type::getInt64Ty(getGlobalContext());
@@ -187,11 +196,10 @@ llvm::Value* BlockStmt::codeGen()
         cout << " BlockStmt : Current Basic Block pointer is NULL\n";
         return NULL ;
     }
-    BasicBlock *BodyBB =
-        BasicBlock::Create(getGlobalContext(), "blockbody", TheFunction);
+    //BasicBlock::Create(getGlobalContext(), "", TheFunction);
     Value* rtn = stmtList.codeGen();
 
-    Builder.SetInsertPoint( CurBB ) ;
+    //Builder.SetInsertPoint( CurBB ) ;
     return rtn ;
 }
 
@@ -235,8 +243,8 @@ llvm::Value* WhileStmt::codeGen() {
 
 llvm::Value* VarDeclStmt::codeGen()
 {
-    /* TODO : TypeInfo's virtual method typeGen need implementation.*/
-    Type* tarType = type->typeGen() ;
+    /* TODO : TypeInfo's virtual method llvmTypeGen need implementation.*/
+    Type* tarType = type->llvmTypeGen() ;
     if ( ! ( NamedValues[varIdent->name] == 0 ) ) {
         std::cout<<"VarDeclStmt : Redefinition of the same name."<<std::endl;
         return NULL ;
@@ -257,7 +265,7 @@ llvm::Value* IdentAccessExpr::codeGen() {
 llvm::Type* VarDecl::getLLVMType()
 {
 	if (llvmType) return llvmType ;
-	llvmType = varType->typeGen();
+	llvmType = varType->llvmTypeGen();
 	return llvmType ;
 }
 
@@ -271,6 +279,7 @@ void Program::ClassInitial() {
 
 
 ClassDecl* ClassDecl::getBaseClass() {
+	std::cout << " [ IR ] < getBaseClass > Class " << classIdent->name << " now is processing on its base class ."<< std::endl ;
 	if ( extClassIdent == NULL ) return NULL ;
 	if ( baseClass ) return baseClass ;
 	if ( extClassIdent != NULL ) {
@@ -310,6 +319,7 @@ ClassDecl* ClassDecl::getBaseClass() {
 
 llvm::Type* ClassDecl::getClassLLVMType() {
 	if ( classLLVMType ) return classLLVMType ;
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " now is processing on its LLVM type ."<< std::endl ;
 	getBaseClass();
 	std::string className = classIdent->name ;
 	if ( NamedClassDecls[className] != 0 ) {
@@ -319,8 +329,10 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 	NamedClassDecls[className] = this ;
 
 	//make an oblique identified class type , then fill some thing into it.
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " create a oblique identifed type ."<< std::endl ;
 	classLLVMType = StructType::create(Builder.getContext() , className );
 
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initialize the fields ."<< std::endl ;
 	std::vector<class VarDecl*>::iterator vit;
 	for( vit = (varDeclList.declList).begin() ;
 	     vit != (varDeclList.declList).end() ; vit++ ) {
@@ -334,62 +346,85 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 		fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
 	}
 
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initialize the methods ."<< std::endl ;
 	std::vector<class MtdDecl*>::iterator mit;
 	for( mit = (mtdDeclList.declList).begin() ;
 		 mit !=(mtdDeclList.declList).end() ; mit++ ) {
+	    std::cout << " [ IR ] < getClassLLVMType > Add the method "<<(*mit)->mtdIdent->name<<" to Class "<<classIdent->name<<std::endl;
 	    if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
 			mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
- 			mtdDecl.push_back((*mit));
+ 			(*mit)->Owner = this ; 
+			mtdDecl.push_back((*mit));
  			continue ;
  		}
  		int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
- 		mtdDecl[mtd_id] = ((*mit));
+ 		mtdDecl[mtd_id] = (*mit);
+                (*mit)->Owner = this ; 
 	}
 
 	std::vector<llvm::Type*> classTypeVec;
 	classTypeVec.clear();
 
 	//push the VTable of Function into the classTypeVec
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initial the VTable's type ."<< std::endl ;
 	classTypeVec.push_back( getVTableType()->getPointerTo() );
 
 	//push the fields' types into the class TypeVec
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " fill the whole type ."<< std::endl ;
 	std::vector<class VarDecl*>::iterator it;
 	for( it = fieldDecl.begin() ;
 	     it != fieldDecl.end() ; it++ ) {
 		llvm::Type* itType = (*it)->getLLVMType();
 		classTypeVec.push_back( itType ) ;
 	}
-
-	((StructType*)classLLVMType)->setBody( classTypeVec ) ;
+	cast<StructType>(classLLVMType)->setBody( classTypeVec ) ;
 	return classLLVMType ;
 }
 
-llvm::Type* ClassDecl::getVTableType(){
+llvm::Type* ClassDecl::getVTableType()
+{
 	if ( vtableType ) return vtableType ;
+	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " now is processing on its VTable's LLVM type ."<< std::endl ;
 	getBaseClass();
 	//make an oblique identified class type , then fill some thing into it.
+	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " create an oblique type ."<< std::endl ;
 	vtableType = StructType::create(Builder.getContext() , (classIdent->name) + std::string("_vtable"));
 
+	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " get the methods' types and fill the whole VTable type ."<< std::endl ;
 	std::vector<llvm::Type*> vtableTypeVec;
+	vtableTypeVec.clear();
 	std::vector<class MtdDecl*>::iterator mit;
-	for( mit = mtdDecl.begin() ;
-		 mit != mtdDecl.end() ; mit++ ) {
-		vtableTypeVec.push_back( (*mit)->getFunctionType() );
+	for( mit = mtdDecl.begin() ; mit != mtdDecl.end() ; mit++ ) {
+		std::cout << " [ IR ] < getVTableType > Add method " << (*mit)->mtdIdent->name << " to vtable ."<<std::endl;
+		vtableTypeVec.push_back( (*mit)->getFunctionType());
 	}
-	((StructType*)vtableType)->setBody( vtableTypeVec );
+	
+	cast<StructType>(vtableType)->setBody( vtableTypeVec );
+	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " 's VTable's type has been processed successfully ."<< std::endl ;
 	return vtableType ;
 }
 
 void ClassDecl::setNamedField( llvm::Value* thisClass )
 {
-	Value * selClass = Builder.CreateLoad( thisClass ) ;
+	if ( ! ( isa<PointerType>( thisClass->getType() ) ) ) {
+		std::cout<<" [ IR ] < setNamedField > Error : type is not compatible."<<std::endl;
+	}
+	Value * selClass = Builder.CreateLoad( thisClass ) ; 
+	if ( ! ( selClass->getType() == getClassLLVMType() ) ) {
+		std::cout<<" [ IR ] < setNamedField > Error : the pointer's type is not correct."<<std::endl;
+	}
+	Value * test = Builder.CreateAlloca( getClassLLVMType() ) ; 
+	if ( ! ( test->getType()  == getClassLLVMType()->getPointerTo() ) ) {
+		std::cout<<" Testing ! Error occurs ! " <<std::endl;
+	}
 	std::vector<class VarDecl*>::iterator it;
 	for( it = fieldDecl.begin() ;
 	     it != fieldDecl.end() ; it++ ) {
+		std::cout<<" [ IR ] < setNamedField > Add the field "<<(*it)->varIdent->name<<" at Pos :"<< fieldName2Pos[(*it)->varIdent->name]<<" into NamedValues ."<<std::endl;
 		NamedValues[ (*it)->varIdent->name ]
-			= Builder.CreateStructGEP( (*it)->getLLVMType() , selClass ,
-									   fieldName2Pos[(*it)->varIdent->name] );
+			= Builder.CreateStructGEP( getClassLLVMType() , thisClass , fieldName2Pos[(*it)->varIdent->name] );
 	}
+	cout<<"Reached here."<<endl;
 }
 
 int ClassDecl::getMethodId(std::string mtdName)
@@ -413,22 +448,30 @@ llvm::Type* ClassDecl::getMethodType(std::string mtdName)
 
 llvm::Value* ClassDecl::getVTableLoc()
 {
+	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " now is processing on its VTable's Global Location ."<< std::endl ;
 	if (vtableLoc) return vtableLoc ;
 	getVTableType();
 
 	std::vector< Constant* > vtableFuncVec ;
 
+	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " fill's the initial data with the Virtual Functions."<< std::endl ;
 	std::vector<class MtdDecl*>::iterator mit;
 	for( mit = mtdDecl.begin() ;
 		 mit != mtdDecl.end() ; mit++ ) {
-		vtableFuncVec.push_back( (*mit)->getFunction() );
+		vtableFuncVec.push_back( cast<Function>((*mit)->getFunction()) );
+		//
+		//if ( (cast<Function>((*mit)->getFunction()))->getType() != (cast<FunctionType>((*mit)->getFunctionType()))) {
+		//	std::cout<<" Fucking ! " <<endl;
+		//}
 	}
 
+	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the initial constants ."<< std::endl ;
 	llvm::ArrayRef< Constant* > vtableInitial(vtableFuncVec);
 
+	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the global table with constants ."<< std::endl ;
 	vtableLoc = new GlobalVariable( *TheModule,
-		getVTableType(), true, GlobalValue::ExternalLinkage ,
-		ConstantStruct::get( (StructType*)getVTableType() , vtableInitial ) ,
+		cast<StructType>(getVTableType()), true, GlobalValue::ExternalLinkage ,
+		ConstantStruct::get( cast<StructType>(getVTableType()) , vtableInitial ) ,
 		classIdent->name + std::string("_vatble_loc") );
 
 	return vtableLoc;
@@ -436,94 +479,122 @@ llvm::Value* ClassDecl::getVTableLoc()
 
 llvm::Value* ClassDecl::codeGen()
 {
-	std::vector<class MtdDecl*>::iterator mit;
-	for( mit = (mtdDeclList.declList).begin() ;
-		 mit != (mtdDeclList.declList).end() ; mit++ ) {
-		(*mit)->codeGen();
-	}
+    std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " now is processing ."<< std::endl ;
+    getClassLLVMType();
+    std::vector<class MtdDecl*>::iterator mit;
+    for( mit = mtdDecl.begin() ;
+	mit != mtdDecl.end() ; mit++ ) {
+	cout<< (*mit)->mtdIdent->name << endl;
+	(*mit)->getFunction();
+    }
+    std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " has been generated successfuly ."<< std::endl ;
     return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
 }
 
-
-
-
 Value * GetMtdCallExpr::codeGen()
 {
+    std::cout << " [ IR ] < CetMtdCallExpr::codeGen > now is processing."<< std::endl ;
 	vector <Value*> arg;
 	arg.push_back(tarExpr->codeGen());
 	int i;
 	for(i=0;i<(fillList.fillList.size());i++)
 		arg.push_back(fillList.fillList[i]->codeGen());
 	ArrayRef<Value*> argRef(arg);
-	Type * MtdType=NamedClassDecls[arg[0]->getType()->getStructName()]->getMethodType(mtdIdent->name);
-	Value * MtdId=ConstantInt::get(Type::getInt64Ty(getGlobalContext()),NamedClassDecls[arg[0]->getType()->getStructName()]->getMethodId(mtdIdent->name), true);
-	Value * my_vtable=Builder.CreateLoad(MtdType->getPointerTo(),arg[0]);
-	Value * my_func_p=Builder.CreateGEP(my_vtable,MtdId);
+	//cout<<"Check point 4"<<endl;
+	//cout<<(arg[0]->getType())->isPointerTy()<<endl;
+	//cout<<(arg[0]->getType())->isStructTy()<<endl;
+	string ClassName="Tester";
+	Type * MtdType=NamedClassDecls[ClassName]->getMethodType(mtdIdent->name);
+	Value * MtdId=ConstantInt::get(Type::getInt64Ty(getGlobalContext()),NamedClassDecls[ClassName]->getMethodId(mtdIdent->name), true);
+	if ( MtdId == NULL ) {
+    		std::cout << " [ IR ] < CetMtdCallExpr::codeGen > Error : Method not found."<< std::endl ;
+	}
+	Value * my_vtable=Builder.CreateLoad(Builder.CreateStructGEP(NamedClassDecls[ClassName]->getClassLLVMType(),arg[0],0));
+	Value * my_func_p=Builder.CreateStructGEP(NamedClassDecls[ClassName]->getVTableType(),my_vtable,NamedClassDecls[ClassName]->getMethodId(mtdIdent->name));
 	Value * my_func=Builder.CreateLoad(my_func_p);
 	return Builder.CreateCall(my_func,argRef);
 }
 
 Type * MtdDecl::getFunctionType()
 {
-	if(func==NULL) {
-		func=Function::Create(FunctionType::get(rtnType->typeGen(),*(varArgList.getTypeArray(Owner->getClassLLVMType()->getPointerTo())),false),Function::ExternalLinkage,mtdIdent->name,TheModule);
-		llvmType = func->getFunctionType();
+	if( llvmType == NULL ) {
+		std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its LLVM type ."<< std::endl ;
+		vector<Type*> typeVec ; 
+		typeVec.clear();
+		typeVec.push_back( Owner->getClassLLVMType()->getPointerTo() ) ; 
+		std::vector<class VarArg*>::iterator vait ; 
+		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ ) 
+			typeVec.push_back( (*vait)->getLLVMType() ) ; 
+		ArrayRef<Type*> argTypeVec( typeVec ) ; 
+		llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false); 
+		func = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->classIdent->name + std::string("_") + mtdIdent->name , TheModule); 
+		llvmType = func->getType();
 	}
 	return llvmType;	
 }
 
 Function * MtdDecl::codeGen()
 {
-	BasicBlock * OldBB = Builder.GetInsertBlock();
-	//Store the old blocks
-	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , mtdIdent->name + std::string("_entry") , llvmFunc);
-	//Create a new Function 
+	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its IR code ."<< std::endl ;
+	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , mtdIdent->name + std::string("_entry") , func);
+	Builder.SetInsertPoint( func_entry ) ;
+	
 	NamedValues.clear();
-	
-	Function::ArgumentListType & argList = llvmFunc->getArgumentList();
-	Function::ArgumentListType & ArgL = llvmFunc->getArgumentList();
-	
-	Function::ArgumentListType::iterator ait = argList.begin();
-	Function::arg_iterator Argi = argList.begin();
 
-		
-//	Owner->setNamedField( (Value*)(ArgL.begin()) );
-	
-//	std::vector< class VarArg * > vit ; 
-	
-//	NamedValuse[std::string("this")] = Builder.CreateStore(
-
-	int j ; 
-	for( Argi = ArgL.begin() , Argi++ ; Argi != ArgL.end() ; j++ , Argi++ ) {
-		Value * Alloca = Builder.CreateAlloca( varArgList.declList[j]->getLLVMType() ) ; 		 
-		Builder.CreateStore( Argi , Alloca ) 
-		NamedValues[varArgList.declList[j]->varIdent->name] = Alloca ;
+	int j = 0 ; 
+	for( auto &Arg : func->args() ) {
+		if ( j == 0 ) {
+			NamedValues[std::string("this")] = &Arg ; 
+		} else {
+			NamedValues[varArgList.declList[j-1]->varIdent->name] = &Arg ;
+		}
+		j++;
 	}
-	
+	Owner->setNamedField(NamedValues[std::string("this")]);
 
-	
 	stmtList.codeGen();
 	Value * retval;
 	retval=rtnExpr->codeGen();
 	Builder.CreateRet(retval);
-	Builder.SetInsertPoint(OldBB);
+	verifyFunction( *func ) ;
+	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
+	return NULL;
 }
 
 Function * MtdDecl::getFunction()
 {
+	if ( isCreated ) return func ; 
+	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing."<< std::endl ;
 	getFunctionType();
 	codeGen();
+	isCreated = true ; 
+	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" has been processed successfully ."<< std::endl ;
 	return func;
 }
 
 Value* ObjNewExpr::codeGen()
 {
-	Value *var = new GlobalVariable(*TheModule,NamedClassDecls[tarIdent->name]->getClassLLVMType(),false,GlobalValue::ExternalLinkage,nullptr);
+	
+	std::cout << " [ IR ] < ObjNewExpr::codeGen > Now allocating an object ."<< std::endl ;
+	Value * mallocSize = ConstantExpr::getSizeOf(
+					NamedClassDecls[tarIdent->name]->getClassLLVMType());
+	mallocSize = ConstantExpr::getTruncOrBitCast( cast<Constant>(mallocSize) , Type::getInt64Ty(getGlobalContext()));
+	Instruction * var_malloc=CallInst::CreateMalloc(	Builder.GetInsertBlock(),
+					Type::getInt64Ty(getGlobalContext()),
+					NamedClassDecls[tarIdent->name]->getClassLLVMType(),
+					mallocSize, nullptr , nullptr , "_malloc");
+	Builder.Insert(var_malloc);
+	Value *var = var_malloc ; //Builder.CreateBitCast(var_malloc,NamedClassDecls[tarIdent->name]->getClassLLVMType()->getPointerTo());
+	// new GlobalVariable(*TheModule,
+//NamedClassDecls[tarIdent->name]->getClassLLVMType()
+//,false,GlobalValue::ExternalLinkage,nullptr);
+	
 	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;	
 	Builder.CreateStore(NamedClassDecls[tarIdent->name]->getVTableLoc(),vtableField);
 	return var;
 }
 
+/*
 void VarArgList::codeGen(Type* ClassType)
 {
 	if(!__codeGen)return;
@@ -542,8 +613,9 @@ ArrayRef<Type*>* VarArgList::getTypeArray(Type * ClassType)
 	codeGen(ClassType);
 	return &TypeArray;
 }
+*/
 
-llvm::Type* ClassIdentType::typeGen() {
+llvm::Type* ClassIdentType::llvmTypeGen() {
 	if (tarType) return tarType;
 	if ( NamedClassDecls.count( classIdent->name ) == 0 ) {
 		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
@@ -554,12 +626,13 @@ llvm::Type* ClassIdentType::typeGen() {
 		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
 		return NULL;		
 	}
-	tarType = tarClassDecl->getClassLLVMType();
+	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
+	
 	return tarType;		
 }
 
 llvm::Type* VarArg::getLLVMType(){
     	if ( llvmType ) return llvmType ; 
-	llvmType = varType->typeGen();
+	llvmType = varType->llvmTypeGen();
 	return llvmType;
 }

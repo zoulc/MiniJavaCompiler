@@ -137,12 +137,13 @@ public:
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) , 
-    stmtList(*_sL) , rtnExpr(_rE) , func(NULL) {} ; 
+    stmtList(*_sL) , rtnExpr(_rE) {} ; 
     llvm::Type * llvmType; 
     llvm::Type * getFunctionType();
     Function * codeGen();
     Function * llvmFunc;
     Function * getFunction();
+    bool isCreated;
 };
 
 class MtdDeclList {
@@ -459,8 +460,8 @@ public:
     ArrAssignStmt( Ident * _aI ,
                    Expr * _aE ,
                    Expr * _vE )
-    : arrIdent(_aI) , addressExpr(_aE) ,
-    valueExpr(_vE) {} ;
+    : arrIdent(_aI) , valueExpr(_aE) ,
+    addressExpr(_vE) {} ;
 };
 
 class VarDeclStmt : public Stmt {
@@ -483,32 +484,33 @@ public:
     TypeInfo(){};
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
-    virtual llvm::Type* typeGen();
+    virtual llvm::Type* llvmTypeGen();  
 };
 
 class IntType : public TypeInfo {
 public:
     IntType() : TypeInfo("int") {} ;
-    virtual llvm::Type* typeGen();
+    virtual llvm::Type* llvmTypeGen();
 };
 
 class ArrType : public TypeInfo {
 public:
     TypeInfo* elemType ;
     ArrType( TypeInfo* _e )
-    : elemType(_e) , TypeInfo("Arr") {} ;
+    : TypeInfo("Arr") , elemType(_e){} ;
 };
 
 class BoolType : public TypeInfo {
 public:
     BoolType() : TypeInfo("boolean") { } ;
-    virtual llvm::Type* typeGen();
+    virtual llvm::Type* llvmTypeGen();
 };
 
 class ClassIdentType : public TypeInfo {
 public:
     Ident * classIdent ;
+    
     ClassIdentType(Ident *_cI )
-    : classIdent(_cI) , TypeInfo("Class") {} ;
-    virtual llvm::Type* typeGen();
+    : TypeInfo("Class") , classIdent(_cI) {} ;
+    virtual llvm::Type* llvmTypeGen();
 };
