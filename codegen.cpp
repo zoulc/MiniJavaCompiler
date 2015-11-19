@@ -557,6 +557,7 @@ Function * MtdDecl::codeGen()
 	retval=rtnExpr->codeGen();
 	Builder.CreateRet(retval);
 	verifyFunction( *func ) ;
+	TheFPM->run(*func);
 	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	return NULL;
 }
