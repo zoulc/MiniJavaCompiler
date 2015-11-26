@@ -637,3 +637,21 @@ llvm::Type* VarArg::getLLVMType(){
 	llvmType = varType->llvmTypeGen();
 	return llvmType;
 }
+
+llvm::Value* SysOutPrtStmt::codeGen() {
+	llvm::Value* number = prtExpr->codeGen();
+	llvm::Value* format = Builder.CreateGlobalStringPtr("%lld\n");
+	
+	std::vector<llvm::Type *> printfArgs;
+	printfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	printfArgs.push_back(Builder.getInt64Ty());
+	llvm::ArrayRef<llvm::Type*>  argsRef(printfArgs);
+
+	llvm::FunctionType *printfType = 
+		llvm::FunctionType::get(Builder.getInt32Ty(), argsRef, false);
+	llvm::Constant *printfFunc = TheModule->getOrInsertFunction("printf", printfType);
+
+  	std::vector<llvm::Value *> printfValues = { format, number };
+
+  	return Builder.CreateCall(printfFunc, printfValues);
+}

@@ -1,4 +1,8 @@
-define i64 @main() {
+; ModuleID = 'my cool mini-java'
+
+@0 = private unnamed_addr constant [6 x i8] c"%lld\0A\00"
+
+define i32 @main() {
 entry:
   %a = alloca i64
   store i64 1, i64* %a
@@ -21,6 +25,10 @@ else:                                             ; preds = %entry
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
-  %0 = load i64, i64* %a
-  ret i64 1
+  %loadvar5 = load i64, i64* %a
+  %0 = call i32 @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @0, i32 0, i32 0), i64 %loadvar5)
+  ret i32 0
 }
+
+declare i32 @printf(i8*, i64)
+

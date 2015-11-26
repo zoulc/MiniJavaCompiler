@@ -440,6 +440,7 @@ public :
     Expr * prtExpr ;
     SysOutPrtStmt( Expr * _pE )
     : prtExpr(_pE) {} ;
+    virtual llvm::Value* codeGen();
 };
 
 class AssignStmt : public Stmt {
