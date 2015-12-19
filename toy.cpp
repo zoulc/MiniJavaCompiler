@@ -88,6 +88,7 @@ Value *Program::codeGen() {
 //===----------------------------------------------------------------------===//
 
 int main() {
+
   cerr << "Main driver started, running yyparse()..." << endl;
 
   yyparse();
@@ -129,6 +130,7 @@ int main() {
   
   TheFPM->doFinalization();
 
+  freopen("tmp.ll","wb",stderr);
   TheModule->dump();
 
   return 0;

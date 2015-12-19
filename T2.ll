@@ -1,74 +1,99 @@
-%Tester_vtable = type { i64 (%Tester*)*, i64 (%Tester*)* }
-%Tester = type { %Tester_vtable*, i64 }
-%Tseter2 = type { %Tseter2_vtable*, i64, i64 }
-%Tseter2_vtable = type { i64 (%Tester*)*, i64 (%Tseter2*)* }
-
-@Tester_vatble_loc = constant %Tester_vtable { i64 (%Tester*)* @Tester_set, i64 (%Tester*)* @Tester_work }
-@0 = private unnamed_addr constant [6 x i8] c"%lld\0A\00"
-@1 = private unnamed_addr constant [6 x i8] c"%lld\0A\00"
-
-define i64 @Tester_set(%Tester*) {
-set_entry:
-  %1 = getelementptr inbounds %Tester, %Tester* %0, i64 0, i32 1
-  store i64 0, i64* %1, align 4
-  ret i64 0
-}
-
-define i64 @Tester_work(%Tester*) {
-work_entry:
-  %1 = getelementptr inbounds %Tester, %Tester* %0, i64 0, i32 1
-  %loadvar = load i64, i64* %1, align 4
-  %addtmp = add i64 %loadvar, 1
-  store i64 %addtmp, i64* %1, align 4
-  ret i64 %addtmp
-}
-
-define i64 @Tseter2_work(%Tseter2*) {
-work_entry:
-  %1 = getelementptr inbounds %Tseter2, %Tseter2* %0, i64 0, i32 2
-  %loadvar = load i64, i64* %1, align 4
-  %addtmp = add i64 %loadvar, 2
-  store i64 %addtmp, i64* %1, align 4
-  ret i64 %addtmp
-}
-
-define i32 @main() {
-entry:
-  %a = alloca i64
-  %b = alloca %Tester*
-  %malloccall = tail call i8* @malloc(i64 ptrtoint (%Tester* getelementptr (%Tester, %Tester* null, i32 1) to i64))
-  %0 = bitcast i8* %malloccall to %Tester*
-  %1 = getelementptr inbounds %Tester, %Tester* %0, i32 0, i32 0
-  store %Tester_vtable* @Tester_vatble_loc, %Tester_vtable** %1
-  store %Tester* %0, %Tester** %b
-  %loadvar = load %Tester*, %Tester** %b
-  %2 = getelementptr inbounds %Tester, %Tester* %loadvar, i32 0, i32 0
-  %3 = load %Tester_vtable*, %Tester_vtable** %2
-  %4 = getelementptr inbounds %Tester_vtable, %Tester_vtable* %3, i32 0, i32 0
-  %5 = load i64 (%Tester*)*, i64 (%Tester*)** %4
-  %6 = call i64 %5(%Tester* %loadvar)
-  store i64 %6, i64* %a
-  %loadvar1 = load %Tester*, %Tester** %b
-  %7 = getelementptr inbounds %Tester, %Tester* %loadvar1, i32 0, i32 0
-  %8 = load %Tester_vtable*, %Tester_vtable** %7
-  %9 = getelementptr inbounds %Tester_vtable, %Tester_vtable* %8, i32 0, i32 1
-  %10 = load i64 (%Tester*)*, i64 (%Tester*)** %9
-  %11 = call i64 %10(%Tester* %loadvar1)
-  store i64 %11, i64* %a
-  %loadvar2 = load i64, i64* %a
-  %12 = call i64 @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @0, i32 0, i32 0), i64 %loadvar2)
-  %loadvar3 = load %Tester*, %Tester** %b
-  %13 = getelementptr inbounds %Tester, %Tester* %loadvar3, i32 0, i32 0
-  %14 = load %Tester_vtable*, %Tester_vtable** %13
-  %15 = getelementptr inbounds %Tester_vtable, %Tester_vtable* %14, i32 0, i32 1
-  %16 = load i64 (%Tester*)*, i64 (%Tester*)** %15
-  %17 = call i64 %16(%Tester* %loadvar3)
-  store i64 %17, i64* %a
-  %loadvar4 = load i64, i64* %a
-  %18 = call i64 @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @1, i32 0, i32 0), i64 %loadvar4)
-  ret i32 0
-}
-
-declare noalias i8* @malloc(i64)
-
-declare i64 @printf(i8*, i64)
+ Reached CodeGen. 
+ [ TypeCheck ] Tester
+ [ Type Check ] Class Tester now is processing on its base class .
+ [ Type Check ] Class Tester initialize the fields .
+ [ Type Check ] Class Tester initialize the methods .
+ [ Type Check ] Add the method set to Class Tester
+ [ Type Check ] Add the method work to Class Tester
+ [ TypeCheck ] Tseter2
+ [ Type Check ] Class Tseter2 now is processing on its base class .
+ [ Type Check ] Class Tseter2 initialize the fields .
+ [ Type Check ] Class Tseter2 initialize the methods .
+ [ Type Check ] Add the method work to Class Tseter2
+haha
+fuck twice
+fuck
+1
+1
+1
+1
+1
+1
+1
+1
+ All Classes have been checked successfully. 
+ [ IR ] < ClassDecl::codeGen > Class Tester now is processing .
+ [ IR ] < getClassLLVMType > Class Tester now is processing on its LLVM type .
+ [ IR ] < getClassLLVMType > Class Tester create a oblique identifed type .
+ [ IR ] < getClassLLVMType > Class Tester generate the LLVM Type for the fields .
+ [ IR ] < getClassLLVMType > Class Tester initial the VTable's type .
+ [ IR ] < getVTableType > Class Tester now is processing on its VTable's LLVM type .
+ [ IR ] < getVTableType > Class Tester create an oblique type .
+ [ IR ] < getVTableType > Class Tester get the methods' types and fill the whole VTable type .
+ [ IR ] < getVTableType > Add method set to vtable .
+ [ IR ] Class Tester's method set now is processing on its LLVM type .
+ [ IR ] < getVTableType > Add method work to vtable .
+ [ IR ] Class Tester's method work now is processing on its LLVM type .
+ [ IR ] < getVTableType > Class Tester 's VTable's type has been processed successfully .
+ [ IR ] < getClassLLVMType > Class Tester fill the whole type .
+set
+ [ IR ] Class Tester's method set now is processing.
+ [ IR ] Class Tester's method set now is processing on its IR code .
+ [ IR ] < setNamedField > Add the field a at Pos :1 into NamedValues .
+Reached here.
+Creating integer literature: 0
+Creating Assignment statement
+Creating integer literature: 0
+ [ IR ] Class Tester's method set have been generated successfully  .
+ [ IR ] Class Tester's method set has been processed successfully .
+work
+ [ IR ] Class Tester's method work now is processing.
+ [ IR ] Class Tester's method work now is processing on its IR code .
+ [ IR ] < setNamedField > Add the field a at Pos :1 into NamedValues .
+Reached here.
+Creating integer literature: 1
+Creating Assignment statement
+ [ IR ] Class Tester's method work have been generated successfully  .
+ [ IR ] Class Tester's method work has been processed successfully .
+ [ IR ] < ClassDecl::codeGen > Class Tester has been generated successfuly .
+ [ IR ] < ClassDecl::codeGen > Class Tseter2 now is processing .
+ [ IR ] < getClassLLVMType > Class Tseter2 now is processing on its LLVM type .
+ [ IR ] < getClassLLVMType > Class Tseter2 create a oblique identifed type .
+ [ IR ] < getClassLLVMType > Class Tseter2 generate the LLVM Type for the fields .
+ [ IR ] < getClassLLVMType > Class Tseter2 initial the VTable's type .
+ [ IR ] < getVTableType > Class Tseter2 now is processing on its VTable's LLVM type .
+ [ IR ] < getVTableType > Class Tseter2 create an oblique type .
+ [ IR ] < getVTableType > Class Tseter2 get the methods' types and fill the whole VTable type .
+ [ IR ] < getVTableType > Add method set to vtable .
+ [ IR ] < getVTableType > Add method work to vtable .
+ [ IR ] Class Tseter2's method work now is processing on its LLVM type .
+ [ IR ] < getVTableType > Class Tseter2 's VTable's type has been processed successfully .
+ [ IR ] < getClassLLVMType > Class Tseter2 fill the whole type .
+set
+work
+ [ IR ] Class Tseter2's method work now is processing.
+ [ IR ] Class Tseter2's method work now is processing on its IR code .
+ [ IR ] < setNamedField > Add the field a at Pos :1 into NamedValues .
+ [ IR ] < setNamedField > Add the field b at Pos :2 into NamedValues .
+Reached here.
+Creating integer literature: 2
+Creating Assignment statement
+ [ IR ] Class Tseter2's method work have been generated successfully  .
+ [ IR ] Class Tseter2's method work has been processed successfully .
+ [ IR ] < ClassDecl::codeGen > Class Tseter2 has been generated successfuly .
+ All Classes have been initialized successfully. 
+ [ IR ] < ObjNewExpr::codeGen > Now allocating an object .
+ [ IR ] < getVTableLoc > Class Tester now is processing on its VTable's Global Location .
+ [ IR ] < getVTableLoc > Class Tester fill's the initial data with the Virtual Functions.
+ [ IR ] < getVTableLoc > Class Tester generate the initial constants .
+ [ IR ] < getVTableLoc > Class Tester generate the global table with constants .
+Creating Assignment statement
+ [ IR ] < CetMtdCallExpr::codeGen > now is processing.
+Debug :Tester
+Creating Assignment statement
+ [ IR ] < CetMtdCallExpr::codeGen > now is processing.
+Debug :Tester
+Creating Assignment statement
+ [ IR ] < CetMtdCallExpr::codeGen > now is processing.
+Debug :Tester
+Creating Assignment statement
