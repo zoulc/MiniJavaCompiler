@@ -6,6 +6,6 @@ class QuickSort{
 		a = a + 1;
 	else
 		a = a + a;
-	System.out.println(new QS().Start(10));
+	System.out.println(a);
     }
 }

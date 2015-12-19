@@ -39,6 +39,7 @@ comment		\/\/[^\n]*
 "new"			return TOKEN(TNEW);
 "length"		return TOKEN(TLENGT);
 "System.out.println"	return TOKEN(TSYSOUT);
+"System.in.read"	return TOKEN(TSYSIN);
 {identifier}		SAVE_TOKEN; return TIDENT;
 {number}		SAVE_TOKEN; return TNUMBER;
 "("			return TOKEN(TLPAREN);

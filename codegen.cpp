@@ -836,6 +836,7 @@ Function * MtdDecl::codeGen()
 	retval=rtnExpr->codeGen();
 	Builder.CreateRet(retval);
 	verifyFunction( *func ) ;
+	TheFPM->run(*func);
 	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	return NULL;
 }
@@ -916,3 +917,40 @@ llvm::Type* VarArg::getLLVMType(){
 	return llvmType;
 }
 
+llvm::Value* SysOutPrtStmt::codeGen() {
+	llvm::Value* number = prtExpr->codeGen();
+	llvm::Value* format = Builder.CreateGlobalStringPtr("%lld\n");
+	
+	std::vector<llvm::Type *> printfArgs;
+	printfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	printfArgs.push_back(Builder.getInt64Ty());
+	llvm::ArrayRef<llvm::Type*>  argsRef(printfArgs);
+
+	llvm::FunctionType *printfType = 
+		llvm::FunctionType::get(Builder.getInt64Ty(), argsRef, false);
+	llvm::Constant *printfFunc = TheModule->getOrInsertFunction("printf", printfType);
+
+  	std::vector<llvm::Value *> printfValues = { format, number };
+
+  	return Builder.CreateCall(printfFunc, printfValues);
+}
+
+llvm::Value* SysInReadExpr::codeGen() {
+	llvm::Value* number = Builder.CreateAlloca( Builder.getInt64Ty(), 0, "" );
+	llvm::Value* format = Builder.CreateGlobalStringPtr("%lld");
+
+	std::vector<llvm::Type *> scanfArgs;
+	scanfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	scanfArgs.push_back(Builder.getInt64Ty()->getPointerTo());
+	llvm::ArrayRef<llvm::Type*> argsRef(scanfArgs);
+
+	llvm::FunctionType *scanfType =
+		llvm::FunctionType::get(Builder.getInt64Ty(), argsRef, false);
+	llvm::Constant *scanfFunc = TheModule->getOrInsertFunction("scanf", scanfType);
+
+	std::vector<llvm::Value *> scanfValues = { format, number };
+
+	Builder.CreateCall(scanfFunc, scanfValues);
+
+	return Builder.CreateLoad(number, "");
+}

@@ -481,6 +481,13 @@ public :
     SysOutPrtStmt( Expr * _pE )
     : prtExpr(_pE) {} ;
 	virtual TypeInfo* typeCheck();
+    virtual llvm::Value* codeGen();
+};
+
+class SysInReadExpr : public Expr {
+public :
+    SysInReadExpr( ) {} ;
+    virtual llvm::Value* codeGen();
 };
 
 class AssignStmt : public Stmt {
