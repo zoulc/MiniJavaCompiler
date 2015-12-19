@@ -1,13 +1,119 @@
-/* Type Checking*/
-TypeInfo* ObjNewExpr::typeCheck() 
+/* Type Check */
+TypeInfo* ObjNewExpr::typeCheck()
 {
 	if ( exprType ) return exprType;
 	if ( TypeNamedClassDecls.count( tarIdent->name ) == 0 ) {
 		cout<<"Error , class not defined"<<endl;
-		return NULL ; 	
+		return NULL ;
 	}
 	exprType = new ClassIdentType( tarIdent );
-	return exprType ; 
+	return exprType ;
+}
+
+TypeInfo* GetLenExpr::typeCheck()
+{
+	if(exprType) return exprType ;
+	exprType = new IntType();
+	return exprType ;
+}
+
+TypeInfo* IntLiterExpr::typeCheck()
+{
+	if (exprType) return exprType;
+	exprType = new IntType();
+	return exprType;
+}
+
+TypeInfo* TrueLiterExpr::typeCheck()
+{
+	if (exprType) return exprType;
+	exprType = new IntType();
+	return exprType;
+}
+
+TypeInfo* FalseLiterExpr::typeCheck()
+{
+	if (exprType) return exprType;
+	exprType = new IntType();
+	return exprType;
+}
+
+TypeInfo* MainClassDecl::typeCheck()
+{
+	if ( mainClassDeclType ) return mainClassDeclType ;
+	std::vector< class Stmt * >::iterator sit ;
+	for ( sit = stmtList.stmtList.begin() ;
+		  sit != stmtList.stmtList.end() ; sit ++ ) {
+		if ( ( (*sit)->typeCheck() ) == NULL ) return NULL ;
+	}
+	mainClassDeclType = new VoidType();
+	return mainClassDeclType ;
+}
+
+TypeInfo* SiOpExpr::typeCheck()
+{
+	std::cout <<"  [ Type Check ] \"SiOpExpr\" should not be type checked. " << std::endl ;
+	return NULL ;
+}
+
+TypeInfo* NegExpr::typeCheck()
+{
+	if (exprType) return exprType ;
+	tarExpr->typeCheck();
+	exprType = new IntType();
+	return exprType ;
+}
+
+TypeInfo* ParenExpr::typeCheck()
+{
+	if(exprType) return exprType;
+	exprType = tarExpr->typeCheck();
+	return exprType;
+}
+
+TypeInfo* BlockStmt::typeCheck()
+{
+	if(stmtType) return stmtType;
+	std::vector<class Stmt *>::iterator sit ;
+	for ( sit = stmtList.stmtList.begin() ; sit != stmtList.stmtList.end() ; sit ++ )
+		(*sit)->typeCheck();
+	stmtType = new VoidType();
+	return stmtType;
+}
+
+TypeInfo* IfThenElseStmt::typeCheck()
+{
+	if(stmtType) return stmtType;
+	condExpr->typeCheck();
+	thenStmt->typeCheck();
+	elseStmt->typeCheck();
+	stmtType = new VoidType();
+	return stmtType;
+}
+
+TypeInfo* WhileStmt::typeCheck()
+{
+	if(stmtType) return stmtType ;
+	condExpr->typeCheck();
+	bodyStmt->typeCheck();
+	stmtType = new VoidType();
+	return stmtType ;
+}
+
+TypeInfo* SysOutPrtStmt::typeCheck()
+{
+	if (stmtType) return stmtType;
+	prtExpr->typeCheck();
+	stmtType = new VoidType();
+	return stmtType ;
+}
+
+TypeInfo* AssignStmt::typeCheck()
+{
+	if ( stmtType ) return stmtType ;
+	valueExpr->typeCheck();
+	stmtType = new VoidType();
+	return stmtType ;
 }
 
 TypeInfo* GetMtdCallExpr::typeCheck()
@@ -16,98 +122,183 @@ TypeInfo* GetMtdCallExpr::typeCheck()
 	if ( tarExpr->typeCheck() == NULL ) return NULL;
 	if ( tarExpr->typeCheck()->typeName != "Class" ) {
 		cout<<"Error empty class"<<endl;
-		return NULL ; 	
+		return NULL ;
 	}
-	class ClassDecl * cls = TypeNamedClassDecls[((class ClassIdentType*)tarExpr->typeCheck())->classIdent->name] ; 
+	class ClassDecl * cls = TypeNamedClassDecls[((class ClassIdentType*)tarExpr->typeCheck())->classIdent->name] ;
 	cls->typeCheck();
 	exprType = cls->getMethodRtnType( mtdIdent->name ) ;
-	return exprType ; 
+	return exprType ;
 }
 
 TypeInfo* IdentAccessExpr::typeCheck()
 {
-	if ( exprType ) return exprType ; 
+	if ( exprType ) return exprType ;
 	if ( TypeNamedValues.count( tarIdent->name ) == 0 ) {
 		cout<<"Error"<<endl;
 		return NULL;
 	}
-	exprType = TypeNamedValues[ tarIdent->name ] ; 
-	return exprType ;   
+	exprType = TypeNamedValues[ tarIdent->name ] ;
+	return exprType ;
 }
 
-TypeInfo* VarDecl::typeCheck() 
+TypeInfo* VarDecl::typeCheck()
 {
 	if ( varType ) return varType;
-	return NULL ; 
-} 
+	return NULL ;
+}
 
-TypeInfo* ClassDecl::typeCheck() 
+TypeInfo* VarDeclStmt::typeCheck()
 {
-	if ( classDeclType ) return classDeclType ; 
-	cout << " [ TypeCheck ] " << classIdent->name << endl ; 
-	TypeNamedClassDecls[ classIdent->name ] = this ; 
-	getClassLLVMType();
-	if ( baseClass ) { 
-		if ( baseClass->typeCheck() == NULL ) return NULL ;
+	TypeNamedValues[varIdent->name] = type ;
+	return type ;
+}
+
+TypeInfo* ClassDecl::typeCheck()
+{
+	if ( classDeclType ) return classDeclType ;
+	cout << " [ TypeCheck ] " << classIdent->name << endl ;
+	TypeNamedClassDecls[ classIdent->name ] = this ;
+	NamedClassDecls[ classIdent->name ] = this ;
+	classDeclType = new VoidType();
+
+	//Fetch Base Class and load methods and fields from it .
+	std::cout << " [ Type Check ] Class " << classIdent->name << " now is processing on its base class ."<< std::endl ;
+	if ( extClassIdent != NULL ) {
+		std::string extClassName = extClassIdent->name ;
+		if ( NamedClassDecls[extClassName] == 0 ) {
+			std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s base class hasn't been defined."<<std::endl;
+			return NULL ;
+		}
+		baseClass = NamedClassDecls[extClassName] ;
+		std::vector<class VarDecl*>::iterator vit;
+
+		//first exam the base Class
+		if ( ! ( baseClass->typeCheck() ) ) {
+			return NULL ;
+		}
+
+		//Add all the fields of base class into this class
+		for( vit = (baseClass->fieldDecl).begin() ; vit !=(baseClass->fieldDecl).end() ; vit++ ) {
+			fieldDecl.push_back((*vit));
+			TypeInfo * itType = (*vit)->typeCheck();
+			if ( itType == NULL ) {
+				std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name << std::endl;
+				return NULL ;
+			}
+			fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
+		}
+
+		//Add all the methods' declartions into this class
+		std::vector<class MtdDecl*>::iterator mit;
+		for( mit = (baseClass->mtdDecl).begin() ;
+			 mit !=(baseClass->mtdDecl).end() ; mit++ ) {
+			if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
+				mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
+				mtdDecl.push_back((*mit));
+				continue ;
+			}
+			int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
+			mtdDecl[mtd_id] = ((*mit));
+		}
 	}
-	std::vector<class MtdDecl*>::iterator mit ; 
+
+	//After that , prepare its own fields and methods .
+	std::cout << " [ Type Check ] Class " << classIdent->name << " initialize the fields ."<< std::endl ;
+	std::vector<class VarDecl*>::iterator vit;
+	for( vit = (varDeclList.declList).begin() ; vit != (varDeclList.declList).end() ; vit++ ) {
+		TypeInfo* itType = (*vit)->typeCheck();
+		if ( itType == NULL ) {
+			std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name << std::endl;
+			return NULL ;
+		}
+		fieldDecl.push_back((*vit));
+		fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
+	}
+
+	std::cout << " [ Type Check ] Class " << classIdent->name << " initialize the methods ."<< std::endl ;
+	std::vector<class MtdDecl*>::iterator mit;
+	for( mit = (mtdDeclList.declList).begin() ; mit !=(mtdDeclList.declList).end() ; mit++ ) {
+		std::cout << " [ Type Check ] Add the method "<<(*mit)->mtdIdent->name<<" to Class "<<classIdent->name<<std::endl;
+		if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
+			mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
+			(*mit)->Owner = this ;
+			mtdDecl.push_back((*mit));
+			continue ;
+		}
+		int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
+		mtdDecl[mtd_id] = (*mit);
+		(*mit)->Owner = this ;
+	}
+
+	// ABANDONED : getClassLLVMType();
 	for ( mit = mtdDecl.begin() ; mit != mtdDecl.end() ; mit ++ ) {
 		TypeNamedValues.clear();
-		std::vector<class VarDecl*>::iterator vit; 
+		std::vector<class VarDecl*>::iterator vit;
 		for( vit = fieldDecl.begin() ; vit != fieldDecl.end() ; vit++ ) {
 		TypeNamedValues[ (*vit)->varIdent->name ]
 			= (*vit)->typeCheck() ;
 		}
-		if ( ((*mit)->typeCheck()) == NULL ) return NULL ; 
+		if ( ((*mit)->typeCheck()) == NULL ) return NULL ;
 	}
-	classDeclType = new VoidType();
-	return classDeclType ;	
+	return classDeclType ;
 }
 
 TypeInfo* VarArg::typeCheck()
 {
-	if ( varType ) return varType ; 		
-	return NULL ; 
-} 
+	if ( varType ) return varType ;
+	return NULL ;
+}
 
 TypeInfo* MtdDecl::typeCheck() {
-	if ( mtdDeclType ) return mtdDeclType ; 
-	std::vector< class VarArg *>::iterator vit ; 
-	for ( vit = varArgList.declList.begin() ; 
+	if ( mtdDeclType ) return mtdDeclType ;
+	std::vector< class VarArg *>::iterator vit ;
+	for ( vit = varArgList.declList.begin() ;
 	      vit != varArgList.declList.end() ; vit ++ ) {
-		TypeNamedValues[(*vit)->varIdent->name] = (*vit)->typeCheck() ; 
+		TypeNamedValues[(*vit)->varIdent->name] = (*vit)->typeCheck() ;
 	}
-	std::vector< class Stmt * >::iterator sit ; 
-	for ( sit = stmtList.stmtList.begin() ; 
-	      sit != stmtList.stmtList.end() ; sit ++ ) { 
+	std::vector< class Stmt * >::iterator sit ;
+	for ( sit = stmtList.stmtList.begin() ;
+	      sit != stmtList.stmtList.end() ; sit ++ ) {
 		if ( ( (*sit)->typeCheck() ) == NULL ) return NULL ;
 	}
-	if ( (rtnExpr->typeCheck()) == NULL ) return NULL ; 
+	if ( (rtnExpr->typeCheck()) == NULL ) return NULL ;
 	mtdDeclType = new VoidType();
-	return mtdDeclType ; 	
+	return mtdDeclType ;
 }
 
 TypeInfo* ClassDecl::getMethodRtnType( std::string mtdName ) {
 	typeCheck();
-	std::vector<class MtdDecl*>::iterator mit ; 
+	std::vector<class MtdDecl*>::iterator mit ;
 	for ( mit = mtdDecl.begin() ; mit != mtdDecl.end() ; mit ++ ) {
-		if ( (*mit)->mtdIdent->name == mtdName ) 
-			return (*mit)->rtnExpr->typeCheck() ; 		
+		if ( (*mit)->mtdIdent->name == mtdName )
+			return (*mit)->rtnExpr->typeCheck() ;
 	}
 	cout<<"Error Method Not Found"<<endl;
-	return NULL ; 
+	return NULL ;
 }
 
 TypeInfo* Stmt::typeCheck() {
-	if ( stmtType ) return stmtType ; 
+	if ( stmtType ) return stmtType ;
 	stmtType = new VoidType();
-	return stmtType ; 
+	return stmtType ;
 }
 
 TypeInfo * Expr::typeCheck() {
 	if ( exprType ) return exprType ;
 	exprType = new IntType();
-	return exprType ; 
+	return exprType ;
+}
+
+TypeInfo* Program::typeCheck() {
+	std::vector<class ClassDecl*>::iterator cit ;
+	for ( cit = classDeclList.declList.begin() ; cit != classDeclList.declList.end() ; cit ++ ) {
+		TypeNamedClassDecls[ (*cit)->classIdent->name ] = (*cit);
+		NamedClassDecls[ (*cit)->classIdent->name ] = (*cit) ;
+	}
+	for ( cit = classDeclList.declList.begin() ; cit != classDeclList.declList.end() ; cit ++ ) {
+		(*cit)->typeCheck();
+ 	}
+	return NULL ;
 }
 
 /* LiterExpr.h */
@@ -378,14 +569,7 @@ void Program::ClassInitial() {
  	}
 }
 
-TypeInfo* Program::typeCheck() {
-	std::vector<class ClassDecl*>::iterator cit ;
-	for ( cit = classDeclList.declList.begin() ; cit != classDeclList.declList.end() ; cit ++ ) {
-		(*cit)->typeCheck();
- 	}
-	return NULL ; 
-}
-
+/*
 ClassDecl* ClassDecl::getBaseClass() {
 	std::cout << " [ IR ] < getBaseClass > Class " << classIdent->name << " now is processing on its base class ."<< std::endl ;
 	if ( extClassIdent == NULL ) return NULL ;
@@ -424,50 +608,37 @@ ClassDecl* ClassDecl::getBaseClass() {
 	}
 	return NULL ;
 }
+*/
 
 llvm::Type* ClassDecl::getClassLLVMType() {
 	if ( classLLVMType ) return classLLVMType ;
+	if ( ! ( classDeclType ) ) this->typeCheck();
 	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " now is processing on its LLVM type ."<< std::endl ;
-	getBaseClass();
+	// ABANDONED : getBaseClass();
 	std::string className = classIdent->name ;
+	/*
 	if ( NamedClassDecls[className] != 0 ) {
 		std::cout<<" [Check] Class "<<className<<" have multiple difintion."<<std::endl;
 		return NULL ;
 	}
+	*/
 	NamedClassDecls[className] = this ;
 
 	//make an oblique identified class type , then fill some thing into it.
 	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " create a oblique identifed type ."<< std::endl ;
 	classLLVMType = StructType::create(Builder.getContext() , className );
 
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initialize the fields ."<< std::endl ;
-	std::vector<class VarDecl*>::iterator vit;
-	for( vit = (varDeclList.declList).begin() ;
-	     vit != (varDeclList.declList).end() ; vit++ ) {
-		llvm::Type* itType = (*vit)->getLLVMType();
+	//Generate LLVM Type for every fields .
+	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " generate the LLVM Type for the fields ."<< std::endl ;
+	std::vector<class VarDecl*>::iterator it;
+	for( it = fieldDecl.begin() ;
+		 it != fieldDecl.end() ; it++ ) {
+		llvm::Type* itType = (*it)->getLLVMType();
 		if ( itType == NULL ) {
 			std::cout<<" [Check] ClassDecl "<<classIdent->name<<
-			"'s field which named "<< (*vit)->varIdent->name << std::endl;
+			"'s field which named "<< (*it)->varIdent->name << std::endl;
 			return NULL ;
 		}
-		fieldDecl.push_back((*vit));
-		fieldName2Pos[(*vit)->varIdent->name] = fieldDecl.size();
-	}
-
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initialize the methods ."<< std::endl ;
-	std::vector<class MtdDecl*>::iterator mit;
-	for( mit = (mtdDeclList.declList).begin() ;
-		 mit !=(mtdDeclList.declList).end() ; mit++ ) {
-	    std::cout << " [ IR ] < getClassLLVMType > Add the method "<<(*mit)->mtdIdent->name<<" to Class "<<classIdent->name<<std::endl;
-	    if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
-			mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
- 			(*mit)->Owner = this ; 
-			mtdDecl.push_back((*mit));
- 			continue ;
- 		}
- 		int mtd_id = mtdName2Pos[(*mit)->mtdIdent->name] ;
- 		mtdDecl[mtd_id] = (*mit);
-                (*mit)->Owner = this ; 
 	}
 
 	std::vector<llvm::Type*> classTypeVec;
@@ -479,7 +650,6 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 
 	//push the fields' types into the class TypeVec
 	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " fill the whole type ."<< std::endl ;
-	std::vector<class VarDecl*>::iterator it;
 	for( it = fieldDecl.begin() ;
 	     it != fieldDecl.end() ; it++ ) {
 		llvm::Type* itType = (*it)->getLLVMType();
@@ -492,8 +662,9 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 llvm::Type* ClassDecl::getVTableType()
 {
 	if ( vtableType ) return vtableType ;
+	if ( ! ( classDeclType ) ) this->typeCheck();
 	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " now is processing on its VTable's LLVM type ."<< std::endl ;
-	getBaseClass();
+	// ABANDONED : getBaseClass();
 	//make an oblique identified class type , then fill some thing into it.
 	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " create an oblique type ."<< std::endl ;
 	vtableType = StructType::create(Builder.getContext() , (classIdent->name) + std::string("_vtable"));
@@ -506,7 +677,7 @@ llvm::Type* ClassDecl::getVTableType()
 		std::cout << " [ IR ] < getVTableType > Add method " << (*mit)->mtdIdent->name << " to vtable ."<<std::endl;
 		vtableTypeVec.push_back( (*mit)->getFunctionType());
 	}
-	
+
 	cast<StructType>(vtableType)->setBody( vtableTypeVec );
 	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " 's VTable's type has been processed successfully ."<< std::endl ;
 	return vtableType ;
@@ -517,11 +688,11 @@ void ClassDecl::setNamedField( llvm::Value* thisClass )
 	if ( ! ( isa<PointerType>( thisClass->getType() ) ) ) {
 		std::cout<<" [ IR ] < setNamedField > Error : type is not compatible."<<std::endl;
 	}
-	Value * selClass = Builder.CreateLoad( thisClass ) ; 
+	Value * selClass = Builder.CreateLoad( thisClass ) ;
 	if ( ! ( selClass->getType() == getClassLLVMType() ) ) {
 		std::cout<<" [ IR ] < setNamedField > Error : the pointer's type is not correct."<<std::endl;
 	}
-	Value * test = Builder.CreateAlloca( getClassLLVMType() ) ; 
+	Value * test = Builder.CreateAlloca( getClassLLVMType() ) ;
 	if ( ! ( test->getType()  == getClassLLVMType()->getPointerTo() ) ) {
 		std::cout<<" Testing ! Error occurs ! " <<std::endl;
 	}
@@ -627,18 +798,18 @@ Type * MtdDecl::getFunctionType()
 {
 	if( llvmType == NULL ) {
 		std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its LLVM type ."<< std::endl ;
-		vector<Type*> typeVec ; 
+		vector<Type*> typeVec ;
 		typeVec.clear();
-		typeVec.push_back( Owner->getClassLLVMType()->getPointerTo() ) ; 
-		std::vector<class VarArg*>::iterator vait ; 
-		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ ) 
-			typeVec.push_back( (*vait)->getLLVMType() ) ; 
-		ArrayRef<Type*> argTypeVec( typeVec ) ; 
-		llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false); 
-		func = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->classIdent->name + std::string("_") + mtdIdent->name , TheModule); 
+		typeVec.push_back( Owner->getClassLLVMType()->getPointerTo() ) ;
+		std::vector<class VarArg*>::iterator vait ;
+		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ )
+			typeVec.push_back( (*vait)->getLLVMType() ) ;
+		ArrayRef<Type*> argTypeVec( typeVec ) ;
+		llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false);
+		func = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->classIdent->name + std::string("_") + mtdIdent->name , TheModule);
 		llvmType = func->getType();
 	}
-	return llvmType;	
+	return llvmType;
 }
 
 Function * MtdDecl::codeGen()
@@ -646,13 +817,13 @@ Function * MtdDecl::codeGen()
 	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its IR code ."<< std::endl ;
 	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , mtdIdent->name + std::string("_entry") , func);
 	Builder.SetInsertPoint( func_entry ) ;
-	
+
 	NamedValues.clear();
 
-	int j = 0 ; 
+	int j = 0 ;
 	for( auto &Arg : func->args() ) {
 		if ( j == 0 ) {
-			NamedValues[std::string("this")] = &Arg ; 
+			NamedValues[std::string("this")] = &Arg ;
 		} else {
 			NamedValues[varArgList.declList[j-1]->varIdent->name] = &Arg ;
 		}
@@ -671,18 +842,18 @@ Function * MtdDecl::codeGen()
 
 Function * MtdDecl::getFunction()
 {
-	if ( isCreated ) return func ; 
+	if ( isCreated ) return func ;
 	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing."<< std::endl ;
 	getFunctionType();
 	codeGen();
-	isCreated = true ; 
+	isCreated = true ;
 	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" has been processed successfully ."<< std::endl ;
 	return func;
 }
 
 Value* ObjNewExpr::codeGen()
 {
-	
+
 	std::cout << " [ IR ] < ObjNewExpr::codeGen > Now allocating an object ."<< std::endl ;
 	Value * mallocSize = ConstantExpr::getSizeOf(
 					NamedClassDecls[tarIdent->name]->getClassLLVMType());
@@ -696,8 +867,8 @@ Value* ObjNewExpr::codeGen()
 	// new GlobalVariable(*TheModule,
 //NamedClassDecls[tarIdent->name]->getClassLLVMType()
 //,false,GlobalValue::ExternalLinkage,nullptr);
-	
-	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;	
+
+	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;
 	Builder.CreateStore(NamedClassDecls[tarIdent->name]->getVTableLoc(),vtableField);
 	return var;
 }
@@ -712,7 +883,7 @@ void VarArgList::codeGen(Type* ClassType)
 	int i,n=declList.size();
 	for(;i<n;i++)
 		t.push_back(declList[i]->getLLVMType());
-	TypeArray = t ; 
+	TypeArray = t ;
 	__codeGen=1;
 }
 
@@ -727,20 +898,21 @@ llvm::Type* ClassIdentType::llvmTypeGen() {
 	if (tarType) return tarType;
 	if ( NamedClassDecls.count( classIdent->name ) == 0 ) {
 		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
-		return NULL;	
-	}	
-	ClassDecl* tarClassDecl = NamedClassDecls[classIdent->name] ; 
+		return NULL;
+	}
+	ClassDecl* tarClassDecl = NamedClassDecls[classIdent->name] ;
 	if ( tarClassDecl == NULL ) {
 		std::cout<<" [ Check ] Class "<<classIdent->name<<" is not defined."<<std::endl;
-		return NULL;		
+		return NULL;
 	}
 	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
-	
-	return tarType;		
+
+	return tarType;
 }
 
 llvm::Type* VarArg::getLLVMType(){
-    	if ( llvmType ) return llvmType ; 
+    	if ( llvmType ) return llvmType ;
 	llvmType = varType->llvmTypeGen();
 	return llvmType;
 }
+

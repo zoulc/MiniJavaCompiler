@@ -44,6 +44,7 @@ class Stmt {
 public:
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	//virtual Stmt * deepCopy();
 	TypeInfo* stmtType;
 };
 
@@ -51,6 +52,7 @@ class Expr {
 public:
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	//virtual Expr * deepCopy();
 	TypeInfo* exprType;
 };
 
@@ -67,6 +69,7 @@ public:
     StmtList( StmtList & _sL ) : stmtList(_sL.stmtList) {} ;
     StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ;
     virtual llvm::Value* codeGen();
+	//virtual StmtList* deepCopy();
 } ;
 
 class VarArg {
@@ -78,14 +81,15 @@ public:
     llvm::Type* llvmType;
     llvm::Type* getLLVMType();
     virtual TypeInfo * typeCheck();
+	//virtual VarArg* deepCopy();
 };
 
 class VarArgList {
 public:
     std::vector< class VarArg * > declList ;
 	bool __codeGen;
-	ArrayRef<Type*> TypeArray; 
-	
+	ArrayRef<Type*> TypeArray;
+
 	VarArgList(){};
     VarArgList( VarArgList* _vAL ,
                    VarArg* _vA )
@@ -93,12 +97,13 @@ public:
     {
         declList.push_back(_vA);
     }
-    VarArgList( VarArgList & _vAL ) : declList(_vAL.declList) {} ; 
-    VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ; 
+    VarArgList( VarArgList & _vAL ) : declList(_vAL.declList) {} ;
+    VarArgList( VarArgList * _vAL ) : declList(_vAL->declList) {} ;
 
 	ArrayRef<Type*>* getTypeArray(Type*);
 	void codeGen(llvm::Type* ClassType);
 	void setNamedValues();
+	//virtual VarArg* deepCopy();
 };
 
 class VarDecl {
@@ -128,7 +133,7 @@ public:
 
 class MtdDecl {
 private:
-    Function * func ; 
+    Function * func ;
 public:
     Ident *mtdIdent ;
     ClassDecl* Owner;
@@ -142,9 +147,9 @@ public:
              StmtList* _sL ,
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
-    varArgList(_vAL) , 
-    stmtList(*_sL) , rtnExpr(_rE) {} ; 
-    llvm::Type * llvmType; 
+    varArgList(_vAL) ,
+    stmtList(*_sL) , rtnExpr(_rE) {} ;
+    llvm::Type * llvmType;
     llvm::Type * getFunctionType();
     Function * codeGen();
     Function * llvmFunc;
@@ -245,6 +250,24 @@ public:
     classIdent(_cI) , extClassIdent(_eCI) ,
     varDeclList(_vDL) , mtdDeclList(_mDL) {};
 
+	//Type Checking
+	/*
+	    0. prepare some basic information ( like NamedClassDecls etc )
+		1. get Base Class and Exam whether it is type checked .
+		2. Put all the methods and variables from the Base Class into this Class Declaration .
+		3. Put its own fields and methods into the Base Class into this Class Declaration .
+		4. Then do some more checkings in the newly added methods .
+	*/
+	// ABANDONED : ClassDecl * getBaseClass();
+	ClassDecl * baseClass ;
+	std::vector<class VarDecl*> fieldDecl;
+	std::map<std::string , int>	fieldName2Pos;
+	std::vector<class MtdDecl*> mtdDecl;
+	std::map<std::string , int> mtdName2Pos;
+	TypeInfo * typeCheck();
+	TypeInfo * classDeclType;
+	TypeInfo * getMethodRtnType( std::string mtdName ) ;
+
 	/*
 	The baisc Field of the ClassDecl:
 	*/
@@ -252,20 +275,12 @@ public:
 	llvm::Type* classLLVMType;
 
 	//Field
-	std::vector<class VarDecl*> fieldDecl;
-	std::map<std::string , int>	fieldName2Pos;
 	void setNamedField(llvm::Value* thisClass );
 
 	//Method
-	std::vector<class MtdDecl*> mtdDecl;
-	std::map<std::string , int> mtdName2Pos;
 	int getMethodId(std::string mtdName);
 	llvm::Type* getMethodType(std::string mtdName);
 
-	//Base Class.
-	ClassDecl * baseClass ;
-    ClassDecl * getBaseClass();
-    
 	//VTable
 	llvm::Type* vtableType;
 	llvm::Type* getVTableType();
@@ -275,11 +290,7 @@ public:
 	//codeGen
 	llvm::Value* codeGen();
 
-   	//Type Checking 
-	TypeInfo * typeCheck();
-	TypeInfo * classDeclType;
-	TypeInfo * getMethodRtnType( std::string mtdName ) ;
-
+	//virtual ClassDecl* deepCopy();
 };
 
 class ClassDeclList {
@@ -315,6 +326,7 @@ public:
     Expr * tarExpr ;
     GetLenExpr( Expr * _tE )
     : tarExpr(_tE) {} ;
+	virtual TypeInfo* typeCheck();
 };
 
 class GetMtdCallExpr : public Expr{
@@ -325,7 +337,7 @@ public:
     GetMtdCallExpr( Expr * _tE ,
                     Ident * _mI ,
                     ExprList * _fL )
-    : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ; 
+    : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ;
     virtual llvm::Value* codeGen();
     virtual TypeInfo* typeCheck();
 };
@@ -353,6 +365,7 @@ public:
     IntLiterExpr( long long int _v )
     : value(_v) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class TrueLiterExpr : public Expr {
@@ -361,6 +374,7 @@ public:
     TrueLiterExpr()
     : value(true) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class FalseLiterExpr : public Expr {
@@ -369,6 +383,7 @@ public:
     FalseLiterExpr()
     : value(false) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class MainClassDecl {
@@ -379,6 +394,8 @@ public:
     MainClassDecl( Ident * _mCN , Ident * _iA , StmtList * _sL )
     : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL) {};
 
+	virtual TypeInfo* typeCheck();
+	TypeInfo * mainClassDeclType ;
     virtual Value *codeGen();
 };
 
@@ -408,6 +425,7 @@ public:
     SiOpExpr( Expr * _tE )
     : tarExpr ( _tE)  {};
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class NegExpr : public SiOpExpr {
@@ -415,6 +433,7 @@ public:
     NegExpr ( Expr * _tE )
     : SiOpExpr( _tE) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class ParenExpr : public SiOpExpr {
@@ -422,6 +441,7 @@ public:
     ParenExpr ( Expr * _tE)
     : SiOpExpr( _tE ) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class BlockStmt : public Stmt{
@@ -430,6 +450,7 @@ public:
     BlockStmt( StmtList *_sL )
     : stmtList(_sL) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class IfThenElseStmt : public Stmt {
@@ -441,6 +462,7 @@ public:
                     Stmt * _eS )
     : condExpr(_cE) , thenStmt(_tS) , elseStmt(_eS) {};
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class WhileStmt : public Stmt {
@@ -450,6 +472,7 @@ public:
     WhileStmt( Expr * _cE , Stmt * _bS )
     : condExpr(_cE) , bodyStmt(_bS) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class SysOutPrtStmt : public Stmt {
@@ -457,6 +480,7 @@ public :
     Expr * prtExpr ;
     SysOutPrtStmt( Expr * _pE )
     : prtExpr(_pE) {} ;
+	virtual TypeInfo* typeCheck();
 };
 
 class AssignStmt : public Stmt {
@@ -467,6 +491,7 @@ public :
                 Expr * _vE )
     : assignIdent(_aI) , valueExpr(_vE) {};
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class ArrAssignStmt : public Stmt {
@@ -479,6 +504,7 @@ public:
                    Expr * _vE )
     : arrIdent(_aI) , valueExpr(_aE) ,
     addressExpr(_vE) {} ;
+	//virtual TypeInfo* typeCheck();
 };
 
 class VarDeclStmt : public Stmt {
@@ -487,6 +513,7 @@ public:
     Ident * varIdent ;
     VarDeclStmt( TypeInfo* _t , Ident* _i ) : type(_t) , varIdent(_i) {} ;
     virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
 };
 
 class ThisExpr : public Expr {
@@ -501,7 +528,7 @@ public:
     TypeInfo(){};
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
-    virtual llvm::Type* llvmTypeGen();  
+    virtual llvm::Type* llvmTypeGen();
 };
 
 class IntType : public TypeInfo {
@@ -525,13 +552,13 @@ public:
 
 class VoidType : public TypeInfo {
 public:
-    VoidType() : TypeInfo("Void") {} ; 
+    VoidType() : TypeInfo("Void") {} ;
 };
 
 class ClassIdentType : public TypeInfo {
 public:
     Ident * classIdent ;
-    
+
     ClassIdentType(Ident *_cI )
     : TypeInfo("Class") , classIdent(_cI) {} ;
     virtual llvm::Type* llvmTypeGen();

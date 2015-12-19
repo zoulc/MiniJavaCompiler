@@ -8,7 +8,7 @@ class Test{
 	Tester b ; 
         b = new Tester();
 	a = b.work();
-	System.out.println(new QS().Start(10));
+	System.out.println(a);
     }
 }
 
