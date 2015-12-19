@@ -62,7 +62,7 @@
 %token  TIDENT TINT TDOUBLE TNUMBER
 %token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
-%token  TSEMICOLON TSYSOUT
+%token  TSEMICOLON TSYSOUT TSYSIN
 %token  TPLUS TMINUS TMUL TDIV TAND 
 %token  TLF TRF
 %token  TCLASS TVOID TPUBLIC TSTATIC TMAIN TSTRING
@@ -154,6 +154,7 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
      ;
 
 expr : biopexpr { $$ = $1 ; }
+     | TSYSIN TLPAREN TRPAREN { $$ = new SysInReadExpr( ) ; }
      | expr TLF expr TRF { $$ = new ArrAcsExpr( $1 , $3 ) ; }
      | expr TDOT TLENGT { $$ = new GetLenExpr( $1 ) ; }
      | expr TDOT ident TLPAREN exprlist TRPAREN

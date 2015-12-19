@@ -43,11 +43,15 @@ class BiOpExpr;
 class Stmt {
 public:
 	virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
+	TypeInfo* stmtType;
 };
 
 class Expr {
 public:
 	virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
+	TypeInfo* exprType;
 };
 
 class StmtList {
@@ -73,6 +77,7 @@ public:
     : varType(_vT) , varIdent(_vI) {} ;
     llvm::Type* llvmType;
     llvm::Type* getLLVMType();
+    virtual TypeInfo * typeCheck();
 };
 
 class VarArgList {
@@ -104,6 +109,7 @@ public:
     : varType(_vT) , varIdent(_vI) {} ;
 	llvm::Type* llvmType;
     llvm::Type* getLLVMType();
+    TypeInfo* typeCheck();
 };
 
 class VarDeclList {
@@ -144,6 +150,8 @@ public:
     Function * llvmFunc;
     Function * getFunction();
     bool isCreated;
+    virtual TypeInfo* typeCheck();
+    TypeInfo * mtdDeclType;
 };
 
 class MtdDeclList {
@@ -257,7 +265,7 @@ public:
 	//Base Class.
 	ClassDecl * baseClass ;
     ClassDecl * getBaseClass();
-
+    
 	//VTable
 	llvm::Type* vtableType;
 	llvm::Type* getVTableType();
@@ -267,12 +275,17 @@ public:
 	//codeGen
 	llvm::Value* codeGen();
 
+   	//Type Checking 
+	TypeInfo * typeCheck();
+	TypeInfo * classDeclType;
+	TypeInfo * getMethodRtnType( std::string mtdName ) ;
+
 };
 
 class ClassDeclList {
 public:
     std::vector<class ClassDecl *> declList;
-    ClassDeclList(){};
+    ClassDeclList(){ declList.clear();};
     ClassDeclList( ClassDeclList* _cDL ,
                    ClassDecl* _cD )
     : declList(_cDL->declList)
@@ -314,6 +327,7 @@ public:
                     ExprList * _fL )
     : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ; 
     virtual llvm::Value* codeGen();
+    virtual TypeInfo* typeCheck();
 };
 
 class IdentAccessExpr : public Expr {
@@ -322,6 +336,7 @@ public:
     IdentAccessExpr( Ident * _tI )
     : tarIdent(_tI) {} ;
     virtual llvm::Value* codeGen();
+    virtual TypeInfo* typeCheck();
 };
 
 class Ident {
@@ -373,6 +388,7 @@ public:
     ObjNewExpr( Ident * _tI )
     : tarIdent(_tI) {} ;
     virtual llvm::Value* codeGen();
+    virtual TypeInfo* typeCheck();
 };
 
 class Program {
@@ -383,6 +399,7 @@ public:
     : mainClassDecl(_mC) , classDeclList(_cD) {};
     virtual Value *codeGen();
     void ClassInitial();
+    virtual TypeInfo* typeCheck();
 };
 
 class SiOpExpr : public Expr{
@@ -440,6 +457,12 @@ public :
     Expr * prtExpr ;
     SysOutPrtStmt( Expr * _pE )
     : prtExpr(_pE) {} ;
+    virtual llvm::Value* codeGen();
+};
+
+class SysInReadExpr : public Expr {
+public :
+    SysInReadExpr( ) {} ;
     virtual llvm::Value* codeGen();
 };
 
@@ -505,6 +528,11 @@ class BoolType : public TypeInfo {
 public:
     BoolType() : TypeInfo("boolean") { } ;
     virtual llvm::Type* llvmTypeGen();
+};
+
+class VoidType : public TypeInfo {
+public:
+    VoidType() : TypeInfo("Void") {} ; 
 };
 
 class ClassIdentType : public TypeInfo {
