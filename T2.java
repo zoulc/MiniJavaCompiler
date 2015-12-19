@@ -1,12 +1,11 @@
 class Test{
     public static void main(String[] a){
 	int a ;
-	a = 1 ; 
-	while (  a <10  ) { 
-		a = a + 1 ; 
-	}
 	Tester b ; 
         b = new Tester();
+	a = b.set();
+	a = b.work();
+	System.out.println(a);
 	a = b.work();
 	System.out.println(a);
     }
@@ -14,14 +13,22 @@ class Test{
 
 class Tester{
     int a ; 
+    public int set()
+    {
+	a=0;
+	return 0;
+    }
+
     public int work() {
-         return a + 1 ; 
+	a=a+1;
+        return a; 
     }
 }
 
 class Tseter2 extends Tester {
     int b ; 
     public int work() {
-	return b + 1 ; 
+	b=b+2;
+        return b; 
     }
 }

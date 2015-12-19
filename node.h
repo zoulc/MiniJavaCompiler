@@ -392,7 +392,7 @@ public:
     Ident *inputArgs;
     StmtList stmtList ;
     MainClassDecl( Ident * _mCN , Ident * _iA , StmtList * _sL )
-    : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL) {};
+    : mainClassName(_mCN) ,  inputArgs(_iA) , stmtList(_sL), mainClassDeclType(NULL) {};
 
 	virtual TypeInfo* typeCheck();
 	TypeInfo * mainClassDeclType ;

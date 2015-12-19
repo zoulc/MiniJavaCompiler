@@ -40,10 +40,13 @@ TypeInfo* FalseLiterExpr::typeCheck()
 
 TypeInfo* MainClassDecl::typeCheck()
 {
+	std::cout<<"fuck twice"<<std::endl;
 	if ( mainClassDeclType ) return mainClassDeclType ;
 	std::vector< class Stmt * >::iterator sit ;
+	std::cout<<"fuck"<<std::endl;
 	for ( sit = stmtList.stmtList.begin() ;
 		  sit != stmtList.stmtList.end() ; sit ++ ) {
+		std::cout<<"1"<<std::endl;
 		if ( ( (*sit)->typeCheck() ) == NULL ) return NULL ;
 	}
 	mainClassDeclType = new VoidType();
@@ -298,6 +301,8 @@ TypeInfo* Program::typeCheck() {
 	for ( cit = classDeclList.declList.begin() ; cit != classDeclList.declList.end() ; cit ++ ) {
 		(*cit)->typeCheck();
  	}
+	std::cout<<"haha"<<endl;
+	mainClassDecl->typeCheck();
 	return NULL ;
 }
 
@@ -782,7 +787,11 @@ Value * GetMtdCallExpr::codeGen()
 	//cout<<"Check point 4"<<endl;
 	//cout<<(arg[0]->getType())->isPointerTy()<<endl;
 	//cout<<(arg[0]->getType())->isStructTy()<<endl;
-	string ClassName="Tester";
+	//string ClassName="Tester";
+	if(tarExpr->typeCheck()->typeName!="Class")
+		std::cout<<" [ Type Check ] Error tarExp Type in GetMtdCallExpr --"<<tarExpr->typeCheck()->typeName<<endl;
+	string ClassName=((ClassIdentType*)tarExpr->typeCheck())->classIdent->name;
+	cout<<"Debug :"<<ClassName<<endl;
 	Type * MtdType=NamedClassDecls[ClassName]->getMethodType(mtdIdent->name);
 	Value * MtdId=ConstantInt::get(Type::getInt64Ty(getGlobalContext()),NamedClassDecls[ClassName]->getMethodId(mtdIdent->name), true);
 	if ( MtdId == NULL ) {
@@ -864,11 +873,11 @@ Value* ObjNewExpr::codeGen()
 					NamedClassDecls[tarIdent->name]->getClassLLVMType(),
 					mallocSize, nullptr , nullptr , "_malloc");
 	Builder.Insert(var_malloc);
-	Value *var = var_malloc ; //Builder.CreateBitCast(var_malloc,NamedClassDecls[tarIdent->name]->getClassLLVMType()->getPointerTo());
+	Value *var = var_malloc ;
+	//Builder.CreateBitCast(var_malloc,NamedClassDecls[tarIdent->name]->getClassLLVMType()->getPointerTo());
 	// new GlobalVariable(*TheModule,
-//NamedClassDecls[tarIdent->name]->getClassLLVMType()
-//,false,GlobalValue::ExternalLinkage,nullptr);
-
+	//NamedClassDecls[tarIdent->name]->getClassLLVMType()
+	//,false,GlobalValue::ExternalLinkage,nullptr);
 	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;
 	Builder.CreateStore(NamedClassDecls[tarIdent->name]->getVTableLoc(),vtableField);
 	return var;
