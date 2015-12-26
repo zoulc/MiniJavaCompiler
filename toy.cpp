@@ -13,6 +13,21 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+//#include "llvm/ExecutionEngine/Interpreter.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/IR/ValueSymbolTable.h"
 #include <cctype>
 #include <cstdio>
 #include <map>
@@ -32,11 +47,14 @@ extern int yyparse();
 // Code Generation
 //===----------------------------------------------------------------------===//
 
-static std::map<std::string, Value*> NamedClassTypes ; 
-static std::map<std::string, ClassDecl*> NamedClassDecls ; 
-static std::map<std::string, ClassDecl*> TypeNamedClassDecls ;
-static std::map<std::string, TypeInfo*> TypeNamedValues ; 
+static std::map<std::string, Value*> NamedClassTypes ;
+static std::map<std::string, ClassDecl*> NamedClassDecls ;
+static std::map<std::string, ItfaceDecl*> NamedItfaceDecls ;
 
+static std::map<std::string, ClassDecl*> TypeNamedClassDecls ;
+static std::map<std::string, TypeInfo*> TypeNamedValues ;
+static std::map<std::string, ItfaceDecl*> TypeNamedItfaceDecls ;
+static std::map<std::string, Ident*> IdentNamedValues ;
 
 static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -75,7 +93,6 @@ Value *MainClassDecl::codeGen() {
 }
 
 Value *Program::codeGen() {
-  std::cout<<" Reached CodeGen. "<<std::endl;
   this->typeCheck();
   std::cout<<" All Classes have been checked successfully. "<<std::endl;
   this->ClassInitial();
@@ -88,6 +105,7 @@ Value *Program::codeGen() {
 //===----------------------------------------------------------------------===//
 
 int main() {
+
   cerr << "Main driver started, running yyparse()..." << endl;
 
   yyparse();
@@ -126,10 +144,14 @@ int main() {
 
   cerr << "All of the generated code:" << endl;
   // Print out all of the generated code.
-  
+
   TheFPM->doFinalization();
 
-  TheModule->dump();
+  //freopen("tmp.ll","wb",stderr);
+  //TheModule->dump();
+  std::error_code EC;
+  llvm::raw_fd_ostream out("tmp.ll",EC,llvm::sys::fs::F_None);
+  TheModule->print(out,nullptr);
 
   return 0;
 }

@@ -89,7 +89,13 @@ extern int yydebug;
     TLENGT = 299,
     TNEW = 300,
     TTHIS = 301,
-    TWHILE = 302
+    TWHILE = 302,
+    TINVOKER = 303,
+    TARROW = 304,
+    TITFACE = 305,
+    TIMPLEM = 306,
+    TINSTANCEOF = 307,
+    TOBJECT = 308
   };
 #endif
 
@@ -105,22 +111,30 @@ union YYSTYPE
     Expr* expr;
     Stmt* stmt;
     BiOpExpr* biopexpr;
-    MainClassDecl * mainclassdecl ; 
+    MainClassDecl * mainclassdecl ;
     ClassDeclList * classdecllist ;
+    ItfaceDeclList * itfacedecllist ;
     MtdDeclList * mtddecllist ;
-    ExprList * exprlist ; 
+    AbsMtdDeclList * absmtddecllist ;
+    ExprList * exprlist ;
     StmtList * stmtlist ;
     Program * program ;
     ClassDecl * classdecl ;
+    ItfaceDecl * itfacedecl ;
     MtdDecl * mtddecl ;
-    VarDeclList * vardecllist ; 
+    AbsMtdDecl* absmtddecl ;
+    VarDeclList * vardecllist ;
     VarArgList * vararglist ;
-    VarDecl * vardecl ; 
-    VarArg * vararg ; 
+    VarDecl * vardecl ;
+    VarArg * vararg ;
+    ExtItface * extitface ;
+    ExtItfaceList * extitfacelist ;
+    ImpItface * impitface ;
+    ImpItfaceList * impitfacelist ;
     std::string *string ;
     int token;
 
-#line 124 "parser.hpp" /* yacc.c:1909  */
+#line 138 "parser.hpp" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

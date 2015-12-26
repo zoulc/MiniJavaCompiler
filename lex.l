@@ -20,6 +20,11 @@ comment		\/\/[^\n]*
 %%
 {comment}		{}
 {ws}			{}
+"Object"        return TOKEN(TOBJECT);
+"instanceof"    return TOKEN(TINSTANCEOF);
+"interface"     return TOKEN(TITFACE);
+"implements"     return TOKEN(TIMPLEM);
+"Invoker"       return TOKEN(TINVOKER);
 "class"			return TOKEN(TCLASS);
 "public"		return TOKEN(TPUBLIC);
 "static"		return TOKEN(TSTATIC);
@@ -58,5 +63,6 @@ comment		\/\/[^\n]*
 "."			return TOKEN(TDOT);
 ","			return TOKEN(TCOMMA);
 ";"			return TOKEN(TSEMICOLON);
+"->"        return TOKEN(TARROW);
 .			{ printf("unrecognized: %s\n", yytext); }
 %%

@@ -40,18 +40,26 @@
     Expr* expr;
     Stmt* stmt;
     BiOpExpr* biopexpr;
-    MainClassDecl * mainclassdecl ; 
+    MainClassDecl * mainclassdecl ;
     ClassDeclList * classdecllist ;
+    ItfaceDeclList * itfacedecllist ;
     MtdDeclList * mtddecllist ;
-    ExprList * exprlist ; 
+    AbsMtdDeclList * absmtddecllist ;
+    ExprList * exprlist ;
     StmtList * stmtlist ;
     Program * program ;
     ClassDecl * classdecl ;
+    ItfaceDecl * itfacedecl ;
     MtdDecl * mtddecl ;
-    VarDeclList * vardecllist ; 
+    AbsMtdDecl* absmtddecl ;
+    VarDeclList * vardecllist ;
     VarArgList * vararglist ;
-    VarDecl * vardecl ; 
-    VarArg * vararg ; 
+    VarDecl * vardecl ;
+    VarArg * vararg ;
+    ExtItface * extitface ;
+    ExtItfaceList * extitfacelist ;
+    ImpItface * impitface ;
+    ImpItfaceList * impitfacelist ;
     std::string *string ;
     int token;
 }
@@ -63,12 +71,16 @@
 %token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token  TSEMICOLON TSYSOUT TSYSIN
-%token  TPLUS TMINUS TMUL TDIV TAND 
+%token  TPLUS TMINUS TMUL TDIV TAND
 %token  TLF TRF
 %token  TCLASS TVOID TPUBLIC TSTATIC TMAIN TSTRING
-%token  TEXTENDS TRETURN 
-%token  TFALSE TTRUE 
-%token  TBOOL TBANG TELSE TIF TLENGT TNEW TTHIS TWHILE  
+%token  TEXTENDS TRETURN
+%token  TFALSE TTRUE
+%token  TBOOL TBANG TELSE TIF TLENGT TNEW TTHIS TWHILE
+%token  TINVOKER TARROW
+%token  TITFACE  TIMPLEM
+%token  TINSTANCEOF
+%token  TOBJECT
 
 /* Define the type of node our nonterminal symbols represent.
    The types refer to the %union declaration above. Ex: when
@@ -76,24 +88,30 @@
    calling an (NIdentifier*). It makes the compiler happy.
  */
 
-%type <ident> ident 
+%type <ident> typeuseident vardeclident mtduseident classdeclident mtddeclident itfacedeclident varuseident argdeclident
 %type <type> type
-%type <expr> expr 
+%type <expr> expr
 %type <stmt> stmt
 %type <biopexpr> biopexpr
-%type <mainclassdecl> mainclassdecl 
-%type <classdecllist> classdecllist 
+%type <mainclassdecl> mainclassdecl
 %type <mtddecllist> mtddecllist
- %type <exprlist> exprlist 
+%type <exprlist> exprlist
 %type <stmtlist> stmtlist
 %type <program> program
-%type <classdecl> classdecl 
+%type <classdecl> classdecl
 %type <mtddecl> mtddecl
 %type <vararglist> vararglist
 %type <vardecllist> vardecllist
 %type <vardecl> vardecl
 %type <vararg> vararg
-%type <string> TNUMBER TIDENT 
+%type <string> TNUMBER TIDENT
+%type <itfacedecl> itfacedecl
+%type <absmtddecllist> absmtddecllist
+%type <absmtddecl> absmtddecl
+%type <extitface> extitface
+%type <impitface> impitface
+%type <extitfacelist> extitfacelist
+%type <impitfacelist> impitfacelist
 
 %left TPLUS TMINUS
 %left TMUL TDIV
@@ -102,40 +120,69 @@
 
 %%
 
-program : mainclassdecl classdecllist
-         { programAst = new Program( $1 , $2 ) ; }
+program : mainclassdecl
+         { programAst = new Program( $1 ) ; }
+         | program classdecl
+         { programAst->AddClassDecl( $2 ) ; }
+         | program itfacedecl
+         { programAst->AddItfaceDecl( $2 ) ; }
         ;
 
-mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF ident TRPAREN TLBRACE stmtlist TRBRACE TRBRACE
+mainclassdecl : TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist TRBRACE TRBRACE
                 { $$ = new MainClassDecl( $2 , $12 , $15 ) ; }
               ;
 
-classdecl : TCLASS ident TEXTENDS ident TLBRACE vardecllist mtddecllist TRBRACE
-            { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ;  }
-          | TCLASS ident TEXTENDS ident TLBRACE vardecllist TRBRACE
-            { $$ = new ClassDecl( $2 , $4 , $6 , new MtdDeclList() ) ;  }
-          | TCLASS ident TLBRACE vardecllist mtddecllist TRBRACE
-            { $$ = new ClassDecl( $2 , NULL , $4 , $5 ) ; }
-          | TCLASS ident TLBRACE vardecllist TRBRACE
-            { $$ = new ClassDecl( $2 , NULL , $4 , new MtdDeclList() ) ; }
+extitface : itfacedeclident { $$ = new ExtItface( $1 ) ; } ;
+
+impitface : itfacedeclident { $$ = new ImpItface( $1 ) ; } ;
+
+extitfacelist :  /*blank*/ { $$ = new ExtItfaceList() ; }
+            |   extitface { $$ = ( new ExtItfaceList() )->AddExtItface( $1 ) ; }
+            |   extitfacelist TCOMMA extitface { $$ = $1 -> AddExtItface( $3 ) ; }
+            ;
+
+impitfacelist :/*blank*/ { $$ = new ImpItfaceList() ; }
+            |   impitface { $$ = ( new ImpItfaceList() )->AddImpItface( $1 ) ; }
+            |   impitfacelist TCOMMA impitface { $$ = $1 -> AddImpItface( $3 ) ; }
+            ;
+
+classdecl : TCLASS classdeclident TEXTENDS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist mtddecllist TRBRACE
+            { $$ = new ClassDecl( $2 , $4 , $6 , $8 , $9 ) ;  }
+          | TCLASS classdeclident TEXTENDS classdeclident TLBRACE vardecllist mtddecllist TRBRACE
+            { $$ = new ClassDecl( $2 , $4 , new ImpItfaceList() , $6 , $7 ) ;  }
+          | TCLASS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist mtddecllist TRBRACE
+            { $$ = new ClassDecl( $2 , NULL , $4 , $6 , $7 ) ;  }
+          | TCLASS classdeclident TLBRACE vardecllist mtddecllist TRBRACE
+            { $$ = new ClassDecl( $2 , NULL , new ImpItfaceList() , $4 , $5 ) ; }
           ;
 
-vardecl : type ident TSEMICOLON  
+itfacedecl :TITFACE itfacedeclident TEXTENDS extitfacelist TLBRACE absmtddecllist TRBRACE
+            { $$ = new ItfaceDecl( $2 , $4 , $6 ) ; }
+        |   TITFACE itfacedeclident TLBRACE absmtddecllist TRBRACE
+            { $$ = new ItfaceDecl( $2 , new ExtItfaceList() , $4 ) ; }
+        ;
+
+vardecl : type vardeclident TSEMICOLON
           { $$ = new VarDecl( $1 , $2 ) ; }
         ;
 
-vararg  : type ident 
-          { $$ = new VarArg( $1, $2 ) ; } 
+vararg  : type vardeclident
+          { $$ = new VarArg( $1, $2 ) ; }
         ;
 
-mtddecl : TPUBLIC type ident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+mtddecl : TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
          { $$ = new MtdDecl( $2 , $3 , $5 , $8 , $10 ); }
          ;
+
+absmtddecl : TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TSEMICOLON
+            { $$ = new AbsMtdDecl( $2 , $3 , $5 ); }
+        ;
 
 type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
      | TINT { $$ = new IntType() ; }
      | TBOOL  { $$ = new BoolType() ; }
-     | ident  { $$ = new ClassIdentType( $1 ) ; }
+     | TINVOKER { $$ = new InvokerType() ; }
+     | typeuseident  { $$ = new UsrDefIdentType( $1 ) ; }
      ;
 
 stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
@@ -145,33 +192,39 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
        { $$ = new WhileStmt( $3 , $5 ) ; }
      | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
        { $$ = new SysOutPrtStmt( $3 ) ; }
-     | ident TEQUAL expr TSEMICOLON
+     | varuseident TEQUAL expr TSEMICOLON
        { $$ = new AssignStmt( $1 , $3 ) ; }
-     | ident TLF expr TRF TEQUAL expr TSEMICOLON
+     | varuseident TLF expr TRF TEQUAL expr TSEMICOLON
        { $$ = new ArrAssignStmt( $1 , $3 , $6 ) ; }
-     | type ident TSEMICOLON 
-       { $$ = new VarDeclStmt( $1 , $2 ) ; } 
+     | type vardeclident TSEMICOLON
+       { $$ = new VarDeclStmt( $1 , $2 ) ; }
      ;
 
 expr : biopexpr { $$ = $1 ; }
      | TSYSIN TLPAREN TRPAREN { $$ = new SysInReadExpr( ) ; }
      | expr TLF expr TRF { $$ = new ArrAcsExpr( $1 , $3 ) ; }
      | expr TDOT TLENGT { $$ = new GetLenExpr( $1 ) ; }
-     | expr TDOT ident TLPAREN exprlist TRPAREN
+     | expr TDOT mtduseident TLPAREN exprlist TRPAREN
       { $$ = new GetMtdCallExpr( $1 , $3 , $5 ) ; }
      | TNUMBER { $$ = new IntLiterExpr( atol($1->c_str()) ) ; }
      | TTRUE { $$ = new TrueLiterExpr( ) ; }
      | TFALSE { $$ = new FalseLiterExpr( ) ; }
-     | ident { $$ = new IdentAccessExpr( $1 ) ; }
+     | vardeclident { $$ = new IdentAccessExpr( $1 ) ; }
      | TTHIS { $$ = new ThisExpr( ) ; }
      | TNEW TINT TLF expr TRF
        { $$ = new ArrNewExpr( $4 ) ; }
-     | TNEW ident TLPAREN TRPAREN
+     | TNEW typeuseident TLPAREN TRPAREN
        { $$ = new ObjNewExpr( $2 ) ; }
      | TBANG expr
        { $$ = new NegExpr( $2 ) ; }
      | TLPAREN expr TRPAREN
        { $$ = new ParenExpr( $2 ) ; }
+     | TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+       { $$ = new LamdaGenExpr( $2 , $6 , $8 ) ; }
+     | varuseident TLPAREN exprlist TRPAREN
+       { $$ = new LamdaAppExpr( $1 , $3 ) ; }
+     | expr TINSTANCEOF type
+       { $$ = new InsOfExpr( $1 , $3 ) ; }
      ;
 
 biopexpr : expr TPLUS expr { $$ = new AddExpr( $1 , $3 ) ; }
@@ -185,14 +238,15 @@ stmtlist : /*blank*/ { $$ = new StmtList() ; }
           { $$ = new StmtList( $1 , $2 ) ; }
          ;
 
-mtddecllist : mtddecllist mtddecl { $$ = new MtdDeclList( $1 , $2 ) ; }
+mtddecllist : /*blank*/ { $$ = new MtdDeclList() ; }
+         | mtddecllist mtddecl { $$ = new MtdDeclList( $1 , $2 ) ; }
          | mtddecl { $$ = new MtdDeclList ( new MtdDeclList() , $1 ) ; }
          ;
 
-classdecllist : /*blank*/ { $$ = new ClassDeclList() ; }
-         | classdecllist classdecl
-           { $$ = new ClassDeclList( $1 , $2 ) ; }
+absmtddecllist : absmtddecllist absmtddecl { $$ = new AbsMtdDeclList( $1 , $2 ) ; }
+         | absmtddecl { $$ = new AbsMtdDeclList ( new AbsMtdDeclList() , $1 ) ; }
          ;
+
 
 exprlist : /*blank*/ { $$ = new ExprList() ; }
          | expr
@@ -205,11 +259,25 @@ vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
          | vardecllist vardecl { $$ = new VarDeclList( $1 , $2 ) ; }
 	 ;
 
-vararglist : /*blank*/ { $$ = new VarArgList() ; } 
+vararglist : /*blank*/ { $$ = new VarArgList() ; }
    	 | vararg { $$ = new VarArgList( new VarArgList() , $1 ) ; }
-    	 | vararg TCOMMA vararglist { $$ = new VarArgList( $3, $1 ) ; } 
-	 ; 
+	 | vararg TCOMMA vararglist { $$ = new VarArgList( $3, $1 ) ; }
+	 ;
 
-ident : TIDENT { $$ = new Ident( *$1  ) ;  }
+itfacedeclident : TIDENT { $$ = new ItfaceDeclIdent( *$1  ) ;  }
+
+classdeclident : TIDENT { $$ = new ClassDeclIdent( *$1  ) ;  }
+
+vardeclident : TIDENT { $$ = new VarDeclIdent( *$1  ) ;  }
+
+argdeclident : TIDENT { $$ = new ArgDeclIdent( *$1  ) ;  }
+
+mtddeclident : TIDENT { $$ = new MtdDeclIdent( *$1  ) ;  }
+
+varuseident : TIDENT { $$ = new VarUseIdent( *$1  ) ;  }
+
+typeuseident : TIDENT { $$ = new TypeUseIdent( *$1  ) ;  }
+
+mtduseident : TIDENT { $$ = new MtdUseIdent( *$1  ) ;  }
 
 %%
