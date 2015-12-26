@@ -36,7 +36,8 @@ static std::map<std::string, Value*> NamedClassTypes ;
 static std::map<std::string, ClassDecl*> NamedClassDecls ; 
 static std::map<std::string, ClassDecl*> TypeNamedClassDecls ;
 static std::map<std::string, TypeInfo*> TypeNamedValues ; 
-
+static std::map<std::string, TemplateClassDecl*> NamedTemplateClassDecls ;
+// Or we can use multimap to support template overloading
 
 static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());

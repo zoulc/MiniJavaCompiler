@@ -50,6 +50,7 @@ comment		\/\/[^\n]*
 "}"			return TOKEN(TRBRACE);
 "&&"			return TOKEN(TAND);
 "<"			return TOKEN(TCLT);
+">"			return TOKEN(TCGT);
 "+"			return TOKEN(TPLUS);
 "-"			return TOKEN(TMINUS);
 "*"			return TOKEN(TMUL);

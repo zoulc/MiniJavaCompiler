@@ -10,6 +10,33 @@ TypeInfo* ObjNewExpr::typeCheck()
 	return exprType ;
 }
 
+TypeInfo* TemplateObjNewExpr::typeCheck()
+{
+	if (instanceClassName != tarIdent->name) {
+		if ( TypeNamedClassDecls.count( instanceClassName ) == 0 ) {
+			TemplateClassDecl *templateClassDecl = NULL;
+			typedef map<string, TemplateClassDecl*>::iterator tIterator;
+			pair<tIterator, tIterator> erange;
+			erange = NamedTemplateClassDecls.equal_range(tarIdent->name);
+			for (tIterator it = erange.first; it !=erange.second; ++it)
+				if ((it->second->prototypeIdents).size() == parameters.size())
+					if (templateClassDecl != NULL)
+						cout<<" [ Check ] TemplateClass "<<instanceClassName<<"matched multiple prototypes"<<endl;
+					else
+						templateClassDecl = it->second;
+			if (templateClassDecl == NULL) {
+				cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+				return NULL;
+			}
+			ClassDecl* tarClassDecl = templateClassDecl->templateGenerate(parameters);
+			tarClassDecl->classIdent->name = instanceClassName;
+			tarClassDecl->typeCheck();
+		}
+		tarIdent->name = instanceClassName;
+	}
+	return ObjNewExpr::typeCheck();
+}
+
 TypeInfo* GetLenExpr::typeCheck()
 {
 	if(exprType) return exprType ;
@@ -304,6 +331,33 @@ TypeInfo* Program::typeCheck() {
 	std::cout<<"haha"<<endl;
 	mainClassDecl->typeCheck();
 	return NULL ;
+}
+
+TypeInfo* TemplateClassIdentType::typeCheck()
+{
+	if (instanceClassName != classIdent->name) {
+		if ( TypeNamedClassDecls.count( instanceClassName ) == 0 ) {
+			TemplateClassDecl *templateClassDecl = NULL;
+			typedef map<string, TemplateClassDecl*>::iterator tIterator;
+			pair<tIterator, tIterator> erange;
+			erange = NamedTemplateClassDecls.equal_range(classIdent->name);
+			for (tIterator it = erange.first; it != erange.second; ++it)
+				if ((it->second->prototypeIdents).size() == parameters.size())
+					if (templateClassDecl != NULL)
+						cout<<" [ Check ] TemplateClass "<<instanceClassName<<"matched multiple prototypes"<<endl;
+					else
+						templateClassDecl = it->second;
+			if (templateClassDecl == NULL) {
+				cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+				return NULL;
+			}
+			classDecl* tarClassDecl = templateClassDecl->templateGenerate(parameters);
+			tarClassDecl->classIdent->name = instanceClassName;
+			tarClassDecl->typeCheck();
+		}
+		classIdent->name = instanceClassName;
+	}
+	return ClassIdentType::typeCheck();
 }
 
 /* LiterExpr.h */
@@ -919,6 +973,42 @@ llvm::Type* ClassIdentType::llvmTypeGen() {
 
 	return tarType;
 }
+
+/*
+llvm::Type* TemplateClassIdentType::llvmTypeGen() {
+	if (tarType) return tarType;
+	string instanceClassName = classIdent->name;
+	for (int i = 0; i < parameters.size(); ++i)
+		instanceClassName += "#" + parameters[i];
+	if ( NamedClassDecls.count( instanceClassName ) == 0 ) {
+		TemplateClassDecl *templateClassDecl = NULL;
+		typedef map<string, TemplateClassDecl*>::iterator tIterator;
+		pair<tIterator, tIterator> erange;
+		erange = NamedTemplateClassDecls.equal_range(classIdent->name);
+		for (tIterator it = erange.first; it != erange.second; ++it)
+			if ((it->second->prototypeIdents).size() == parameters.size())
+				if (templateClassDecl != NULL)
+					cout<<" [ Check ] TemplateClass "<<instanceClassName<<"matched multiple prototypes"<<endl;
+				else
+					templateClassDecl = it->second;
+		if (templateClassDecl == NULL) {
+			cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+			return NULL;
+		}
+		ClassDecl* tarClassDecl = templateClassDecl->templateGenerate(parameters);
+		tarClassDecl->classIdent->name = instanceClassName;
+		tarClassDecl->typeCheck();
+		// NamedClassDecls[instanceClassName] = templateClassDecl->templateGenerate(parameters);
+	}
+	ClassDecl* tarClassDecl = NamedClassDecls[instanceClassName];
+	if (tarClassDecl == NULL) {
+		cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+		return NULL;
+	}
+	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
+	return tarType;
+}
+*/
 
 llvm::Type* VarArg::getLLVMType(){
     	if ( llvmType ) return llvmType ;

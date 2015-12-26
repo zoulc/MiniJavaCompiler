@@ -293,6 +293,27 @@ public:
 	//virtual ClassDecl* deepCopy();
 };
 
+class TemplateClassDecl : public ClassDecl {
+	vector<string> prototypeIdents;
+	TemplateClassDecl( Ident* _cI,
+			   Ident* _tI,
+			   Ident* _eCI,
+			   VarDeclList* _vDL ,
+			   MtdDeclList* _mDL ):
+	classIdent(_cI), extClassIdent(_eCI) ,
+	varDeclList(_vDL), mtdDeclList(_mDL) {
+		prototypeIdents.push_back(_tI->name);
+	};
+	ClassDecl *templateGenerate(vector<string> parameters) {
+		if (parameters.size() != prototypeIdents.size()) {
+			std::cout << "template parameters mismatch!" << std::endl;
+		return NULL;
+		}
+		// Need to be implemented
+		// deep copy and replace each prototypeIdents[i] with parameters[i]
+	};
+}
+
 class ClassDeclList {
 public:
     std::vector<class ClassDecl *> declList;
@@ -408,15 +429,35 @@ public:
     virtual TypeInfo* typeCheck();
 };
 
+class TemplateObjNewExpr : public Expr {
+public:
+    string instanceClassName;
+    vector<string> parameters;
+    TemplateObjNewExpr( Ident * _cI, Ident * _tI)
+    : ObjNewExpr( Ident * _cI ) {
+	parameters.clear();
+	parameters.push_back(_tI->name);
+	instanceClassName = _cI->name;
+	for (int i = 0; i < parameters.size(); ++i)
+	    instanceClassName += "#" + parameters[i];
+    }
+    virtual TypeInfo* typeCheck();
+}
+
 class Program {
 public:
     MainClassDecl * mainClassDecl ;
     ClassDeclList classDeclList ;
     Program( MainClassDecl* _mC , ClassDeclList *_cD )
-    : mainClassDecl(_mC) , classDeclList(_cD) {};
+    : mainClassDecl(_mC) , classDeclList(_cD) {
+	templateClassDeclList.clear();
+    };
     virtual Value *codeGen();
     void ClassInitial();
     virtual TypeInfo* typeCheck();
+    void insertTemplate(TemplateClassDecl *_t) {
+	NamedTemplateClassDecls.insert(pair<string, TemplateClassDecl*>(_t->classIdent->name, _t);
+    }
 };
 
 class SiOpExpr : public Expr{
@@ -536,6 +577,7 @@ public:
     TypeInfo( std::string _tN ) : typeName(_tN) {} ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) {} ;
     virtual llvm::Type* llvmTypeGen();
+    virtual TypeInfo * typeCheck() ;
 };
 
 class IntType : public TypeInfo {
@@ -568,5 +610,22 @@ public:
 
     ClassIdentType(Ident *_cI )
     : TypeInfo("Class") , classIdent(_cI) {} ;
+    virtual TypeInfo * typeCheck();
     virtual llvm::Type* llvmTypeGen();
 };
+
+class TemplateClassIdentType : public ClassIdentType {
+public:
+    vector<string> parameters;
+    string instanceClassName;
+
+    TemplateClassIdentType(Ident *_cI, Ident *_tI)
+    : ClassIdentType(_cI) {
+	 parameters.clear();
+         parameters.push_back(_tI->name);
+	 instanceClassName = _cI->name;
+	 for (int i = 0; i < parameters.size(); ++i)
+	     instanceClassName += "#" + parameters[i];
+    }
+    virtual TypeInfo * typeCheck();
+}

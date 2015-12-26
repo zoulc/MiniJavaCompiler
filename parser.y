@@ -60,7 +60,7 @@
    they represent.
  */
 %token  TIDENT TINT TDOUBLE TNUMBER
-%token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
+%token  TCEQ TCNE TCLT TCGT TCLE TCGT TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token  TSEMICOLON TSYSOUT TSYSIN
 %token  TPLUS TMINUS TMUL TDIV TAND 
@@ -110,6 +110,9 @@ mainclassdecl : TCLASS ident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING
                 { $$ = new MainClassDecl( $2 , $12 , $15 ) ; }
               ;
 
+templateclassdecl : TCLASS ident TCLT ident TGLT TLBRACE vardecllist mtddecllist TRBRACE
+	    { programAst.insertTemplate(new TemplateClassDecl( $2, $4, NULL, $7, $8 )) ; }
+
 classdecl : TCLASS ident TEXTENDS ident TLBRACE vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , $4 , $6 , $7 ) ;  }
           | TCLASS ident TEXTENDS ident TLBRACE vardecllist TRBRACE
@@ -135,6 +138,7 @@ mtddecl : TPUBLIC type ident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN
 type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
      | TINT { $$ = new IntType() ; }
      | TBOOL  { $$ = new BoolType() ; }
+     | ident TCLT ident TCGT  { $$ = new TemplateClassIdentType( $1, $3); }
      | ident  { $$ = new ClassIdentType( $1 ) ; }
      ;
 
@@ -168,6 +172,8 @@ expr : biopexpr { $$ = $1 ; }
        { $$ = new ArrNewExpr( $4 ) ; }
      | TNEW ident TLPAREN TRPAREN
        { $$ = new ObjNewExpr( $2 ) ; }
+     | TNEW ident TCLT ident TCGT TLPAREN TRPAREN
+       { $$ = new TemplateObjNewExpr( $2, $4 ) ; }
      | TBANG expr
        { $$ = new NegExpr( $2 ) ; }
      | TLPAREN expr TRPAREN
