@@ -33,7 +33,7 @@ class Tester2 extends Tester {
 	b=b+2;
         return b; 
     }
-    public int seek( Tester a ) {
-	return a.work();
+    public int seek( Tester d ) {
+	return d.work();
     }
 }

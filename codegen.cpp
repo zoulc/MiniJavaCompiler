@@ -1068,7 +1068,7 @@ llvm::Type* IntType::llvmTypeGen()
 llvm::Type* ClassType::llvmTypeGen()
 {
 	if ( tarType ) return tarType ;
-	tarType = tarClassDecl->getClassLLVMType();
+	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
     return tarType ;
 }
 llvm::Type* ItfaceType::llvmTypeGen()
@@ -1481,6 +1481,7 @@ Function * MtdDecl::codeGen()
 	Value * thisCls ; 
 
 	int j = 0 ;
+	cout << "fuck" << endl;
 	for( auto &Arg : func->args() ) {
 		if ( j == 0 ) {
 			thisCls = Builder.CreatePointerCast( &Arg , Owner->getClassLLVMType()->getPointerTo() )  ;
@@ -1489,12 +1490,14 @@ Function * MtdDecl::codeGen()
 			NamedValues[std::string("this")] = tmpPtr ;
 		} else {
 			// Add the Alloca Instruction for the Argments 
+			cout << varArgList.declList[j-1]->typeCheck()->typeName << endl ; 
 			Value* tmpPtr = Builder.CreateAlloca( varArgList.declList[j-1]->typeCheck()->llvmTypeGen() , 0 ) ; 
 			Builder.CreateStore( &Arg , tmpPtr ) ; 
  			NamedValues[varArgList.declList[j-1]->varIdent->name] = tmpPtr ;
 		}
 		j++;
 	}
+	cout << "fuck" << endl;
 	Owner->setNamedField(thisCls);
 
 	stmtList.codeGen();
