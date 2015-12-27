@@ -1,3 +1,254 @@
+/* Template Generate: deep copy and replace type parameteres*/
+ClassDecl* TemplateClassDecl::replaceCopy(vector<string> parameters) {
+	cout << "Debug: Template Class Decl replaceCopy() was called" << endl;
+        if (parameters.size() != prototypes.size()) {
+                std::cout << "template parameters mismatch!" << std::endl;
+                return NULL;
+        }
+         // deep copy and replace each prototypeIdents[i] with parameters[i]
+         map<string, string> rule;
+         for (int i = 0; i < parameters.size(); ++i) {
+                if (rule.count(prototypes[i]) != 0) {
+                        cout << "duplicate proto typenames for template class " << classIdent->name << endl;
+                        return NULL;
+                }
+                rule.insert(pair<string, string>(prototypes[i], parameters[i]));
+        }
+        return ClassDecl::replaceCopy(rule);
+}
+
+ClassDecl* ClassDecl::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering ClassDecl::replaceCopy() ..." << endl;
+	cout << "map<string, string> &rule = {";
+	for (auto it = rule.begin(); it != rule.end(); ++it)
+		cout << " ( " << it->first << " , " << it->second << " ) ,";
+	cout << "}" << endl;
+	Ident *newExtClassIdent = NULL;
+	if (extClassIdent != NULL)
+		newExtClassIdent = extClassIdent->replaceCopy(rule);
+	ClassDecl* tmp = new ClassDecl( classIdent->replaceCopy(rule),
+			newExtClassIdent,
+			new ImpItfaceList(),
+	// doesn't support interface replaceCopy() here yet
+			varDeclList.replaceCopy(rule),
+			mtdDeclList.replaceCopy(rule));
+	return tmp;
+}
+
+Ident* Ident::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering Ident::replaceCopy() ..." << endl;
+	string newName = name;
+	if (rule.count(name) > 0)
+		newName = rule[name];
+	cout << "Debug: name = " << name << ", newName = " << newName << endl;
+	Ident * tmp = new Ident( newName );
+	return tmp;
+}
+
+VarDeclList* VarDeclList::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering VarDeclList::replaceCopy() ..." << endl;
+	VarDeclList* tmp = new VarDeclList();
+	for (int i = 0; i < declList.size(); ++i)
+		tmp->declList.push_back(declList[i]->replaceCopy(rule));
+	return tmp;
+}
+
+VarDecl* VarDecl::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering VarDecl::replaceCopy() ..." << endl;
+	cout << "varIdent->name = " << varIdent->name << endl;
+	VarDecl* tmp = new VarDecl(varType->replaceCopy(rule),
+				varIdent->replaceCopy(rule));
+	return tmp;
+}
+
+MtdDeclList* MtdDeclList::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering MtdDeclList::replaceCopy() ..." << endl;
+	MtdDeclList* tmp = new MtdDeclList();
+	for (int i = 0; i < declList.size(); ++i)
+		tmp->declList.push_back(declList[i]->replaceCopy(rule));
+	return tmp;
+}
+
+MtdDecl* MtdDecl::replaceCopy(map<string, string> &rule) {
+	cout << "Debug: Entering MtdDecl::replaceCopy() ..." << endl;
+	cout << "mtdIdent->name = " << mtdIdent->name << endl;
+	MtdDecl* tmp = new MtdDecl(rtnType->replaceCopy(rule),
+				mtdIdent->replaceCopy(rule),
+				varArgList.replaceCopy(rule),
+				stmtList.replaceCopy(rule),
+				rtnExpr->replaceCopy(rule));
+	return tmp;
+}
+
+VarArgList* VarArgList::replaceCopy(map<string, string> &rule) {
+	VarArgList* tmp = new VarArgList();
+	for (int i = 0; i < declList.size(); ++i)
+		tmp->declList.push_back(declList[i]->replaceCopy(rule));
+	return tmp;
+}
+
+Stmt* Stmt::replaceCopy(map<string, string> &rule) {
+	Stmt* tmp = new Stmt();
+	tmp->stmtType = stmtType->replaceCopy(rule);
+	return tmp;
+}
+
+Expr* Expr::replaceCopy(map<string, string> &rule) {
+	Expr* tmp = new Expr();
+	tmp->exprType = exprType->replaceCopy(rule);
+	return tmp;
+}
+
+NegExpr* NegExpr::replaceCopy(map<string, string> &rule) {
+	NegExpr* tmp = new NegExpr(tarExpr->replaceCopy(rule));
+	return tmp;
+}
+
+ParenExpr* ParenExpr::replaceCopy(map<string, string> &rule) {
+	ParenExpr* tmp = new ParenExpr(tarExpr->replaceCopy(rule));
+	return tmp;
+}
+
+StmtList* StmtList::replaceCopy(map<string, string> &rule) {
+	StmtList* tmp = new StmtList();
+	for (int i = 0; i < stmtList.size(); ++i)
+		tmp->stmtList.push_back(stmtList[i]->replaceCopy(rule));
+	return tmp;
+}
+
+BlockStmt* BlockStmt::replaceCopy(map<string, string> &rule) {
+	return new BlockStmt(stmtList.replaceCopy(rule));
+}
+
+IfThenElseStmt* IfThenElseStmt::replaceCopy(map<string, string> &rule) {
+	IfThenElseStmt* tmp = new IfThenElseStmt(
+				condExpr->replaceCopy(rule),
+				thenStmt->replaceCopy(rule),
+				elseStmt->replaceCopy(rule));
+	return tmp;
+	
+}
+
+WhileStmt* WhileStmt::replaceCopy(map<string, string> &rule) {
+	WhileStmt* tmp = new WhileStmt(condExpr->replaceCopy(rule),
+					bodyStmt->replaceCopy(rule));
+	return tmp;
+}
+
+SysOutPrtStmt* SysOutPrtStmt::replaceCopy(map<string, string> &rule) {
+	SysOutPrtStmt* tmp = new SysOutPrtStmt(prtExpr->replaceCopy(rule));
+	return tmp;
+}
+
+AssignStmt* AssignStmt::replaceCopy(map<string, string> &rule) {
+	AssignStmt* tmp = new AssignStmt(assignIdent->replaceCopy(rule),
+					valueExpr->replaceCopy(rule));
+	return tmp;
+}
+
+ArrAssignStmt* ArrAssignStmt::replaceCopy(map<string, string> &rule) {
+	ArrAssignStmt* tmp = new ArrAssignStmt(arrIdent->replaceCopy(rule),
+					valueExpr->replaceCopy(rule),
+					addressExpr->replaceCopy(rule));
+	return tmp;
+}
+
+VarDeclStmt* VarDeclStmt::replaceCopy(map<string, string> &rule) {
+	VarDeclStmt* tmp = new VarDeclStmt(type->replaceCopy(rule),
+					varIdent->replaceCopy(rule));
+	return tmp;
+}
+
+BiOpExpr* BiOpExpr::replaceCopy(map<string, string> &rule) {
+	BiOpExpr* tmp = new BiOpExpr(leftExpr->replaceCopy(rule),
+				     rightExpr->replaceCopy(rule));
+	return tmp;
+}
+
+SysInReadExpr* SysInReadExpr::replaceCopy(map<string, string> &rule) {
+	SysInReadExpr* tmp = new SysInReadExpr();
+	return tmp;
+}
+
+GetLenExpr* GetLenExpr::replaceCopy(map<string, string> &rule) {
+	GetLenExpr* tmp = new GetLenExpr(tarExpr->replaceCopy(rule));
+	return tmp;
+}
+
+GetMtdCallExpr* GetMtdCallExpr::replaceCopy(map<string, string> &rule) {
+	GetMtdCallExpr* tmp = new GetMtdCallExpr(
+					tarExpr->replaceCopy(rule),
+					mtdIdent->replaceCopy(rule),
+					fillList.replaceCopy(rule));
+	return tmp;
+}
+
+ExprList* ExprList::replaceCopy(map<string, string> &rule) {
+	ExprList* tmp = new ExprList();
+	for (int i = 0; i < fillList.size(); ++i)
+		tmp->fillList.push_back(fillList[i]->replaceCopy(rule));
+	return tmp;
+}
+
+IntLiterExpr* IntLiterExpr::replaceCopy(map<string, string> &rule) {
+	IntLiterExpr* tmp = new IntLiterExpr(value);
+	return tmp;
+}
+
+TrueLiterExpr* TrueLiterExpr::replaceCopy(map<string, string> &rule) {
+	return new TrueLiterExpr();
+}
+
+FalseLiterExpr* FalseLiterExpr::replaceCopy(map<string, string> &rule) {
+	return new FalseLiterExpr();
+}
+
+IdentAccessExpr* IdentAccessExpr::replaceCopy(map<string, string> &rule) {
+	return new IdentAccessExpr(tarIdent->replaceCopy(rule));
+}
+
+ArrNewExpr* ArrNewExpr::replaceCopy(map<string, string> &rule) {
+	return new ArrNewExpr(sizeExpr->replaceCopy(rule));
+}
+
+TemplateObjNewExpr* TemplateObjNewExpr::replaceCopy(map<string, string> &rule)
+{
+	// Need to be extended to support multiple template parameters
+	string newparam = rule.count(parameters[0]) == 0 ?
+			parameters[0] : rule[parameters[0]];
+	TemplateObjNewExpr *tmp = new TemplateObjNewExpr(
+					tarIdent->replaceCopy(rule),
+					newparam);
+	return tmp;
+}
+
+ObjNewExpr* ObjNewExpr::replaceCopy(map<string, string> &rule) {
+	return new ObjNewExpr(tarIdent->replaceCopy(rule));
+}
+
+SiOpExpr* SiOpExpr::replaceCopy(map<string, string> &rule) {
+	return new SiOpExpr(tarExpr->replaceCopy(rule));
+}
+
+LamdaGenExpr* LamdaGenExpr::replaceCopy(map<string, string> &rule) {
+	LamdaGenExpr* tmp = new LamdaGenExpr(varArgList.replaceCopy(rule),
+					stmtList.replaceCopy(rule),
+					rtnExpr->replaceCopy(rule));
+	return tmp;
+}
+
+LamdaAppExpr* LamdaAppExpr::replaceCopy(map<string, string> &rule) {
+	LamdaAppExpr* tmp = new LamdaAppExpr(tarIdent->replaceCopy(rule),
+					fillList.replaceCopy(rule));
+	return tmp;
+}
+
+InsOfExpr* InsOfExpr::replaceCopy(map<string, string> &rule) {
+	InsOfExpr* tmp = new InsOfExpr(tarExpr->replaceCopy(rule),
+					srcType->replaceCopy(rule));
+	return tmp;
+}
+
 /*Basic Verifier*/
 
 
@@ -42,6 +293,13 @@ VarArg* VarArg::deepCopy()
 	return tmp ;
 }
 
+VarArg* VarArg::replaceCopy(map<string, string> &rule)
+{
+	VarArg* tmp = new VarArg(varType->replaceCopy(rule),
+				 varIdent->replaceCopy(rule));
+	return tmp;
+}
+
 AbsMtdDecl* AbsMtdDecl::deepCopy()
 {
 	AbsMtdDecl * tmp = new AbsMtdDecl( rtnType->deepCopy() , absMtdIdent->deepCopy() , new VarArgList() ) ;
@@ -57,10 +315,36 @@ TypeInfo* TypeInfo::deepCopy()
 	return tmp ;
 }
 
+TypeInfo* TypeInfo::replaceCopy(map<string, string> &rule)
+{
+	return this->deepCopy();
+}
+
+TypeInfo* IntType::replaceCopy(map<string, string> &rule)
+{
+	return new IntType();
+}
+
+TypeInfo* BoolType::replaceCopy(map<string, string> &rule)
+{
+	return new BoolType();
+}
+
 TypeInfo* ClassType::deepCopy()
 {
 	TypeInfo* tmp = new ClassType( tarIdent->deepCopy() , tarClassDecl ) ;
 	return tmp ;
+}
+
+TypeInfo* ClassType::replaceCopy(map<string, string> &rule)
+{
+	string key = tarIdent->name;
+	if (rule.count(key) == 0)
+		return deepCopy();
+	if (rule[key] == "int")
+		return new IntType();
+	TypeUseIdent *tarIdent = new TypeUseIdent(rule[key]);
+	return new UsrDefIdentType(tarIdent);
 }
 
 TypeInfo* ItfaceType::deepCopy()
@@ -69,10 +353,38 @@ TypeInfo* ItfaceType::deepCopy()
 	return tmp ;
 }
 
+TypeInfo* ItfaceType::replaceCopy(map<string, string> &rule)
+{
+	TypeInfo *tmp = new ItfaceType( tarIdent->replaceCopy(rule), tarItfaceDecl ) ;
+	return tmp;
+}
+
 TypeInfo* UsrDefIdentType::deepCopy()
 {
 	TypeInfo* tmp = new UsrDefIdentType( tarIdent->deepCopy() );
 	return tmp ;
+}
+
+TypeInfo* UsrDefIdentType::replaceCopy(map<string, string> &rule)
+{
+	string key = tarIdent->name;
+	if (rule.count(key) == 0)
+		return deepCopy();
+	if (rule[key] == "int")
+		return new IntType();
+	TypeUseIdent *tarIdent = new TypeUseIdent(rule[key]);
+	return new UsrDefIdentType(tarIdent);
+}
+
+TypeInfo* TemplateUsrDefIdentType::replaceCopy(map<string, string> &rule)
+{
+	// Need to be extented to support multiple template parameters
+	string newparam = rule.count(parameters[0]) == 0 ?
+			parameters[0] : rule[parameters[0]];
+	TemplateUsrDefIdentType *tmp = new TemplateUsrDefIdentType(
+					tarIdent->replaceCopy(rule),
+					newparam);
+	return tmp;
 }
 
 Ident* Ident::deepCopy()
@@ -201,6 +513,37 @@ TypeInfo* UsrDefIdentType::typeCheck()
 	}
 	isTypeChecked = true ;
 	return  concreType ;
+}
+
+TypeInfo* TemplateUsrDefIdentType::typeCheck()
+{
+	cout << "Debug: TemplateUsrDefIdentType::typeCheck() was called" << endl;
+	if ( instanceClassName != tarIdent->name ) {
+                if ( TypeNamedClassDecls.count( instanceClassName ) == 0 ) {
+                        TemplateClassDecl *templateClassDecl = NULL;
+                        typedef map<string, TemplateClassDecl*>::iterator tIterator;
+                        pair<tIterator, tIterator> erange;
+                        erange = NamedTemplateClassDecls.equal_range(tarIdent->name);
+                        for (tIterator it = erange.first; it != erange.second; ++it)
+                                if ((it->second->prototypes).size() == parameters.size())
+                                        if (templateClassDecl != NULL)
+                                                cout<<" [ Check ] TemplateClass "<<instanceClassName<<"matched multiple prototypes"<<endl;
+                                        else
+                                                templateClassDecl = it->second;
+                        if (templateClassDecl == NULL) {
+                                cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+                                return NULL;
+                        }
+			cout << "Debug: Calling templateClassDecl->replaceCopy() from TemplateUsrDefIdentType::typeCheck()" << endl;
+                        ClassDecl* tarClassDecl = templateClassDecl->replaceCopy(parameters);
+			cout << "Debug: templateClassDecl->replaceCopy() returned to TemplateUsrDefIdentType::typeCheck()" << endl;
+			classToInit.push_back(tarClassDecl);
+                        tarClassDecl->classIdent->name = instanceClassName;
+                        tarClassDecl->typeCheck();
+		}
+		tarIdent->name = instanceClassName;
+	}
+	return UsrDefIdentType::typeCheck();
 }
 
 bool TypeInfo::isUsrDefIdentType() { return false ; }
@@ -505,6 +848,36 @@ TypeInfo* ObjNewExpr::typeCheck()
 	return exprType ;
 }
 
+TypeInfo* TemplateObjNewExpr::typeCheck()
+{
+	cout << "TemplateObjNewExpr::typeCheck() ------- instanceClassname = " << instanceClassName << ", tarIdent->name = " << tarIdent->name << endl;
+        if ( instanceClassName != tarIdent->name ) {
+                if ( TypeNamedClassDecls.count( instanceClassName ) == 0 ) {
+                        TemplateClassDecl *templateClassDecl = NULL;
+                        typedef map<string, TemplateClassDecl*>::iterator tIterator;
+                        pair<tIterator, tIterator> erange;
+                        erange = NamedTemplateClassDecls.equal_range(tarIdent->name);
+                        for (tIterator it = erange.first; it != erange.second; ++it)
+                                if ((it->second->prototypes).size() == parameters.size())
+                                        if (templateClassDecl != NULL)
+                                                cout<<" [ Check ] TemplateClass "<<instanceClassName<<"matched multiple prototypes"<<endl;
+                                        else
+                                                templateClassDecl = it->second;
+                        if (templateClassDecl == NULL) {
+                                cout<<" [ Check ] TemplateClass "<<instanceClassName<<"found no match"<<endl;
+                                return NULL;
+                        }
+                        ClassDecl* tarClassDecl = templateClassDecl->replaceCopy(parameters);
+                        classToInit.push_back(tarClassDecl);
+                        tarClassDecl->classIdent->name = instanceClassName;
+                        tarClassDecl->typeCheck();
+                }
+                tarIdent->name = instanceClassName;
+		cout << "TemplateObjNewExpr::typeCheck() ------ tarIdent->name = " << tarIdent->name << endl;
+        }
+        return ObjNewExpr::typeCheck();
+}
+
 TypeInfo* GetLenExpr::typeCheck()
 {
 	if(exprType) return exprType ;
@@ -605,7 +978,9 @@ TypeInfo* SysOutPrtStmt::typeCheck()
 
 TypeInfo* AssignStmt::typeCheck()
 {
+	cout << "AssignStmt::typeCheck() ------- assignIdent->name = " << assignIdent->name << endl;
 	if ( stmtType ) return stmtType ;
+	assignIdent->typeCheck();
 	valueExpr->typeCheck();
 	stmtType = new VoidType();
 	return stmtType ;
@@ -629,6 +1004,7 @@ TypeInfo* GetMtdCallExpr::typeCheck()
 			isClass = false ;
 			return exprType ;
 		} else {
+			cout<< tarExpr->typeCheck()->typeName << endl; 
 			std::cout << " [ Type Check ] < GetMtdCallExpr > Invalid Caller Type ." << std::endl ;
 			exprType = new NullType() ;
 			return exprType;
@@ -667,6 +1043,8 @@ TypeInfo* VarDeclStmt::typeCheck()
 	if ( stmtType ) return stmtType ;
 	type->typeCheck();
 	varIdent->typeCheck();
+	cout<<varIdent->name<<endl;
+	cout<<type->typeName<<endl;
 	if ( type->isUsrDefIdentType() )
 		TypeNamedValues[varIdent->name] = ((UsrDefIdentType*)type)->getConcreType();
 	else
@@ -898,6 +1276,10 @@ Value*  FalseLiterExpr :: codeGen()
 }
 
 /* SiOpExpr.h */
+Value* SiOpExpr::codeGen()
+{
+	return NULL;
+}
 
 Value* NegExpr::codeGen()
 {
@@ -983,11 +1365,7 @@ Value* AssignStmt::codeGen()
 	}
 	Value * rval=valueExpr->codeGen();
 	std::cout << "Creating Assignment statement" << endl;
-	if ( valueExpr->typeCheck() == NULL ) cout << "fuck" <<endl ; 
 	cout << valueExpr->typeCheck()->typeName << endl ; 
-	if ( NamedValues[assignIdent->name]->getType() != (valueExpr->typeCheck())->llvmTypeGen()->getPointerTo() ) 
-		cout<<"haha"<<endl;
-	cout<<"hehe"<<endl;
 	//Value * ptrCast = Builder.CreatePointerCast( NamedValues[assignIdent->name] , (valueExpr->typeCheck())->llvmTypeGen()->getPointerTo() );
 
 	Value* ptr = Builder.CreatePointerCast( NamedValues[assignIdent->name] , ( valueExpr->typeCheck())->llvmTypeGen()->getPointerTo());
@@ -1061,6 +1439,7 @@ llvm::Value* MultExpr::codeGen()
 llvm::Type* IntType::llvmTypeGen()
 {
 	if ( tarType ) return tarType ;
+	cout<<"haha"<<endl;
 	tarType = Type::getInt64Ty(getGlobalContext());
     return tarType ;
 }
@@ -1385,8 +1764,9 @@ llvm::Value* ClassDecl::codeGen()
 
 Value * GetMtdCallExpr::codeGen()
 {
-    std::cout << " [ IR ] < CetMtdCallExpr::codeGen > now is processing."<< std::endl ;
+    std::cout << " [ IR ] < GetMtdCallExpr::codeGen > now is processing."<< std::endl ;
 	if ( isClass ) {
+		std::cout << "Debug: Is a class" << endl;
 		ClassDecl* tarClassDecl = ((ClassType*)(tarExpr->typeCheck()))->tarClassDecl;
 		int mtdSlot = tarClassDecl->getMethodId(mtdIdent->name) ;
 		MtdDecl*   tarMtdDecl   = tarClassDecl->mtdDecl[mtdSlot];
@@ -1416,7 +1796,7 @@ Value * GetMtdCallExpr::codeGen()
 		return Builder.CreateCall(my_func,argRef);
 
 	} else {
-
+		std::cout << "Debug: Is interface" << endl;
 		ItfaceDecl* tarItfaceDecl = ((ItfaceType*)tarExpr->typeCheck())->tarItfaceDecl ;
 		int absMtdSlot = tarItfaceDecl->absMtdName2Pos[ mtdIdent->name ];
 		AbsMtdDecl* tarAbsMtdDecl = tarItfaceDecl->absMtdDecl[absMtdSlot];
@@ -1460,12 +1840,22 @@ Type * MtdDecl::getFunctionType()
 		typeVec.clear();
 		typeVec.push_back( formOwner->getClassLLVMType()->getPointerTo() ) ;
 		std::vector<class VarArg*>::iterator vait ;
-		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ )
+		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ ) {
 			typeVec.push_back( (*vait)->getLLVMType() ) ;
+		}
+		std::cout << "Debug: rtnType->typeName = " << rtnType->typeName << endl;
+		for ( int i = 0; i < varArgList.declList.size(); ++i)
+			std::cout << "Debug: varArgList.declList[" << i << "]->varType->typeName = " << varArgList.declList[i]->varType->typeName << endl;
 		ArrayRef<Type*> argTypeVec( typeVec ) ;
-		llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false);
+		std::cout << "Debug: Preparing to run rtnType->llvmTypeGen() ." << std::endl;
+		llvm::Type* rtnllvmType = rtnType->llvmTypeGen();
+		std::cout << "Debug: Preparing to run FunctionType::get() ." << std::endl;
+		llvmType = FunctionType::get(rtnllvmType,argTypeVec,false);
+		std::cout << "Debug: Preparing to run Function::Create() ." << std::endl;
 		func = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->classIdent->name + std::string("_") + mtdIdent->name , TheModule);
+		std::cout << "Debug: Preparing to run func->getType() ." << std::endl;
 		llvmType = func->getType();
+		std::cout << "Debug: Processing LLVM type finished ." << std::endl;
 	}
 	return llvmType;
 }
@@ -1525,9 +1915,12 @@ Value* ObjNewExpr::codeGen()
 {
 
 	std::cout << " [ IR ] < ObjNewExpr::codeGen > Now allocating an object ."<< std::endl ;
+	cout << "tarIdent->name = " << tarIdent->name << endl;
 	Value * mallocSize = ConstantExpr::getSizeOf(
 					NamedClassDecls[tarIdent->name]->getClassLLVMType());
+	cout << "Debug: preparing to call ConstantExpr::getTruncOrBitCase()" << endl;
 	mallocSize = ConstantExpr::getTruncOrBitCast( cast<Constant>(mallocSize) , Type::getInt64Ty(getGlobalContext()));
+	cout << "Debug: preparing to call CallInst::CreateMalloc()" << endl;
 	Instruction * var_malloc=CallInst::CreateMalloc(	Builder.GetInsertBlock(),
 					Type::getInt64Ty(getGlobalContext()),
 					NamedClassDecls[tarIdent->name]->getClassLLVMType(),
@@ -1538,11 +1931,14 @@ Value* ObjNewExpr::codeGen()
 	// new GlobalVariable(*TheModule,
 	//NamedClassDecls[tarIdent->name]->getClassLLVMType()
 	//,false,GlobalValue::ExternalLinkage,nullptr);
+	cout << "Debug: preparing to get vtableField" << endl;
 	Value * vtableField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 1 ) ;
 	Builder.CreateStore(NamedClassDecls[tarIdent->name]->getVTableLoc(),vtableField);
+	cout << "Debug: preparing to get clsNoField" << endl;
 	Value * clsNoField = Builder.CreateStructGEP( NamedClassDecls[tarIdent->name]->getClassLLVMType() , var , 0 ) ;
 	Value * srcClsNo = ConstantInt::get(Type::getInt64Ty(getGlobalContext()),  NamedClassDecls[tarIdent->name]->classDeclNumber, true);
 	Builder.CreateStore( srcClsNo ,clsNoField );
+	cout << "Debug: preparing to return from ObjNewExpr::codeGen()" << endl;
 	return var;
 }
 
@@ -1583,6 +1979,7 @@ llvm::Type* UsrDefIdentType::llvmTypeGen() {
 		return NULL;
 	}
 	cout << "is a class" <<endl;
+	cout << tarClassDecl->classIdent->name << endl ; 
 	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
 	return tarType;
 }

@@ -20,6 +20,7 @@
 #include <map>
 #include <queue>
 
+using namespace std;
 using namespace llvm;
 
 class Ident;
@@ -28,6 +29,7 @@ class Expr;
 class Stmt;
 class MtdDecl;
 class ClassDecl;
+class TemplateClassDecl;
 class VarArg;
 class VarDecl;
 class StmtList ;
@@ -56,6 +58,8 @@ public:
 	virtual TypeInfo* typeCheck();
 	//virtual Stmt * deepCopy();
 	TypeInfo* stmtType;
+	Stmt(){ stmtType = NULL ;} 
+	virtual Stmt* replaceCopy(map<string, string> &rule) ;
 };
 
 class Expr {
@@ -64,6 +68,7 @@ public:
 	virtual TypeInfo* typeCheck();
 	//virtual Expr * deepCopy();
 	TypeInfo* exprType;
+	virtual Expr* replaceCopy(map<string, string> &rule) ;
 };
 
 class StmtList {
@@ -80,6 +85,7 @@ public:
     StmtList( StmtList * _sL ) : stmtList(_sL->stmtList) {} ;
     virtual llvm::Value* codeGen();
 	//virtual StmtList* deepCopy();
+	virtual StmtList* replaceCopy(map<string, string> &rule);
 } ;
 
 class VarArg {
@@ -92,6 +98,7 @@ public:
     llvm::Type* getLLVMType();
     virtual TypeInfo * typeCheck();
 	virtual VarArg* deepCopy();
+	virtual VarArg* replaceCopy(map<string, string> &rule);
 };
 
 class VarArgList {
@@ -114,6 +121,7 @@ public:
 	void codeGen(llvm::Type* ClassType);
 	void setNamedValues();
 	//virtual VarArg* deepCopy();
+	virtual VarArgList* replaceCopy(map<string, string> &rule);
 };
 
 class VarDecl {
@@ -125,6 +133,7 @@ public:
 	llvm::Type* llvmType;
     llvm::Type* getLLVMType();
     TypeInfo* typeCheck();
+    virtual VarDecl* replaceCopy(map<string, string> &rule) ;
 };
 
 class VarDeclList {
@@ -139,6 +148,7 @@ public:
     }
     VarDeclList( VarDeclList& _vDL ) : declList(_vDL.declList) {} ;
     VarDeclList( VarDeclList* _vDL ) : declList(_vDL->declList) {} ;
+    virtual VarDeclList* replaceCopy(map<string, string> &rule) ;
 };
 class ImpItface
 {
@@ -209,6 +219,7 @@ public:
     bool isCreated;
     virtual TypeInfo* typeCheck();
     TypeInfo * mtdDeclType;
+    virtual MtdDecl* replaceCopy(map<string, string> &rule);
 };
 
 class AbsMtdDecl {
@@ -245,6 +256,7 @@ public:
     }
     MtdDeclList( MtdDeclList * _mDL ) : declList(_mDL->declList) {} ;
     MtdDeclList( MtdDeclList & _mDL ) : declList(_mDL.declList) {} ;
+    virtual MtdDeclList *replaceCopy(map<string, string> &rule) ;
 };
 
 class AbsMtdDeclList {
@@ -266,6 +278,7 @@ public:
     Expr * sizeExpr ;
     ArrNewExpr( Expr * _sE )
     : sizeExpr(_sE) {} ;
+    virtual ArrNewExpr* replaceCopy(map<string, string> &rule);
 };
 
 class BiOpExpr : public Expr{
@@ -276,6 +289,7 @@ public:
               Expr * _rE )
     : leftExpr(_lE), rightExpr(_rE) {};
     virtual llvm::Value* codeGen();
+    virtual BiOpExpr* replaceCopy(map<string, string> &rule);
 };
 
 class AddExpr : public BiOpExpr {
@@ -425,6 +439,7 @@ public:
 	llvm::Value* codeGen();
 
 	//virtual ClassDecl* deepCopy();
+	virtual ClassDecl *replaceCopy(map<string, string> &rule);
 };
 
 class ClassDeclList {
@@ -455,6 +470,7 @@ public:
     }
     ExprList( ExprList * _eL ) : fillList(_eL->fillList) {} ;
     ExprList( ExprList & _eL ) : fillList(_eL.fillList) {} ;
+    virtual ExprList* replaceCopy(map<string, string> &rule);
 } ;
 
 class GetLenExpr : public Expr{
@@ -463,6 +479,7 @@ public:
     GetLenExpr( Expr * _tE )
     : tarExpr(_tE) {} ;
 	virtual TypeInfo* typeCheck();
+	virtual GetLenExpr* replaceCopy(map<string, string> &rule);
 };
 
 class GetMtdCallExpr : public Expr{
@@ -479,6 +496,7 @@ public:
     : tarExpr(_tE) , mtdIdent(_mI) , fillList(_fL) {}  ;
     virtual llvm::Value* codeGen();
     virtual TypeInfo* typeCheck();
+    virtual GetMtdCallExpr* replaceCopy(map<string, string> &rule);
 };
 
 class IdentAccessExpr : public Expr {
@@ -488,6 +506,7 @@ public:
     : tarIdent(_tI) {} ;
     virtual llvm::Value* codeGen();
     virtual TypeInfo* typeCheck();
+    virtual IdentAccessExpr* replaceCopy(map<string, string> &rule);
 };
 
 class Ident {
@@ -500,6 +519,7 @@ public:
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
 	virtual Ident* deepCopy();
+	virtual Ident* replaceCopy(map<string, string> &rule);
 
 	// Only for TypeUseIdent
 	virtual bool isItfaceTypeIdent();
@@ -587,6 +607,7 @@ public:
     : value(_v) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+    virtual IntLiterExpr* replaceCopy(map<string, string> &rule);
 };
 
 class TrueLiterExpr : public Expr {
@@ -596,6 +617,7 @@ public:
     : value(true) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual TrueLiterExpr* replaceCopy(map<string, string> &rule);
 };
 
 class FalseLiterExpr : public Expr {
@@ -605,6 +627,7 @@ public:
     : value(false) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual FalseLiterExpr* replaceCopy(map<string, string> &rule);
 };
 
 class MainClassDecl {
@@ -627,6 +650,23 @@ public:
     : tarIdent(_tI) {} ;
     virtual llvm::Value* codeGen();
     virtual TypeInfo* typeCheck();
+    virtual ObjNewExpr* replaceCopy(map<string, string> &rule);
+};
+
+class TemplateObjNewExpr : public ObjNewExpr {
+public:
+	string instanceClassName;
+	vector<string> parameters;
+	TemplateObjNewExpr( Ident *_tI, string tparam)
+	: ObjNewExpr(_tI) {
+		parameters.clear();
+		parameters.push_back(tparam);
+		instanceClassName = tarIdent->name;
+		for (int i = 0; i < parameters.size(); ++i)
+			instanceClassName += "#" + parameters[i];
+	}
+	virtual TypeInfo* typeCheck();
+	TemplateObjNewExpr* replaceCopy(map<string, string> &rule);
 };
 
 class Program {
@@ -661,6 +701,7 @@ public:
     : tarExpr ( _tE)  {};
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual SiOpExpr* replaceCopy(map<string, string> &rule);
 };
 
 class NegExpr : public SiOpExpr {
@@ -669,6 +710,7 @@ public:
     : SiOpExpr( _tE) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual NegExpr* replaceCopy(map<string, string> &rule);
 };
 
 class ParenExpr : public SiOpExpr {
@@ -677,15 +719,18 @@ public:
     : SiOpExpr( _tE ) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual ParenExpr* replaceCopy(map<string, string> &rule);
 };
 
 class BlockStmt : public Stmt{
 public:
     StmtList stmtList ;
+    BlockStmt() {} ;
     BlockStmt( StmtList *_sL )
     : stmtList(_sL) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual BlockStmt* replaceCopy(map<string, string> &rule);
 };
 
 class IfThenElseStmt : public Stmt {
@@ -698,6 +743,7 @@ public:
     : condExpr(_cE) , thenStmt(_tS) , elseStmt(_eS) {};
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual IfThenElseStmt* replaceCopy(map<string, string> &rule);
 };
 
 class WhileStmt : public Stmt {
@@ -708,6 +754,7 @@ public:
     : condExpr(_cE) , bodyStmt(_bS) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual WhileStmt* replaceCopy(map<string, string> &rule);
 };
 
 class SysOutPrtStmt : public Stmt {
@@ -717,12 +764,14 @@ public :
     : prtExpr(_pE) {} ;
 	virtual TypeInfo* typeCheck();
     virtual llvm::Value* codeGen();
+    virtual SysOutPrtStmt* replaceCopy(map<string, string> &rule);
 };
 
 class SysInReadExpr : public Expr {
 public :
     SysInReadExpr( ) {} ;
     virtual llvm::Value* codeGen();
+    SysInReadExpr* replaceCopy(map<string, string> &rule);
 };
 
 class LamdaGenExpr : public Expr {
@@ -737,6 +786,7 @@ public :
 	stmtList(*_sL) , rtnExpr(_rE) {} ;
 	virtual TypeInfo* typeCheck();
 	virtual llvm::Value* codeGen();
+	virtual LamdaGenExpr* replaceCopy(map<string, string> &rule);
 };
 
 class LamdaAppExpr : public Expr {
@@ -748,6 +798,7 @@ public :
 	: tarIdent(_tI) , fillList(_fL) {}  ;
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual LamdaAppExpr* replaceCopy(map<string, string> &rule);
 };
 
 class AssignStmt : public Stmt {
@@ -759,6 +810,7 @@ public :
     : assignIdent(_aI) , valueExpr(_vE) {};
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+    virtual AssignStmt* replaceCopy(map<string, string> &rule);
 };
 
 class ArrAssignStmt : public Stmt {
@@ -772,6 +824,7 @@ public:
     : arrIdent(_aI) , valueExpr(_aE) ,
     addressExpr(_vE) {} ;
 	//virtual TypeInfo* typeCheck();
+	virtual ArrAssignStmt* replaceCopy(map<string, string> &rule);
 };
 
 class VarDeclStmt : public Stmt {
@@ -781,6 +834,7 @@ public:
     VarDeclStmt( TypeInfo* _t , Ident* _i ) : type(_t) , varIdent(_i) {} ;
     virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual VarDeclStmt* replaceCopy(map<string, string> &rule);
 };
 
 class ThisExpr : public Expr {
@@ -807,6 +861,7 @@ public:
 	virtual TypeInfo* typeCheck();
 	bool isTypeChecked ;
 	virtual TypeInfo* deepCopy();
+	virtual TypeInfo* replaceCopy(map<string, string> &rule);
 	virtual bool isUsrDefIdentType();
 };
 
@@ -814,6 +869,7 @@ class IntType : public TypeInfo {
 public:
     IntType() : TypeInfo("int") {} ;
     virtual llvm::Type* llvmTypeGen();
+    virtual TypeInfo* replaceCopy(map<string, string> &rule);
 };
 
 class ArrType : public TypeInfo {
@@ -827,6 +883,7 @@ class BoolType : public TypeInfo {
 public:
     BoolType() : TypeInfo("boolean") { } ;
     virtual llvm::Type* llvmTypeGen();
+    virtual TypeInfo* replaceCopy(map<string, string> &rule);
 };
 
 class VoidType : public TypeInfo {
@@ -842,6 +899,7 @@ public:
 	: TypeInfo("Class") , tarIdent(_tI) , tarClassDecl(_tCD) {} ;
 	virtual llvm::Type* llvmTypeGen();
 	virtual TypeInfo* deepCopy();
+	virtual TypeInfo* replaceCopy(map<string, string> &rule);
 };
 
 class ItfaceType : public TypeInfo {
@@ -852,6 +910,7 @@ public:
 	: TypeInfo("Itface") , tarIdent(_tI) , tarItfaceDecl(_tID) {} ;
 	virtual llvm::Type* llvmTypeGen();
 	virtual TypeInfo* deepCopy();
+	virtual TypeInfo* replaceCopy(map<string, string> &rule);
 };
 
 class UsrDefIdentType : public TypeInfo {
@@ -864,6 +923,7 @@ public:
     virtual llvm::Type* llvmTypeGen();
 	virtual TypeInfo* typeCheck();
 	virtual TypeInfo* deepCopy();
+	virtual TypeInfo* replaceCopy(map<string, string> &rule);
 
 	virtual bool isUsrDefIdentType();
 	bool isItfaceType();
@@ -871,6 +931,23 @@ public:
 	ItfaceDecl* getItfaceDecl();
  	ClassDecl* getClassDecl();
 	TypeInfo* getConcreType();
+};
+
+class TemplateUsrDefIdentType : public UsrDefIdentType {
+public:
+    vector<string> parameters;
+    string instanceClassName;
+
+    TemplateUsrDefIdentType(Ident *_cI, string _t)
+    : UsrDefIdentType(_cI) {
+	parameters.clear();
+	parameters.push_back(_t);
+	instanceClassName = tarIdent->name;
+	for (int i = 0; i < parameters.size(); ++i)
+		instanceClassName += "#" + parameters[i];
+    }
+    virtual TypeInfo* typeCheck();
+    virtual TypeInfo* replaceCopy(map<string, string> &rule);
 };
 
 class InvokerType : public TypeInfo {
@@ -892,4 +969,21 @@ public:
 	: tarExpr(_tE) , srcType(_sT) {} ;
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
+	virtual InsOfExpr* replaceCopy(map<string, string> &rule);
 };
+
+class TemplateClassDecl : public ClassDecl {
+public:
+	vector<string> prototypes;
+	TemplateClassDecl(Ident *_cI,
+			string tparam,
+			Ident *_eCI,
+			ImpItfaceList* _iIL,
+			VarDeclList *_vDL,
+			MtdDeclList *_mDL ):
+	ClassDecl(_cI, _eCI, _iIL, _vDL, _mDL) {
+		prototypes.push_back(tparam);
+	}
+	ClassDecl *replaceCopy(vector<string> parameters);
+};
+
