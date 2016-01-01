@@ -2,7 +2,6 @@ class Test{
     public static void main(String[] a){
 	int a ;
 	Tester b ; 
-	Reader c ; 
         b = new Tester();
 	a = b.set();
 	a = b.work();

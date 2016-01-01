@@ -44,7 +44,9 @@ comment		\/\/[^\n]*
 "new"			return TOKEN(TNEW);
 "length"		return TOKEN(TLENGT);
 "System.out.println"	return TOKEN(TSYSOUT);
+"System.out.putc"	return TOKEN(TSYSOUTCHAR);
 "System.in.read"	return TOKEN(TSYSIN);
+"System.in.getc"	return TOKEN(TSYSINCHAR);
 {identifier}		SAVE_TOKEN; return TIDENT;
 {number}		SAVE_TOKEN; return TNUMBER;
 "("			return TOKEN(TLPAREN);
@@ -55,6 +57,9 @@ comment		\/\/[^\n]*
 "}"			return TOKEN(TRBRACE);
 "&&"			return TOKEN(TAND);
 "<"			return TOKEN(TCLT);
+">"			return TOKEN(TCGT);
+"=="			return TOKEN(TCEQ);
+"!="			return TOKEN(TCNE);
 "+"			return TOKEN(TPLUS);
 "-"			return TOKEN(TMINUS);
 "*"			return TOKEN(TMUL);

@@ -56,6 +56,7 @@ public:
 	virtual TypeInfo* typeCheck();
 	//virtual Stmt * deepCopy();
 	TypeInfo* stmtType;
+	Stmt(){ stmtType = NULL ; }
 };
 
 class Expr {
@@ -64,12 +65,13 @@ public:
 	virtual TypeInfo* typeCheck();
 	//virtual Expr * deepCopy();
 	TypeInfo* exprType;
+	Expr(){ exprType = NULL ; } 
 };
 
 class StmtList {
 public:
     std::vector<class Stmt *> stmtList;
-    StmtList(){}
+    StmtList(){ /*stmtList.clear() ;*/ }
     StmtList( StmtList* _sL ,
               Stmt * _s )
     : stmtList(_sL->stmtList)
@@ -87,7 +89,7 @@ public:
     TypeInfo * varType ;
     Ident * varIdent ;
     VarArg( TypeInfo* _vT , Ident* _vI )
-    : varType(_vT) , varIdent(_vI) {} ;
+    : varType(_vT) , varIdent(_vI) { } ;
     llvm::Type* llvmType;
     llvm::Type* getLLVMType();
     virtual TypeInfo * typeCheck();
@@ -101,8 +103,7 @@ public:
 	ArrayRef<Type*> TypeArray;
 
 	VarArgList(){};
-    VarArgList( VarArgList* _vAL ,
-                   VarArg* _vA )
+    VarArgList( VarArgList* _vAL,VarArg* _vA)
     : declList(_vAL->declList)
     {
         declList.push_back(_vA);
@@ -200,7 +201,8 @@ public:
              Expr* _rE) :
     mtdIdent(_mI) , rtnType(_rT) ,
     varArgList(_vAL) ,
-    stmtList(*_sL) , rtnExpr(_rE) {} ;
+    stmtList(*_sL) , rtnExpr(_rE),mtdDeclType(NULL) {} ;
+    llvm::FunctionType * func_type;
     llvm::Type * llvmType;
     llvm::Type * getFunctionType();
     Function * codeGen();
@@ -209,6 +211,8 @@ public:
     bool isCreated;
     virtual TypeInfo* typeCheck();
     TypeInfo * mtdDeclType;
+	/* Used for lambda */
+	void ClearNamedValues();
 };
 
 class AbsMtdDecl {
@@ -275,6 +279,7 @@ public:
     BiOpExpr( Expr * _lE ,
               Expr * _rE )
     : leftExpr(_lE), rightExpr(_rE) {};
+	virtual TypeInfo* typeCheck();
     virtual llvm::Value* codeGen();
 };
 
@@ -289,6 +294,30 @@ public:
 class LessCmpExpr : public BiOpExpr {
 public:
     LessCmpExpr ( Expr * lE ,
+                  Expr *  rE )
+        :BiOpExpr( lE , rE ) {} ;
+    virtual llvm::Value* codeGen();
+};
+
+class GreaterCmpExpr : public BiOpExpr {
+public:
+    GreaterCmpExpr ( Expr * lE ,
+                  Expr *  rE )
+        :BiOpExpr( lE , rE ) {} ;
+    virtual llvm::Value* codeGen();
+};
+
+class EqualCmpExpr : public BiOpExpr {
+public:
+    EqualCmpExpr ( Expr * lE ,
+                  Expr *  rE )
+        :BiOpExpr( lE , rE ) {} ;
+    virtual llvm::Value* codeGen();
+};
+
+class NotEqualCmpExpr : public BiOpExpr {
+public:
+    NotEqualCmpExpr ( Expr * lE ,
                   Expr *  rE )
         :BiOpExpr( lE , rE ) {} ;
     virtual llvm::Value* codeGen();
@@ -719,35 +748,25 @@ public :
     virtual llvm::Value* codeGen();
 };
 
+class SysOutPrtCharStmt : public Stmt {
+public :
+    Expr * prtExpr ;
+    SysOutPrtCharStmt( Expr * _pE )
+    : prtExpr(_pE) {} ;
+	virtual TypeInfo* typeCheck();
+    virtual llvm::Value* codeGen();
+};
+
 class SysInReadExpr : public Expr {
 public :
     SysInReadExpr( ) {} ;
     virtual llvm::Value* codeGen();
 };
 
-class LamdaGenExpr : public Expr {
+class SysInReadCharExpr : public Expr {
 public :
-	VarArgList varArgList ;
-	StmtList    stmtList ;
-	Expr    *rtnExpr ;
-	LamdaGenExpr( VarArgList* _vAL ,
-			 StmtList* _sL ,
-			 Expr* _rE) :
-	varArgList(_vAL) ,
-	stmtList(*_sL) , rtnExpr(_rE) {} ;
-	virtual TypeInfo* typeCheck();
-	virtual llvm::Value* codeGen();
-};
-
-class LamdaAppExpr : public Expr {
-public :
-	Ident *tarIdent ;
-	ExprList fillList ;
-	LamdaAppExpr( Ident * _tI ,
-				  ExprList * _fL )
-	: tarIdent(_tI) , fillList(_fL) {}  ;
-	virtual llvm::Value* codeGen();
-	virtual TypeInfo* typeCheck();
+    SysInReadCharExpr( ) {} ;
+    virtual llvm::Value* codeGen();
 };
 
 class AssignStmt : public Stmt {
@@ -794,7 +813,7 @@ public:
     llvm::Type* tarType ;
 	long long classNo ;
     TypeInfo(){};
-    TypeInfo( std::string _tN ) : typeName(_tN) , classNo(0) {} ;
+    TypeInfo( std::string _tN ) : typeName(_tN) , classNo(0) { tarType = NULL ; } ;
     TypeInfo( TypeInfo * _t ) : typeName(_t->typeName) , classNo(_t->classNo){} ;
 	TypeInfo( TypeInfo & _t ) : typeName(_t.typeName) , classNo(_t.classNo){} ;
     virtual llvm::Type* llvmTypeGen();
@@ -877,6 +896,7 @@ class InvokerType : public TypeInfo {
 public:
 	InvokerType()
 	: TypeInfo("Invoker") {} ;
+    virtual llvm::Type* llvmTypeGen();
 };
 
 class NullType : public TypeInfo {
@@ -893,3 +913,40 @@ public:
 	virtual llvm::Value* codeGen();
 	virtual TypeInfo* typeCheck();
 };
+
+/*  Used for lambda  */
+
+
+void NamedValuesAccess(std::string);
+
+Value* CreatePtrAdd(Value*,int,Type*);
+
+FunctionType* GetLambdaType();
+
+void ArgValuesAccess(std::string,Type*,int);
+
+class LamdaGenExpr : public Expr {
+public :
+	VarArgList varArgList ;
+	StmtList    stmtList ;
+	Expr    *rtnExpr ;
+	LamdaGenExpr( VarArgList* _vAL ,
+			 StmtList* _sL ,
+			 Expr* _rE) :
+	varArgList(_vAL) ,
+	stmtList(*_sL) , rtnExpr(_rE) {} ;
+	virtual TypeInfo* typeCheck();
+	virtual llvm::Value* codeGen();
+};
+
+class LamdaAppExpr : public Expr {
+public :
+	Ident *tarIdent ;
+	ExprList fillList ;
+	LamdaAppExpr( Ident * _tI ,
+				  ExprList * _fL )
+	: tarIdent(_tI) , fillList(_fL) { exprType = NULL ; }  ;
+	virtual llvm::Value* codeGen();
+	virtual TypeInfo* typeCheck();
+};
+/*  Used for lambda  */

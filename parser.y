@@ -70,7 +70,7 @@
 %token  TIDENT TINT TDOUBLE TNUMBER
 %token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
-%token  TSEMICOLON TSYSOUT TSYSIN
+%token  TSEMICOLON TSYSOUT TSYSIN TSYSOUTCHAR TSYSINCHAR
 %token  TPLUS TMINUS TMUL TDIV TAND
 %token  TLF TRF
 %token  TCLASS TVOID TPUBLIC TSTATIC TMAIN TSTRING
@@ -192,6 +192,8 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
        { $$ = new WhileStmt( $3 , $5 ) ; }
      | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
        { $$ = new SysOutPrtStmt( $3 ) ; }
+     | TSYSOUTCHAR TLPAREN expr TRPAREN TSEMICOLON
+       { $$ = new SysOutPrtCharStmt( $3 ) ; }
      | varuseident TEQUAL expr TSEMICOLON
        { $$ = new AssignStmt( $1 , $3 ) ; }
      | varuseident TLF expr TRF TEQUAL expr TSEMICOLON
@@ -202,6 +204,7 @@ stmt : TLBRACE stmtlist TRBRACE { $$ = new BlockStmt($2) ; }
 
 expr : biopexpr { $$ = $1 ; }
      | TSYSIN TLPAREN TRPAREN { $$ = new SysInReadExpr( ) ; }
+     | TSYSINCHAR TLPAREN TRPAREN { $$ = new SysInReadCharExpr( ) ; }
      | expr TLF expr TRF { $$ = new ArrAcsExpr( $1 , $3 ) ; }
      | expr TDOT TLENGT { $$ = new GetLenExpr( $1 ) ; }
      | expr TDOT mtduseident TLPAREN exprlist TRPAREN
@@ -229,7 +232,10 @@ expr : biopexpr { $$ = $1 ; }
 
 biopexpr : expr TPLUS expr { $$ = new AddExpr( $1 , $3 ) ; }
          | expr TMINUS expr { $$ = new SubExpr( $1 , $3 ) ; }
-         | expr TCLT expr { $$ = new LessCmpExpr( $1 , $3 ) ; }
+	 | expr TCLT expr { $$ = new LessCmpExpr( $1 , $3 ) ; }
+         | expr TCGT expr { $$ = new GreaterCmpExpr( $1 , $3 ) ; }
+         | expr TCEQ expr { $$ = new EqualCmpExpr( $1 , $3 ) ; }
+         | expr TCNE expr { $$ = new NotEqualCmpExpr( $1 , $3 ) ; }
          | expr TAND expr { $$ = new AndExpr( $1 , $3 ) ; }
          | expr TMUL expr { $$ = new MultExpr( $1 , $3 ) ; }
 
@@ -261,7 +267,7 @@ vardecllist : /*blank*/ { $$ = new VarDeclList() ; }
 
 vararglist : /*blank*/ { $$ = new VarArgList() ; }
    	 | vararg { $$ = new VarArgList( new VarArgList() , $1 ) ; }
-	 | vararg TCOMMA vararglist { $$ = new VarArgList( $3, $1 ) ; }
+	 | vararglist TCOMMA vararg { $$ = new VarArgList( $1, $3 ) ; }
 	 ;
 
 itfacedeclident : TIDENT { $$ = new ItfaceDeclIdent( *$1  ) ;  }

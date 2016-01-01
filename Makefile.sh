@@ -8,4 +8,5 @@ clang++-3.5 -g -O3 -c parser.cpp `llvm-config --cxxflags` -o parser.o
 clang++-3.5 -g -O3 -c toy.cpp `llvm-config --cxxflags` -o toy.o
 
 # Link seperate objects to form our compiler
-clang++-3.5 -g -O3 parser.o toy.o lex.o `llvm-config --ldflags --system-libs --libs core mcjit native` -o toy
+clang++-3.5 -g -O3 parser.o toy.o lex.o `llvm-config --ldflags --system-libs --libs core mcjit native` -o gava
+

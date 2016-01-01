@@ -61,6 +61,20 @@ static IRBuilder<> Builder(getGlobalContext());
 static std::map<std::string, Value*> NamedValues;
 static legacy::FunctionPassManager *TheFPM;
 
+/*  Used for lambda  */
+static int LambdaLevel;
+static map<string, int> NamedValuesLevel;
+static map<string, int> IsField;
+static vector<BasicBlock *> LambdaBB;
+static vector<BasicBlock *> FunctionBB;
+static vector<Value *> LambdaArgStart;
+static vector<Value *> FunctionArgStart;
+static vector<int> LambdaArgCount;
+static ClassDecl* LambdaOwner;
+
+static int type_check_level = 0 ;
+static int code_gen_level = 0 ;
+
 #include "codegen.cpp"
 
 Value *MainClassDecl::codeGen() {
@@ -88,15 +102,15 @@ Value *MainClassDecl::codeGen() {
     return MainFunction;
   }
   else
-    cerr << "Main function generation failed!" << endl;
+    cerr << " [ Gava ] Main function generation failed!" << endl;
   return NULL;
 }
 
 Value *Program::codeGen() {
   this->typeCheck();
-  std::cout<<" All Classes have been checked successfully. "<<std::endl;
+  std::cout<<" [ Gava ] All Classes have been checked. "<<std::endl;
   this->ClassInitial();
-  std::cout<<" All Classes have been initialized successfully. "<<std::endl;
+  std::cout<<" [ Gava ] All Classes have been initialized. "<<std::endl;
   return mainClassDecl->codeGen();
 }
 
@@ -104,13 +118,47 @@ Value *Program::codeGen() {
 // Main driver code.
 //===----------------------------------------------------------------------===//
 
-int main() {
+int main( int argc , char** argv ) {
+  std::string tarFile("tmp.ll");
+	
+  for ( int i = 0 ; i < argc ; i ++ ) {
+      if ( ( argv[i][0] == '-') && ( argv[i][1] == 'v') && ( argv[i][2] != 't' ) && ( argv[i][2] !='i' ) ) {
+          char tmp1 , tmp2 ;
+          int level ;
+          level = 0 ;
+          sscanf( argv[i] , "%c%c%d" , &tmp1 , &tmp2 , &level ) ;
+          if ( level >= 2 ) level = 2 ;
+          type_check_level = level ;
+          code_gen_level = level ; 
+      } 
+      if ( ( argv[i][0] == '-') && ( argv[i][1] == 'v') && ( argv[i][2] == 't' ) ) {
+          char tmp1 , tmp2 , tmp3 ; 
+          int level ;
+          level = 0 ;
+          sscanf( argv[i] , "%c%c%c%d" , &tmp1 , &tmp2 , &tmp3 , &level ) ;
+          if ( level >= 2 ) level = 2 ;
+          type_check_level = level ;
+      } 
+      if ( ( argv[i][0] == '-') && ( argv[i][1] == 'v') && ( argv[i][2] == 'i' ) ) {
+          char tmp1 , tmp2 , tmp3 ;
+          int level ;
+          level = 0 ;
+          sscanf( argv[i] , "%c%c%c%d" , &tmp1 , &tmp2 , &tmp3 , &level ) ;
+          if ( level >= 2 ) level = 2 ;
+          type_check_level = level ;
+      } 
+      if ( ( argv[i][0] == '-' ) && ( argv[i][1] == 'o' ) ) {
+	  char name[100];
+	  sscanf( argv[i+1], "%s" , name ) ; 
+	  tarFile = name;
+      }
+  }
 
-  cerr << "Main driver started, running yyparse()..." << endl;
+  cerr << " [ Gava ] Main driver started, running yyparse()..." << endl;
 
   yyparse();
 
-  cerr << "Ready for llvm IR generation." << endl;
+  cerr << " [ Gava ] Ready for llvm IR generation." << endl;
 
   LLVMContext &Context = getGlobalContext();
 
@@ -136,13 +184,13 @@ int main() {
   TheFPM = &OurFPM;
   TheFPM->doInitialization();
   if (Value *PROG = programAst->codeGen()) {
-    cerr << "Codegen result for Main Function(programAst):" << endl;
-    PROG->dump();
+    //cerr << "Codegen result for Main Function(programAst):" << endl;
+    //PROG->dump();
   }
   else
-    cerr << "Codegen failed! So sad..." << endl;
+    cerr << " [ Gava ] Codegen failed! So sad..." << endl;
 
-  cerr << "All of the generated code:" << endl;
+  cerr << " [ Gava ] All of the generated code is write down to File \'"<<tarFile<<"\'" << endl;
   // Print out all of the generated code.
 
   TheFPM->doFinalization();
@@ -150,7 +198,7 @@ int main() {
   //freopen("tmp.ll","wb",stderr);
   //TheModule->dump();
   std::error_code EC;
-  llvm::raw_fd_ostream out("tmp.ll",EC,llvm::sys::fs::F_None);
+  llvm::raw_fd_ostream out( tarFile ,EC,llvm::sys::fs::F_None);
   TheModule->print(out,nullptr);
 
   return 0;

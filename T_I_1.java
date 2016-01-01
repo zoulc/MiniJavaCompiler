@@ -2,14 +2,20 @@ class Test{
     public static void main(String[] a){
 	int a ;
 	Tester b ;
-        Reader c ; 
-	b = new Tester2();
+        Tester2 c ; 
+	Reader d ; 
+	b = new Tester();
+	c = new Tester2();
+	d = new Reader(); 
+	
 	a = b.set();
 	System.out.println(a);
-	c = new Reader() ; 
-	a = c.read(b);
+	a = d.read(b) ;
 	System.out.println(a);
-	a = b.work();
+
+	a = c.set();
+	System.out.println(a);
+	a = d.read(c);
 	System.out.println(a);
     }
 }

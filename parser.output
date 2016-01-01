@@ -1,10 +1,7 @@
 Terminals unused in grammar
 
    TDOUBLE
-   TCEQ
-   TCNE
    TCLE
-   TCGT
    TCGE
    TDIV
    TOBJECT
@@ -15,12 +12,15 @@ State 35 conflicts: 1 shift/reduce
 State 60 conflicts: 1 shift/reduce
 State 62 conflicts: 1 shift/reduce
 State 80 conflicts: 1 shift/reduce
-State 139 conflicts: 8 shift/reduce
-State 164 conflicts: 8 shift/reduce
-State 169 conflicts: 5 shift/reduce
-State 170 conflicts: 5 shift/reduce
-State 171 conflicts: 5 shift/reduce
-State 172 conflicts: 8 shift/reduce
+State 144 conflicts: 11 shift/reduce
+State 174 conflicts: 11 shift/reduce
+State 175 conflicts: 11 shift/reduce
+State 176 conflicts: 11 shift/reduce
+State 177 conflicts: 11 shift/reduce
+State 182 conflicts: 8 shift/reduce
+State 183 conflicts: 8 shift/reduce
+State 184 conflicts: 8 shift/reduce
+State 185 conflicts: 11 shift/reduce
 
 
 Grammar
@@ -71,194 +71,202 @@ Grammar
    29     | TIF TLPAREN expr TRPAREN stmt TELSE stmt
    30     | TWHILE TLPAREN expr TRPAREN stmt
    31     | TSYSOUT TLPAREN expr TRPAREN TSEMICOLON
-   32     | varuseident TEQUAL expr TSEMICOLON
-   33     | varuseident TLF expr TRF TEQUAL expr TSEMICOLON
-   34     | type vardeclident TSEMICOLON
+   32     | TSYSOUTCHAR TLPAREN expr TRPAREN TSEMICOLON
+   33     | varuseident TEQUAL expr TSEMICOLON
+   34     | varuseident TLF expr TRF TEQUAL expr TSEMICOLON
+   35     | type vardeclident TSEMICOLON
 
-   35 expr: biopexpr
-   36     | TSYSIN TLPAREN TRPAREN
-   37     | expr TLF expr TRF
-   38     | expr TDOT TLENGT
-   39     | expr TDOT mtduseident TLPAREN exprlist TRPAREN
-   40     | TNUMBER
-   41     | TTRUE
-   42     | TFALSE
-   43     | vardeclident
-   44     | TTHIS
-   45     | TNEW TINT TLF expr TRF
-   46     | TNEW typeuseident TLPAREN TRPAREN
-   47     | TBANG expr
-   48     | TLPAREN expr TRPAREN
-   49     | TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
-   50     | varuseident TLPAREN exprlist TRPAREN
-   51     | expr TINSTANCEOF type
+   36 expr: biopexpr
+   37     | TSYSIN TLPAREN TRPAREN
+   38     | TSYSINCHAR TLPAREN TRPAREN
+   39     | expr TLF expr TRF
+   40     | expr TDOT TLENGT
+   41     | expr TDOT mtduseident TLPAREN exprlist TRPAREN
+   42     | TNUMBER
+   43     | TTRUE
+   44     | TFALSE
+   45     | vardeclident
+   46     | TTHIS
+   47     | TNEW TINT TLF expr TRF
+   48     | TNEW typeuseident TLPAREN TRPAREN
+   49     | TBANG expr
+   50     | TLPAREN expr TRPAREN
+   51     | TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   52     | varuseident TLPAREN exprlist TRPAREN
+   53     | expr TINSTANCEOF type
 
-   52 biopexpr: expr TPLUS expr
-   53         | expr TMINUS expr
-   54         | expr TCLT expr
-   55         | expr TAND expr
-   56         | expr TMUL expr
+   54 biopexpr: expr TPLUS expr
+   55         | expr TMINUS expr
+   56         | expr TCLT expr
+   57         | expr TCGT expr
+   58         | expr TCEQ expr
+   59         | expr TCNE expr
+   60         | expr TAND expr
+   61         | expr TMUL expr
 
-   57 stmtlist: %empty
-   58         | stmtlist stmt
+   62 stmtlist: %empty
+   63         | stmtlist stmt
 
-   59 mtddecllist: %empty
-   60            | mtddecllist mtddecl
-   61            | mtddecl
+   64 mtddecllist: %empty
+   65            | mtddecllist mtddecl
+   66            | mtddecl
 
-   62 absmtddecllist: absmtddecllist absmtddecl
-   63               | absmtddecl
+   67 absmtddecllist: absmtddecllist absmtddecl
+   68               | absmtddecl
 
-   64 exprlist: %empty
-   65         | expr
-   66         | exprlist TCOMMA expr
+   69 exprlist: %empty
+   70         | expr
+   71         | exprlist TCOMMA expr
 
-   67 vardecllist: %empty
-   68            | vardecllist vardecl
+   72 vardecllist: %empty
+   73            | vardecllist vardecl
 
-   69 vararglist: %empty
-   70           | vararg
-   71           | vararg TCOMMA vararglist
+   74 vararglist: %empty
+   75           | vararg
+   76           | vararglist TCOMMA vararg
 
-   72 itfacedeclident: TIDENT
+   77 itfacedeclident: TIDENT
 
-   73 classdeclident: TIDENT
+   78 classdeclident: TIDENT
 
-   74 vardeclident: TIDENT
+   79 vardeclident: TIDENT
 
-   75 argdeclident: TIDENT
+   80 argdeclident: TIDENT
 
-   76 mtddeclident: TIDENT
+   81 mtddeclident: TIDENT
 
-   77 varuseident: TIDENT
+   82 varuseident: TIDENT
 
-   78 typeuseident: TIDENT
+   83 typeuseident: TIDENT
 
-   79 mtduseident: TIDENT
+   84 mtduseident: TIDENT
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-TIDENT (258) 72 73 74 75 76 77 78 79
-TINT (259) 23 24 45
+TIDENT (258) 77 78 79 80 81 82 83 84
+TINT (259) 23 24 47
 TDOUBLE (260)
-TNUMBER (261) 40
-TCEQ (262)
-TCNE (263)
-TCLT (264) 54
+TNUMBER (261) 42
+TCEQ (262) 58
+TCNE (263) 59
+TCLT (264) 56
 TCLE (265)
-TCGT (266)
+TCGT (266) 57
 TCGE (267)
-TEQUAL (268) 32 33
-TLPAREN (269) 4 21 22 29 30 31 36 39 46 48 49 50
-TRPAREN (270) 4 21 22 29 30 31 36 39 46 48 49 50
-TLBRACE (271) 4 13 14 15 16 17 18 21 28 49
-TRBRACE (272) 4 13 14 15 16 17 18 21 28 49
-TCOMMA (273) 9 12 66 71
-TDOT (274) 38 39
-TSEMICOLON (275) 19 21 22 31 32 33 34 49
+TEQUAL (268) 33 34
+TLPAREN (269) 4 21 22 29 30 31 32 37 38 41 48 50 51 52
+TRPAREN (270) 4 21 22 29 30 31 32 37 38 41 48 50 51 52
+TLBRACE (271) 4 13 14 15 16 17 18 21 28 51
+TRBRACE (272) 4 13 14 15 16 17 18 21 28 51
+TCOMMA (273) 9 12 71 76
+TDOT (274) 40 41
+TSEMICOLON (275) 19 21 22 31 32 33 34 35 51
 TSYSOUT (276) 31
-TSYSIN (277) 36
-TPLUS (278) 52
-TMINUS (279) 53
-TMUL (280) 56
-TDIV (281)
-TAND (282) 55
-TLF (283) 4 23 33 37 45
-TRF (284) 4 23 33 37 45
-TCLASS (285) 4 13 14 15 16
-TVOID (286) 4
-TPUBLIC (287) 4 21 22
-TSTATIC (288) 4
-TMAIN (289) 4
-TSTRING (290) 4
-TEXTENDS (291) 13 14 17
-TRETURN (292) 21 49
-TFALSE (293) 42
-TTRUE (294) 41
-TBOOL (295) 25
-TBANG (296) 47
-TELSE (297) 29
-TIF (298) 29
-TLENGT (299) 38
-TNEW (300) 45 46
-TTHIS (301) 44
-TWHILE (302) 30
-TINVOKER (303) 26
-TARROW (304) 49
-TITFACE (305) 17 18
-TIMPLEM (306) 13 15
-TINSTANCEOF (307) 51
-TOBJECT (308)
+TSYSIN (277) 37
+TSYSOUTCHAR (278) 32
+TSYSINCHAR (279) 38
+TPLUS (280) 54
+TMINUS (281) 55
+TMUL (282) 61
+TDIV (283)
+TAND (284) 60
+TLF (285) 4 23 34 39 47
+TRF (286) 4 23 34 39 47
+TCLASS (287) 4 13 14 15 16
+TVOID (288) 4
+TPUBLIC (289) 4 21 22
+TSTATIC (290) 4
+TMAIN (291) 4
+TSTRING (292) 4
+TEXTENDS (293) 13 14 17
+TRETURN (294) 21 51
+TFALSE (295) 44
+TTRUE (296) 43
+TBOOL (297) 25
+TBANG (298) 49
+TELSE (299) 29
+TIF (300) 29
+TLENGT (301) 40
+TNEW (302) 47 48
+TTHIS (303) 46
+TWHILE (304) 30
+TINVOKER (305) 26
+TARROW (306) 51
+TITFACE (307) 17 18
+TIMPLEM (308) 13 15
+TINSTANCEOF (309) 53
+TOBJECT (310)
 
 
 Nonterminals, with rules where they appear
 
-$accept (54)
+$accept (56)
     on left: 0
-program (55)
+program (57)
     on left: 1 2 3, on right: 0 2 3
-mainclassdecl (56)
+mainclassdecl (58)
     on left: 4, on right: 1
-extitface (57)
+extitface (59)
     on left: 5, on right: 8 9
-impitface (58)
+impitface (60)
     on left: 6, on right: 11 12
-extitfacelist (59)
+extitfacelist (61)
     on left: 7 8 9, on right: 9 17
-impitfacelist (60)
+impitfacelist (62)
     on left: 10 11 12, on right: 12 13 15
-classdecl (61)
+classdecl (63)
     on left: 13 14 15 16, on right: 2
-itfacedecl (62)
+itfacedecl (64)
     on left: 17 18, on right: 3
-vardecl (63)
-    on left: 19, on right: 68
-vararg (64)
-    on left: 20, on right: 70 71
-mtddecl (65)
-    on left: 21, on right: 60 61
-absmtddecl (66)
-    on left: 22, on right: 62 63
-type (67)
-    on left: 23 24 25 26 27, on right: 19 20 21 22 34 51
-stmt (68)
-    on left: 28 29 30 31 32 33 34, on right: 29 30 58
-expr (69)
-    on left: 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51, on right:
-    21 29 30 31 32 33 37 38 39 45 47 48 49 51 52 53 54 55 56 65 66
-biopexpr (70)
-    on left: 52 53 54 55 56, on right: 35
-stmtlist (71)
-    on left: 57 58, on right: 4 21 28 49 58
-mtddecllist (72)
-    on left: 59 60 61, on right: 13 14 15 16 60
-absmtddecllist (73)
-    on left: 62 63, on right: 17 18 62
-exprlist (74)
-    on left: 64 65 66, on right: 39 50 66
-vardecllist (75)
-    on left: 67 68, on right: 13 14 15 16 68
-vararglist (76)
-    on left: 69 70 71, on right: 21 22 49 71
-itfacedeclident (77)
-    on left: 72, on right: 5 6 17 18
-classdeclident (78)
-    on left: 73, on right: 4 13 14 15 16
-vardeclident (79)
-    on left: 74, on right: 19 20 34 43
-argdeclident (80)
-    on left: 75, on right: 4
-mtddeclident (81)
-    on left: 76, on right: 21 22
-varuseident (82)
-    on left: 77, on right: 32 33 50
-typeuseident (83)
-    on left: 78, on right: 27 46
-mtduseident (84)
-    on left: 79, on right: 39
+vardecl (65)
+    on left: 19, on right: 73
+vararg (66)
+    on left: 20, on right: 75 76
+mtddecl (67)
+    on left: 21, on right: 65 66
+absmtddecl (68)
+    on left: 22, on right: 67 68
+type (69)
+    on left: 23 24 25 26 27, on right: 19 20 21 22 35 53
+stmt (70)
+    on left: 28 29 30 31 32 33 34 35, on right: 29 30 63
+expr (71)
+    on left: 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53,
+    on right: 21 29 30 31 32 33 34 39 40 41 47 49 50 51 53 54 55 56
+    57 58 59 60 61 70 71
+biopexpr (72)
+    on left: 54 55 56 57 58 59 60 61, on right: 36
+stmtlist (73)
+    on left: 62 63, on right: 4 21 28 51 63
+mtddecllist (74)
+    on left: 64 65 66, on right: 13 14 15 16 65
+absmtddecllist (75)
+    on left: 67 68, on right: 17 18 67
+exprlist (76)
+    on left: 69 70 71, on right: 41 52 71
+vardecllist (77)
+    on left: 72 73, on right: 13 14 15 16 73
+vararglist (78)
+    on left: 74 75 76, on right: 21 22 51 76
+itfacedeclident (79)
+    on left: 77, on right: 5 6 17 18
+classdeclident (80)
+    on left: 78, on right: 4 13 14 15 16
+vardeclident (81)
+    on left: 79, on right: 19 20 35 45
+argdeclident (82)
+    on left: 80, on right: 4
+mtddeclident (83)
+    on left: 81, on right: 21 22
+varuseident (84)
+    on left: 82, on right: 33 34 52
+typeuseident (85)
+    on left: 83, on right: 27 48
+mtduseident (86)
+    on left: 84, on right: 41
 
 
 State 0
@@ -303,9 +311,9 @@ State 3
 
 State 4
 
-   73 classdeclident: TIDENT .
+   78 classdeclident: TIDENT .
 
-    $default  reduce using rule 73 (classdeclident)
+    $default  reduce using rule 78 (classdeclident)
 
 
 State 5
@@ -379,9 +387,9 @@ State 12
 
 State 13
 
-   72 itfacedeclident: TIDENT .
+   77 itfacedeclident: TIDENT .
 
-    $default  reduce using rule 72 (itfacedeclident)
+    $default  reduce using rule 77 (itfacedeclident)
 
 
 State 14
@@ -404,7 +412,7 @@ State 16
 
    16 classdecl: TCLASS classdeclident TLBRACE . vardecllist mtddecllist TRBRACE
 
-    $default  reduce using rule 67 (vardecllist)
+    $default  reduce using rule 72 (vardecllist)
 
     vardecllist  go to state 22
 
@@ -465,7 +473,7 @@ State 21
 State 22
 
    16 classdecl: TCLASS classdeclident TLBRACE vardecllist . mtddecllist TRBRACE
-   68 vardecllist: vardecllist . vardecl
+   73 vardecllist: vardecllist . vardecl
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
@@ -473,8 +481,8 @@ State 22
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    TPUBLIC   [reduce using rule 59 (mtddecllist)]
-    $default  reduce using rule 59 (mtddecllist)
+    TPUBLIC   [reduce using rule 64 (mtddecllist)]
+    $default  reduce using rule 64 (mtddecllist)
 
     vardecl       go to state 39
     mtddecl       go to state 40
@@ -530,15 +538,15 @@ State 27
 
 State 28
 
-   63 absmtddecllist: absmtddecl .
+   68 absmtddecllist: absmtddecl .
 
-    $default  reduce using rule 63 (absmtddecllist)
+    $default  reduce using rule 68 (absmtddecllist)
 
 
 State 29
 
    18 itfacedecl: TITFACE itfacedeclident TLBRACE absmtddecllist . TRBRACE
-   62 absmtddecllist: absmtddecllist . absmtddecl
+   67 absmtddecllist: absmtddecllist . absmtddecl
 
     TRBRACE  shift, and go to state 49
     TPUBLIC  shift, and go to state 27
@@ -578,9 +586,9 @@ State 33
 
 State 34
 
-   78 typeuseident: TIDENT .
+   83 typeuseident: TIDENT .
 
-    $default  reduce using rule 78 (typeuseident)
+    $default  reduce using rule 83 (typeuseident)
 
 
 State 35
@@ -623,16 +631,16 @@ State 38
 
 State 39
 
-   68 vardecllist: vardecllist vardecl .
+   73 vardecllist: vardecllist vardecl .
 
-    $default  reduce using rule 68 (vardecllist)
+    $default  reduce using rule 73 (vardecllist)
 
 
 State 40
 
-   61 mtddecllist: mtddecl .
+   66 mtddecllist: mtddecl .
 
-    $default  reduce using rule 61 (mtddecllist)
+    $default  reduce using rule 66 (mtddecllist)
 
 
 State 41
@@ -647,7 +655,7 @@ State 41
 State 42
 
    16 classdecl: TCLASS classdeclident TLBRACE vardecllist mtddecllist . TRBRACE
-   60 mtddecllist: mtddecllist . mtddecl
+   65 mtddecllist: mtddecllist . mtddecl
 
     TRBRACE  shift, and go to state 58
     TPUBLIC  shift, and go to state 36
@@ -666,7 +674,7 @@ State 44
 
    14 classdecl: TCLASS classdeclident TEXTENDS classdeclident TLBRACE . vardecllist mtddecllist TRBRACE
 
-    $default  reduce using rule 67 (vardecllist)
+    $default  reduce using rule 72 (vardecllist)
 
     vardecllist  go to state 60
 
@@ -688,7 +696,7 @@ State 46
 
    15 classdecl: TCLASS classdeclident TIMPLEM impitfacelist TLBRACE . vardecllist mtddecllist TRBRACE
 
-    $default  reduce using rule 67 (vardecllist)
+    $default  reduce using rule 72 (vardecllist)
 
     vardecllist  go to state 62
 
@@ -721,9 +729,9 @@ State 49
 
 State 50
 
-   62 absmtddecllist: absmtddecllist absmtddecl .
+   67 absmtddecllist: absmtddecllist absmtddecl .
 
-    $default  reduce using rule 62 (absmtddecllist)
+    $default  reduce using rule 67 (absmtddecllist)
 
 
 State 51
@@ -771,9 +779,9 @@ State 55
 
 State 56
 
-   74 vardeclident: TIDENT .
+   79 vardeclident: TIDENT .
 
-    $default  reduce using rule 74 (vardeclident)
+    $default  reduce using rule 79 (vardeclident)
 
 
 State 57
@@ -792,15 +800,15 @@ State 58
 
 State 59
 
-   60 mtddecllist: mtddecllist mtddecl .
+   65 mtddecllist: mtddecllist mtddecl .
 
-    $default  reduce using rule 60 (mtddecllist)
+    $default  reduce using rule 65 (mtddecllist)
 
 
 State 60
 
    14 classdecl: TCLASS classdeclident TEXTENDS classdeclident TLBRACE vardecllist . mtddecllist TRBRACE
-   68 vardecllist: vardecllist . vardecl
+   73 vardecllist: vardecllist . vardecl
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
@@ -808,8 +816,8 @@ State 60
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    TPUBLIC   [reduce using rule 59 (mtddecllist)]
-    $default  reduce using rule 59 (mtddecllist)
+    TPUBLIC   [reduce using rule 64 (mtddecllist)]
+    $default  reduce using rule 64 (mtddecllist)
 
     vardecl       go to state 39
     mtddecl       go to state 40
@@ -830,7 +838,7 @@ State 61
 State 62
 
    15 classdecl: TCLASS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist . mtddecllist TRBRACE
-   68 vardecllist: vardecllist . vardecl
+   73 vardecllist: vardecllist . vardecl
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
@@ -838,8 +846,8 @@ State 62
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    TPUBLIC   [reduce using rule 59 (mtddecllist)]
-    $default  reduce using rule 59 (mtddecllist)
+    TPUBLIC   [reduce using rule 64 (mtddecllist)]
+    $default  reduce using rule 64 (mtddecllist)
 
     vardecl       go to state 39
     mtddecl       go to state 40
@@ -857,9 +865,9 @@ State 63
 
 State 64
 
-   76 mtddeclident: TIDENT .
+   81 mtddeclident: TIDENT .
 
-    $default  reduce using rule 76 (mtddeclident)
+    $default  reduce using rule 81 (mtddeclident)
 
 
 State 65
@@ -872,7 +880,7 @@ State 65
 State 66
 
    17 itfacedecl: TITFACE itfacedeclident TEXTENDS extitfacelist TLBRACE absmtddecllist . TRBRACE
-   62 absmtddecllist: absmtddecllist . absmtddecl
+   67 absmtddecllist: absmtddecllist . absmtddecl
 
     TRBRACE  shift, and go to state 76
     TPUBLIC  shift, and go to state 27
@@ -918,7 +926,7 @@ State 71
 State 72
 
    14 classdecl: TCLASS classdeclident TEXTENDS classdeclident TLBRACE vardecllist mtddecllist . TRBRACE
-   60 mtddecllist: mtddecllist . mtddecl
+   65 mtddecllist: mtddecllist . mtddecl
 
     TRBRACE  shift, and go to state 79
     TPUBLIC  shift, and go to state 36
@@ -930,7 +938,7 @@ State 73
 
    13 classdecl: TCLASS classdeclident TEXTENDS classdeclident TIMPLEM impitfacelist TLBRACE . vardecllist mtddecllist TRBRACE
 
-    $default  reduce using rule 67 (vardecllist)
+    $default  reduce using rule 72 (vardecllist)
 
     vardecllist  go to state 80
 
@@ -938,7 +946,7 @@ State 73
 State 74
 
    15 classdecl: TCLASS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist mtddecllist . TRBRACE
-   60 mtddecllist: mtddecllist . mtddecl
+   65 mtddecllist: mtddecllist . mtddecl
 
     TRBRACE  shift, and go to state 81
     TPUBLIC  shift, and go to state 36
@@ -955,7 +963,7 @@ State 75
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    $default  reduce using rule 69 (vararglist)
+    $default  reduce using rule 74 (vararglist)
 
     vararg        go to state 82
     type          go to state 83
@@ -986,7 +994,7 @@ State 78
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    $default  reduce using rule 69 (vararglist)
+    $default  reduce using rule 74 (vararglist)
 
     vararg        go to state 82
     type          go to state 83
@@ -1004,7 +1012,7 @@ State 79
 State 80
 
    13 classdecl: TCLASS classdeclident TEXTENDS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist . mtddecllist TRBRACE
-   68 vardecllist: vardecllist . vardecl
+   73 vardecllist: vardecllist . vardecl
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
@@ -1012,8 +1020,8 @@ State 80
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    TPUBLIC   [reduce using rule 59 (mtddecllist)]
-    $default  reduce using rule 59 (mtddecllist)
+    TPUBLIC   [reduce using rule 64 (mtddecllist)]
+    $default  reduce using rule 64 (mtddecllist)
 
     vardecl       go to state 39
     mtddecl       go to state 40
@@ -1031,12 +1039,9 @@ State 81
 
 State 82
 
-   70 vararglist: vararg .
-   71           | vararg . TCOMMA vararglist
+   75 vararglist: vararg .
 
-    TCOMMA  shift, and go to state 88
-
-    $default  reduce using rule 70 (vararglist)
+    $default  reduce using rule 75 (vararglist)
 
 
 State 83
@@ -1045,14 +1050,16 @@ State 83
 
     TIDENT  shift, and go to state 56
 
-    vardeclident  go to state 89
+    vardeclident  go to state 88
 
 
 State 84
 
    22 absmtddecl: TPUBLIC type mtddeclident TLPAREN vararglist . TRPAREN TSEMICOLON
+   76 vararglist: vararglist . TCOMMA vararg
 
-    TRPAREN  shift, and go to state 90
+    TRPAREN  shift, and go to state 89
+    TCOMMA   shift, and go to state 90
 
 
 State 85
@@ -1065,14 +1072,16 @@ State 85
 State 86
 
    21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist . TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   76 vararglist: vararglist . TCOMMA vararg
 
     TRPAREN  shift, and go to state 92
+    TCOMMA   shift, and go to state 90
 
 
 State 87
 
    13 classdecl: TCLASS classdeclident TEXTENDS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist mtddecllist . TRBRACE
-   60 mtddecllist: mtddecllist . mtddecl
+   65 mtddecllist: mtddecllist . mtddecl
 
     TRBRACE  shift, and go to state 93
     TPUBLIC  shift, and go to state 36
@@ -1082,33 +1091,30 @@ State 87
 
 State 88
 
-   71 vararglist: vararg TCOMMA . vararglist
+   20 vararg: type vardeclident .
+
+    $default  reduce using rule 20 (vararg)
+
+
+State 89
+
+   22 absmtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN . TSEMICOLON
+
+    TSEMICOLON  shift, and go to state 94
+
+
+State 90
+
+   76 vararglist: vararglist TCOMMA . vararg
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    $default  reduce using rule 69 (vararglist)
-
-    vararg        go to state 82
+    vararg        go to state 95
     type          go to state 83
-    vararglist    go to state 94
     typeuseident  go to state 43
-
-
-State 89
-
-   20 vararg: type vardeclident .
-
-    $default  reduce using rule 20 (vararg)
-
-
-State 90
-
-   22 absmtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN . TSEMICOLON
-
-    TSEMICOLON  shift, and go to state 95
 
 
 State 91
@@ -1136,23 +1142,23 @@ State 93
 
 State 94
 
-   71 vararglist: vararg TCOMMA vararglist .
-
-    $default  reduce using rule 71 (vararglist)
-
-
-State 95
-
    22 absmtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TSEMICOLON .
 
     $default  reduce using rule 22 (absmtddecl)
 
 
+State 95
+
+   76 vararglist: vararglist TCOMMA vararg .
+
+    $default  reduce using rule 76 (vararglist)
+
+
 State 96
 
-   75 argdeclident: TIDENT .
+   80 argdeclident: TIDENT .
 
-    $default  reduce using rule 75 (argdeclident)
+    $default  reduce using rule 80 (argdeclident)
 
 
 State 97
@@ -1166,7 +1172,7 @@ State 98
 
    21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE . stmtlist TRETURN expr TSEMICOLON TRBRACE
 
-    $default  reduce using rule 57 (stmtlist)
+    $default  reduce using rule 62 (stmtlist)
 
     stmtlist  go to state 100
 
@@ -1181,21 +1187,22 @@ State 99
 State 100
 
    21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist . TRETURN expr TSEMICOLON TRBRACE
-   58 stmtlist: stmtlist . stmt
+   63 stmtlist: stmtlist . stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TSYSOUT   shift, and go to state 104
-    TRETURN   shift, and go to state 105
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TRETURN      shift, and go to state 106
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 109
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 110
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
@@ -1203,1485 +1210,1927 @@ State 101
 
     4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE . stmtlist TRBRACE TRBRACE
 
-    $default  reduce using rule 57 (stmtlist)
+    $default  reduce using rule 62 (stmtlist)
 
-    stmtlist  go to state 111
+    stmtlist  go to state 112
 
 
 State 102
 
-   77 varuseident: TIDENT .
-   78 typeuseident: TIDENT .
+   82 varuseident: TIDENT .
+   83 typeuseident: TIDENT .
 
-    TIDENT    reduce using rule 78 (typeuseident)
-    $default  reduce using rule 77 (varuseident)
+    TIDENT    reduce using rule 83 (typeuseident)
+    $default  reduce using rule 82 (varuseident)
 
 
 State 103
 
    28 stmt: TLBRACE . stmtlist TRBRACE
 
-    $default  reduce using rule 57 (stmtlist)
+    $default  reduce using rule 62 (stmtlist)
 
-    stmtlist  go to state 112
+    stmtlist  go to state 113
 
 
 State 104
 
    31 stmt: TSYSOUT . TLPAREN expr TRPAREN TSEMICOLON
 
-    TLPAREN  shift, and go to state 113
+    TLPAREN  shift, and go to state 114
 
 
 State 105
 
-   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN . expr TSEMICOLON TRBRACE
+   32 stmt: TSYSOUTCHAR . TLPAREN expr TRPAREN TSEMICOLON
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 123
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TLPAREN  shift, and go to state 115
 
 
 State 106
 
-   29 stmt: TIF . TLPAREN expr TRPAREN stmt TELSE stmt
+   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN . expr TSEMICOLON TRBRACE
 
-    TLPAREN  shift, and go to state 127
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 126
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 107
 
-   30 stmt: TWHILE . TLPAREN expr TRPAREN stmt
+   29 stmt: TIF . TLPAREN expr TRPAREN stmt TELSE stmt
 
-    TLPAREN  shift, and go to state 128
+    TLPAREN  shift, and go to state 130
 
 
 State 108
 
-   34 stmt: type . vardeclident TSEMICOLON
+   30 stmt: TWHILE . TLPAREN expr TRPAREN stmt
 
-    TIDENT  shift, and go to state 56
-
-    vardeclident  go to state 129
+    TLPAREN  shift, and go to state 131
 
 
 State 109
 
-   58 stmtlist: stmtlist stmt .
+   35 stmt: type . vardeclident TSEMICOLON
 
-    $default  reduce using rule 58 (stmtlist)
+    TIDENT  shift, and go to state 56
+
+    vardeclident  go to state 132
 
 
 State 110
 
-   32 stmt: varuseident . TEQUAL expr TSEMICOLON
-   33     | varuseident . TLF expr TRF TEQUAL expr TSEMICOLON
+   63 stmtlist: stmtlist stmt .
 
-    TEQUAL  shift, and go to state 130
-    TLF     shift, and go to state 131
+    $default  reduce using rule 63 (stmtlist)
 
 
 State 111
 
-    4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist . TRBRACE TRBRACE
-   58 stmtlist: stmtlist . stmt
+   33 stmt: varuseident . TEQUAL expr TSEMICOLON
+   34     | varuseident . TLF expr TRF TEQUAL expr TSEMICOLON
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TRBRACE   shift, and go to state 132
-    TSYSOUT   shift, and go to state 104
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
-
-    type          go to state 108
-    stmt          go to state 109
-    varuseident   go to state 110
-    typeuseident  go to state 43
+    TEQUAL  shift, and go to state 133
+    TLF     shift, and go to state 134
 
 
 State 112
 
-   28 stmt: TLBRACE stmtlist . TRBRACE
-   58 stmtlist: stmtlist . stmt
+    4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist . TRBRACE TRBRACE
+   63 stmtlist: stmtlist . stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TRBRACE   shift, and go to state 133
-    TSYSOUT   shift, and go to state 104
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TRBRACE      shift, and go to state 135
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 109
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 110
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
 State 113
 
-   31 stmt: TSYSOUT TLPAREN . expr TRPAREN TSEMICOLON
+   28 stmt: TLBRACE stmtlist . TRBRACE
+   63 stmtlist: stmtlist . stmt
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TRBRACE      shift, and go to state 136
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    expr          go to state 134
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    type          go to state 109
+    stmt          go to state 110
+    varuseident   go to state 111
+    typeuseident  go to state 43
 
 
 State 114
 
-   74 vardeclident: TIDENT .
-   77 varuseident: TIDENT .
+   31 stmt: TSYSOUT TLPAREN . expr TRPAREN TSEMICOLON
 
-    TLPAREN   reduce using rule 77 (varuseident)
-    $default  reduce using rule 74 (vardeclident)
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 137
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 115
 
-   40 expr: TNUMBER .
+   32 stmt: TSYSOUTCHAR TLPAREN . expr TRPAREN TSEMICOLON
 
-    $default  reduce using rule 40 (expr)
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 138
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 116
 
-   48 expr: TLPAREN . expr TRPAREN
-   49     | TLPAREN . vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   79 vardeclident: TIDENT .
+   82 varuseident: TIDENT .
 
-    TIDENT    shift, and go to state 135
-    TINT      shift, and go to state 35
-    TNUMBER   shift, and go to state 115
-    TLPAREN   shift, and go to state 116
-    TSYSIN    shift, and go to state 117
-    TFALSE    shift, and go to state 118
-    TTRUE     shift, and go to state 119
-    TBOOL     shift, and go to state 37
-    TBANG     shift, and go to state 120
-    TNEW      shift, and go to state 121
-    TTHIS     shift, and go to state 122
-    TINVOKER  shift, and go to state 38
-
-    $default  reduce using rule 69 (vararglist)
-
-    vararg        go to state 82
-    type          go to state 83
-    expr          go to state 136
-    biopexpr      go to state 124
-    vararglist    go to state 137
-    vardeclident  go to state 125
-    varuseident   go to state 126
-    typeuseident  go to state 43
+    TLPAREN   reduce using rule 82 (varuseident)
+    $default  reduce using rule 79 (vardeclident)
 
 
 State 117
 
-   36 expr: TSYSIN . TLPAREN TRPAREN
-
-    TLPAREN  shift, and go to state 138
-
-
-State 118
-
-   42 expr: TFALSE .
+   42 expr: TNUMBER .
 
     $default  reduce using rule 42 (expr)
 
 
+State 118
+
+   50 expr: TLPAREN . expr TRPAREN
+   51     | TLPAREN . vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+
+    TIDENT      shift, and go to state 139
+    TINT        shift, and go to state 35
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBOOL       shift, and go to state 37
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+    TINVOKER    shift, and go to state 38
+
+    $default  reduce using rule 74 (vararglist)
+
+    vararg        go to state 82
+    type          go to state 83
+    expr          go to state 140
+    biopexpr      go to state 127
+    vararglist    go to state 141
+    vardeclident  go to state 128
+    varuseident   go to state 129
+    typeuseident  go to state 43
+
+
 State 119
 
-   41 expr: TTRUE .
+   37 expr: TSYSIN . TLPAREN TRPAREN
 
-    $default  reduce using rule 41 (expr)
+    TLPAREN  shift, and go to state 142
 
 
 State 120
 
-   47 expr: TBANG . expr
+   38 expr: TSYSINCHAR . TLPAREN TRPAREN
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 139
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TLPAREN  shift, and go to state 143
 
 
 State 121
 
-   45 expr: TNEW . TINT TLF expr TRF
-   46     | TNEW . typeuseident TLPAREN TRPAREN
-
-    TIDENT  shift, and go to state 34
-    TINT    shift, and go to state 140
-
-    typeuseident  go to state 141
-
-
-State 122
-
-   44 expr: TTHIS .
+   44 expr: TFALSE .
 
     $default  reduce using rule 44 (expr)
 
 
-State 123
+State 122
 
-   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr . TSEMICOLON TRBRACE
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TSEMICOLON   shift, and go to state 144
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-
-State 124
-
-   35 expr: biopexpr .
-
-    $default  reduce using rule 35 (expr)
-
-
-State 125
-
-   43 expr: vardeclident .
+   43 expr: TTRUE .
 
     $default  reduce using rule 43 (expr)
 
 
+State 123
+
+   49 expr: TBANG . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 144
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 124
+
+   47 expr: TNEW . TINT TLF expr TRF
+   48     | TNEW . typeuseident TLPAREN TRPAREN
+
+    TIDENT  shift, and go to state 34
+    TINT    shift, and go to state 145
+
+    typeuseident  go to state 146
+
+
+State 125
+
+   46 expr: TTHIS .
+
+    $default  reduce using rule 46 (expr)
+
+
 State 126
 
-   50 expr: varuseident . TLPAREN exprlist TRPAREN
+   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr . TSEMICOLON TRBRACE
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TLPAREN  shift, and go to state 151
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TSEMICOLON   shift, and go to state 152
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
 State 127
 
-   29 stmt: TIF TLPAREN . expr TRPAREN stmt TELSE stmt
+   36 expr: biopexpr .
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 152
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    $default  reduce using rule 36 (expr)
 
 
 State 128
 
-   30 stmt: TWHILE TLPAREN . expr TRPAREN stmt
+   45 expr: vardeclident .
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 153
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    $default  reduce using rule 45 (expr)
 
 
 State 129
 
-   34 stmt: type vardeclident . TSEMICOLON
+   52 expr: varuseident . TLPAREN exprlist TRPAREN
 
-    TSEMICOLON  shift, and go to state 154
+    TLPAREN  shift, and go to state 159
 
 
 State 130
 
-   32 stmt: varuseident TEQUAL . expr TSEMICOLON
+   29 stmt: TIF TLPAREN . expr TRPAREN stmt TELSE stmt
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 155
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 160
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 131
 
-   33 stmt: varuseident TLF . expr TRF TEQUAL expr TSEMICOLON
+   30 stmt: TWHILE TLPAREN . expr TRPAREN stmt
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 156
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 161
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 132
 
-    4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist TRBRACE . TRBRACE
+   35 stmt: type vardeclident . TSEMICOLON
 
-    TRBRACE  shift, and go to state 157
+    TSEMICOLON  shift, and go to state 162
 
 
 State 133
+
+   33 stmt: varuseident TEQUAL . expr TSEMICOLON
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 163
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 134
+
+   34 stmt: varuseident TLF . expr TRF TEQUAL expr TSEMICOLON
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 164
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 135
+
+    4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist TRBRACE . TRBRACE
+
+    TRBRACE  shift, and go to state 165
+
+
+State 136
 
    28 stmt: TLBRACE stmtlist TRBRACE .
 
     $default  reduce using rule 28 (stmt)
 
 
-State 134
-
-   31 stmt: TSYSOUT TLPAREN expr . TRPAREN TSEMICOLON
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TRPAREN      shift, and go to state 158
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-
-State 135
-
-   74 vardeclident: TIDENT .
-   77 varuseident: TIDENT .
-   78 typeuseident: TIDENT .
-
-    TIDENT    reduce using rule 78 (typeuseident)
-    TLPAREN   reduce using rule 77 (varuseident)
-    $default  reduce using rule 74 (vardeclident)
-
-
-State 136
-
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   48     | TLPAREN expr . TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TRPAREN      shift, and go to state 159
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-
 State 137
 
-   49 expr: TLPAREN vararglist . TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   31 stmt: TSYSOUT TLPAREN expr . TRPAREN TSEMICOLON
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TRPAREN  shift, and go to state 160
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TRPAREN      shift, and go to state 166
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
 State 138
 
-   36 expr: TSYSIN TLPAREN . TRPAREN
+   32 stmt: TSYSOUTCHAR TLPAREN expr . TRPAREN TSEMICOLON
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TRPAREN  shift, and go to state 161
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TRPAREN      shift, and go to state 167
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
 State 139
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   47     | TBANG expr .
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   79 vardeclident: TIDENT .
+   82 varuseident: TIDENT .
+   83 typeuseident: TIDENT .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    TCLT         [reduce using rule 47 (expr)]
-    TDOT         [reduce using rule 47 (expr)]
-    TPLUS        [reduce using rule 47 (expr)]
-    TMINUS       [reduce using rule 47 (expr)]
-    TMUL         [reduce using rule 47 (expr)]
-    TAND         [reduce using rule 47 (expr)]
-    TLF          [reduce using rule 47 (expr)]
-    TINSTANCEOF  [reduce using rule 47 (expr)]
-    $default     reduce using rule 47 (expr)
+    TIDENT    reduce using rule 83 (typeuseident)
+    TLPAREN   reduce using rule 82 (varuseident)
+    $default  reduce using rule 79 (vardeclident)
 
 
 State 140
 
-   45 expr: TNEW TINT . TLF expr TRF
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   50     | TLPAREN expr . TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TLF  shift, and go to state 162
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TRPAREN      shift, and go to state 168
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
 State 141
 
-   46 expr: TNEW typeuseident . TLPAREN TRPAREN
+   51 expr: TLPAREN vararglist . TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   76 vararglist: vararglist . TCOMMA vararg
 
-    TLPAREN  shift, and go to state 163
+    TRPAREN  shift, and go to state 169
+    TCOMMA   shift, and go to state 90
 
 
 State 142
 
-   54 biopexpr: expr TCLT . expr
+   37 expr: TSYSIN TLPAREN . TRPAREN
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 164
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TRPAREN  shift, and go to state 170
 
 
 State 143
 
-   38 expr: expr TDOT . TLENGT
-   39     | expr TDOT . mtduseident TLPAREN exprlist TRPAREN
+   38 expr: TSYSINCHAR TLPAREN . TRPAREN
 
-    TIDENT  shift, and go to state 165
-    TLENGT  shift, and go to state 166
-
-    mtduseident  go to state 167
+    TRPAREN  shift, and go to state 171
 
 
 State 144
 
-   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON . TRBRACE
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   49     | TBANG expr .
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TRBRACE  shift, and go to state 168
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 49 (expr)]
+    TCNE         [reduce using rule 49 (expr)]
+    TCLT         [reduce using rule 49 (expr)]
+    TCGT         [reduce using rule 49 (expr)]
+    TDOT         [reduce using rule 49 (expr)]
+    TPLUS        [reduce using rule 49 (expr)]
+    TMINUS       [reduce using rule 49 (expr)]
+    TMUL         [reduce using rule 49 (expr)]
+    TAND         [reduce using rule 49 (expr)]
+    TLF          [reduce using rule 49 (expr)]
+    TINSTANCEOF  [reduce using rule 49 (expr)]
+    $default     reduce using rule 49 (expr)
 
 
 State 145
 
-   52 biopexpr: expr TPLUS . expr
+   47 expr: TNEW TINT . TLF expr TRF
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 169
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TLF  shift, and go to state 172
 
 
 State 146
 
-   53 biopexpr: expr TMINUS . expr
+   48 expr: TNEW typeuseident . TLPAREN TRPAREN
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 170
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TLPAREN  shift, and go to state 173
 
 
 State 147
 
-   56 biopexpr: expr TMUL . expr
+   58 biopexpr: expr TCEQ . expr
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 171
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 174
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 148
 
-   55 biopexpr: expr TAND . expr
+   59 biopexpr: expr TCNE . expr
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 172
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 175
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 149
 
-   37 expr: expr TLF . expr TRF
+   56 biopexpr: expr TCLT . expr
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 173
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 176
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
 State 150
 
-   51 expr: expr TINSTANCEOF . type
+   57 biopexpr: expr TCGT . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 177
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 151
+
+   40 expr: expr TDOT . TLENGT
+   41     | expr TDOT . mtduseident TLPAREN exprlist TRPAREN
+
+    TIDENT  shift, and go to state 178
+    TLENGT  shift, and go to state 179
+
+    mtduseident  go to state 180
+
+
+State 152
+
+   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON . TRBRACE
+
+    TRBRACE  shift, and go to state 181
+
+
+State 153
+
+   54 biopexpr: expr TPLUS . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 182
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 154
+
+   55 biopexpr: expr TMINUS . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 183
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 155
+
+   61 biopexpr: expr TMUL . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 184
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 156
+
+   60 biopexpr: expr TAND . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 185
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 157
+
+   39 expr: expr TLF . expr TRF
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 186
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 158
+
+   53 expr: expr TINSTANCEOF . type
 
     TIDENT    shift, and go to state 34
     TINT      shift, and go to state 35
     TBOOL     shift, and go to state 37
     TINVOKER  shift, and go to state 38
 
-    type          go to state 174
+    type          go to state 187
     typeuseident  go to state 43
 
 
-State 151
+State 159
 
-   50 expr: varuseident TLPAREN . exprlist TRPAREN
+   52 expr: varuseident TLPAREN . exprlist TRPAREN
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    $default  reduce using rule 64 (exprlist)
+    $default  reduce using rule 69 (exprlist)
 
-    expr          go to state 175
-    biopexpr      go to state 124
-    exprlist      go to state 176
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    expr          go to state 188
+    biopexpr      go to state 127
+    exprlist      go to state 189
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
-State 152
+State 160
 
    29 stmt: TIF TLPAREN expr . TRPAREN stmt TELSE stmt
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TCLT         shift, and go to state 142
-    TRPAREN      shift, and go to state 177
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TRPAREN      shift, and go to state 190
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
-State 153
+State 161
 
    30 stmt: TWHILE TLPAREN expr . TRPAREN stmt
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TCLT         shift, and go to state 142
-    TRPAREN      shift, and go to state 178
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-
-State 154
-
-   34 stmt: type vardeclident TSEMICOLON .
-
-    $default  reduce using rule 34 (stmt)
-
-
-State 155
-
-   32 stmt: varuseident TEQUAL expr . TSEMICOLON
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TSEMICOLON   shift, and go to state 179
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TRPAREN      shift, and go to state 191
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
-State 156
+State 162
 
-   33 stmt: varuseident TLF expr . TRF TEQUAL expr TSEMICOLON
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   35 stmt: type vardeclident TSEMICOLON .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TRF          shift, and go to state 180
-    TINSTANCEOF  shift, and go to state 150
+    $default  reduce using rule 35 (stmt)
 
 
-State 157
+State 163
+
+   33 stmt: varuseident TEQUAL expr . TSEMICOLON
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TSEMICOLON   shift, and go to state 192
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+
+State 164
+
+   34 stmt: varuseident TLF expr . TRF TEQUAL expr TSEMICOLON
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TRF          shift, and go to state 193
+    TINSTANCEOF  shift, and go to state 158
+
+
+State 165
 
     4 mainclassdecl: TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist TRBRACE TRBRACE .
 
     $default  reduce using rule 4 (mainclassdecl)
 
 
-State 158
+State 166
 
    31 stmt: TSYSOUT TLPAREN expr TRPAREN . TSEMICOLON
 
-    TSEMICOLON  shift, and go to state 181
-
-
-State 159
-
-   48 expr: TLPAREN expr TRPAREN .
-
-    $default  reduce using rule 48 (expr)
-
-
-State 160
-
-   49 expr: TLPAREN vararglist TRPAREN . TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
-
-    TARROW  shift, and go to state 182
-
-
-State 161
-
-   36 expr: TSYSIN TLPAREN TRPAREN .
-
-    $default  reduce using rule 36 (expr)
-
-
-State 162
-
-   45 expr: TNEW TINT TLF . expr TRF
-
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 183
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
-
-
-State 163
-
-   46 expr: TNEW typeuseident TLPAREN . TRPAREN
-
-    TRPAREN  shift, and go to state 184
-
-
-State 164
-
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   54         | expr TCLT expr .
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    TCLT         [reduce using rule 54 (biopexpr)]
-    TDOT         [reduce using rule 54 (biopexpr)]
-    TPLUS        [reduce using rule 54 (biopexpr)]
-    TMINUS       [reduce using rule 54 (biopexpr)]
-    TMUL         [reduce using rule 54 (biopexpr)]
-    TAND         [reduce using rule 54 (biopexpr)]
-    TLF          [reduce using rule 54 (biopexpr)]
-    TINSTANCEOF  [reduce using rule 54 (biopexpr)]
-    $default     reduce using rule 54 (biopexpr)
-
-
-State 165
-
-   79 mtduseident: TIDENT .
-
-    $default  reduce using rule 79 (mtduseident)
-
-
-State 166
-
-   38 expr: expr TDOT TLENGT .
-
-    $default  reduce using rule 38 (expr)
+    TSEMICOLON  shift, and go to state 194
 
 
 State 167
 
-   39 expr: expr TDOT mtduseident . TLPAREN exprlist TRPAREN
+   32 stmt: TSYSOUTCHAR TLPAREN expr TRPAREN . TSEMICOLON
 
-    TLPAREN  shift, and go to state 185
+    TSEMICOLON  shift, and go to state 195
 
 
 State 168
 
-   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE .
+   50 expr: TLPAREN expr TRPAREN .
 
-    $default  reduce using rule 21 (mtddecl)
+    $default  reduce using rule 50 (expr)
 
 
 State 169
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   52         | expr TPLUS expr .
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   51 expr: TLPAREN vararglist TRPAREN . TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    TCLT         [reduce using rule 52 (biopexpr)]
-    TDOT         [reduce using rule 52 (biopexpr)]
-    TAND         [reduce using rule 52 (biopexpr)]
-    TLF          [reduce using rule 52 (biopexpr)]
-    TINSTANCEOF  [reduce using rule 52 (biopexpr)]
-    $default     reduce using rule 52 (biopexpr)
+    TARROW  shift, and go to state 196
 
 
 State 170
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   53         | expr TMINUS expr .
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   37 expr: TSYSIN TLPAREN TRPAREN .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    TCLT         [reduce using rule 53 (biopexpr)]
-    TDOT         [reduce using rule 53 (biopexpr)]
-    TAND         [reduce using rule 53 (biopexpr)]
-    TLF          [reduce using rule 53 (biopexpr)]
-    TINSTANCEOF  [reduce using rule 53 (biopexpr)]
-    $default     reduce using rule 53 (biopexpr)
+    $default  reduce using rule 37 (expr)
 
 
 State 171
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-   56         | expr TMUL expr .
+   38 expr: TSYSINCHAR TLPAREN TRPAREN .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    $default  reduce using rule 38 (expr)
 
+
+State 172
+
+   47 expr: TNEW TINT TLF . expr TRF
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 197
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 173
+
+   48 expr: TNEW typeuseident TLPAREN . TRPAREN
+
+    TRPAREN  shift, and go to state 198
+
+
+State 174
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   58         | expr TCEQ expr .
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 58 (biopexpr)]
+    TCNE         [reduce using rule 58 (biopexpr)]
+    TCLT         [reduce using rule 58 (biopexpr)]
+    TCGT         [reduce using rule 58 (biopexpr)]
+    TDOT         [reduce using rule 58 (biopexpr)]
+    TPLUS        [reduce using rule 58 (biopexpr)]
+    TMINUS       [reduce using rule 58 (biopexpr)]
+    TMUL         [reduce using rule 58 (biopexpr)]
+    TAND         [reduce using rule 58 (biopexpr)]
+    TLF          [reduce using rule 58 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 58 (biopexpr)]
+    $default     reduce using rule 58 (biopexpr)
+
+
+State 175
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   59         | expr TCNE expr .
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 59 (biopexpr)]
+    TCNE         [reduce using rule 59 (biopexpr)]
+    TCLT         [reduce using rule 59 (biopexpr)]
+    TCGT         [reduce using rule 59 (biopexpr)]
+    TDOT         [reduce using rule 59 (biopexpr)]
+    TPLUS        [reduce using rule 59 (biopexpr)]
+    TMINUS       [reduce using rule 59 (biopexpr)]
+    TMUL         [reduce using rule 59 (biopexpr)]
+    TAND         [reduce using rule 59 (biopexpr)]
+    TLF          [reduce using rule 59 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 59 (biopexpr)]
+    $default     reduce using rule 59 (biopexpr)
+
+
+State 176
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   56         | expr TCLT expr .
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 56 (biopexpr)]
+    TCNE         [reduce using rule 56 (biopexpr)]
     TCLT         [reduce using rule 56 (biopexpr)]
+    TCGT         [reduce using rule 56 (biopexpr)]
     TDOT         [reduce using rule 56 (biopexpr)]
+    TPLUS        [reduce using rule 56 (biopexpr)]
+    TMINUS       [reduce using rule 56 (biopexpr)]
+    TMUL         [reduce using rule 56 (biopexpr)]
     TAND         [reduce using rule 56 (biopexpr)]
     TLF          [reduce using rule 56 (biopexpr)]
     TINSTANCEOF  [reduce using rule 56 (biopexpr)]
     $default     reduce using rule 56 (biopexpr)
 
 
-State 172
+State 177
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   55         | expr TAND expr .
-   56         | expr . TMUL expr
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   57         | expr TCGT expr .
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
+    TCEQ         [reduce using rule 57 (biopexpr)]
+    TCNE         [reduce using rule 57 (biopexpr)]
+    TCLT         [reduce using rule 57 (biopexpr)]
+    TCGT         [reduce using rule 57 (biopexpr)]
+    TDOT         [reduce using rule 57 (biopexpr)]
+    TPLUS        [reduce using rule 57 (biopexpr)]
+    TMINUS       [reduce using rule 57 (biopexpr)]
+    TMUL         [reduce using rule 57 (biopexpr)]
+    TAND         [reduce using rule 57 (biopexpr)]
+    TLF          [reduce using rule 57 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 57 (biopexpr)]
+    $default     reduce using rule 57 (biopexpr)
+
+
+State 178
+
+   84 mtduseident: TIDENT .
+
+    $default  reduce using rule 84 (mtduseident)
+
+
+State 179
+
+   40 expr: expr TDOT TLENGT .
+
+    $default  reduce using rule 40 (expr)
+
+
+State 180
+
+   41 expr: expr TDOT mtduseident . TLPAREN exprlist TRPAREN
+
+    TLPAREN  shift, and go to state 199
+
+
+State 181
+
+   21 mtddecl: TPUBLIC type mtddeclident TLPAREN vararglist TRPAREN TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE .
+
+    $default  reduce using rule 21 (mtddecl)
+
+
+State 182
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   54         | expr TPLUS expr .
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 54 (biopexpr)]
+    TCNE         [reduce using rule 54 (biopexpr)]
+    TCLT         [reduce using rule 54 (biopexpr)]
+    TCGT         [reduce using rule 54 (biopexpr)]
+    TDOT         [reduce using rule 54 (biopexpr)]
+    TAND         [reduce using rule 54 (biopexpr)]
+    TLF          [reduce using rule 54 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 54 (biopexpr)]
+    $default     reduce using rule 54 (biopexpr)
+
+
+State 183
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   55         | expr TMINUS expr .
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 55 (biopexpr)]
+    TCNE         [reduce using rule 55 (biopexpr)]
     TCLT         [reduce using rule 55 (biopexpr)]
+    TCGT         [reduce using rule 55 (biopexpr)]
     TDOT         [reduce using rule 55 (biopexpr)]
-    TPLUS        [reduce using rule 55 (biopexpr)]
-    TMINUS       [reduce using rule 55 (biopexpr)]
-    TMUL         [reduce using rule 55 (biopexpr)]
     TAND         [reduce using rule 55 (biopexpr)]
     TLF          [reduce using rule 55 (biopexpr)]
     TINSTANCEOF  [reduce using rule 55 (biopexpr)]
     $default     reduce using rule 55 (biopexpr)
 
 
-State 173
+State 184
 
-   37 expr: expr . TLF expr TRF
-   37     | expr TLF expr . TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+   61         | expr TMUL expr .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TRF          shift, and go to state 186
-    TINSTANCEOF  shift, and go to state 150
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
-
-State 174
-
-   51 expr: expr TINSTANCEOF type .
-
-    $default  reduce using rule 51 (expr)
-
-
-State 175
-
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-   65 exprlist: expr .
-
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    $default  reduce using rule 65 (exprlist)
+    TCEQ         [reduce using rule 61 (biopexpr)]
+    TCNE         [reduce using rule 61 (biopexpr)]
+    TCLT         [reduce using rule 61 (biopexpr)]
+    TCGT         [reduce using rule 61 (biopexpr)]
+    TDOT         [reduce using rule 61 (biopexpr)]
+    TAND         [reduce using rule 61 (biopexpr)]
+    TLF          [reduce using rule 61 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 61 (biopexpr)]
+    $default     reduce using rule 61 (biopexpr)
 
 
-State 176
+State 185
 
-   50 expr: varuseident TLPAREN exprlist . TRPAREN
-   66 exprlist: exprlist . TCOMMA expr
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   60         | expr TAND expr .
+   61         | expr . TMUL expr
 
-    TRPAREN  shift, and go to state 187
-    TCOMMA   shift, and go to state 188
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    TCEQ         [reduce using rule 60 (biopexpr)]
+    TCNE         [reduce using rule 60 (biopexpr)]
+    TCLT         [reduce using rule 60 (biopexpr)]
+    TCGT         [reduce using rule 60 (biopexpr)]
+    TDOT         [reduce using rule 60 (biopexpr)]
+    TPLUS        [reduce using rule 60 (biopexpr)]
+    TMINUS       [reduce using rule 60 (biopexpr)]
+    TMUL         [reduce using rule 60 (biopexpr)]
+    TAND         [reduce using rule 60 (biopexpr)]
+    TLF          [reduce using rule 60 (biopexpr)]
+    TINSTANCEOF  [reduce using rule 60 (biopexpr)]
+    $default     reduce using rule 60 (biopexpr)
 
 
-State 177
+State 186
+
+   39 expr: expr . TLF expr TRF
+   39     | expr TLF expr . TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TRF          shift, and go to state 200
+    TINSTANCEOF  shift, and go to state 158
+
+
+State 187
+
+   53 expr: expr TINSTANCEOF type .
+
+    $default  reduce using rule 53 (expr)
+
+
+State 188
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+   70 exprlist: expr .
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    $default  reduce using rule 70 (exprlist)
+
+
+State 189
+
+   52 expr: varuseident TLPAREN exprlist . TRPAREN
+   71 exprlist: exprlist . TCOMMA expr
+
+    TRPAREN  shift, and go to state 201
+    TCOMMA   shift, and go to state 202
+
+
+State 190
 
    29 stmt: TIF TLPAREN expr TRPAREN . stmt TELSE stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TSYSOUT   shift, and go to state 104
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 189
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 203
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
-State 178
+State 191
 
    30 stmt: TWHILE TLPAREN expr TRPAREN . stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TSYSOUT   shift, and go to state 104
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 190
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 204
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
-State 179
+State 192
 
-   32 stmt: varuseident TEQUAL expr TSEMICOLON .
+   33 stmt: varuseident TEQUAL expr TSEMICOLON .
 
-    $default  reduce using rule 32 (stmt)
-
-
-State 180
-
-   33 stmt: varuseident TLF expr TRF . TEQUAL expr TSEMICOLON
-
-    TEQUAL  shift, and go to state 191
+    $default  reduce using rule 33 (stmt)
 
 
-State 181
+State 193
+
+   34 stmt: varuseident TLF expr TRF . TEQUAL expr TSEMICOLON
+
+    TEQUAL  shift, and go to state 205
+
+
+State 194
 
    31 stmt: TSYSOUT TLPAREN expr TRPAREN TSEMICOLON .
 
     $default  reduce using rule 31 (stmt)
 
 
-State 182
+State 195
 
-   49 expr: TLPAREN vararglist TRPAREN TARROW . TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
+   32 stmt: TSYSOUTCHAR TLPAREN expr TRPAREN TSEMICOLON .
 
-    TLBRACE  shift, and go to state 192
-
-
-State 183
-
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   45     | TNEW TINT TLF expr . TRF
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TRF          shift, and go to state 193
-    TINSTANCEOF  shift, and go to state 150
+    $default  reduce using rule 32 (stmt)
 
 
-State 184
+State 196
 
-   46 expr: TNEW typeuseident TLPAREN TRPAREN .
+   51 expr: TLPAREN vararglist TRPAREN TARROW . TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE
 
-    $default  reduce using rule 46 (expr)
-
-
-State 185
-
-   39 expr: expr TDOT mtduseident TLPAREN . exprlist TRPAREN
-
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    $default  reduce using rule 64 (exprlist)
-
-    expr          go to state 175
-    biopexpr      go to state 124
-    exprlist      go to state 194
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TLBRACE  shift, and go to state 206
 
 
-State 186
+State 197
 
-   37 expr: expr TLF expr TRF .
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   47     | TNEW TINT TLF expr . TRF
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    $default  reduce using rule 37 (expr)
-
-
-State 187
-
-   50 expr: varuseident TLPAREN exprlist TRPAREN .
-
-    $default  reduce using rule 50 (expr)
-
-
-State 188
-
-   66 exprlist: exprlist TCOMMA . expr
-
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 195
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TRF          shift, and go to state 207
+    TINSTANCEOF  shift, and go to state 158
 
 
-State 189
+State 198
+
+   48 expr: TNEW typeuseident TLPAREN TRPAREN .
+
+    $default  reduce using rule 48 (expr)
+
+
+State 199
+
+   41 expr: expr TDOT mtduseident TLPAREN . exprlist TRPAREN
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    $default  reduce using rule 69 (exprlist)
+
+    expr          go to state 188
+    biopexpr      go to state 127
+    exprlist      go to state 208
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 200
+
+   39 expr: expr TLF expr TRF .
+
+    $default  reduce using rule 39 (expr)
+
+
+State 201
+
+   52 expr: varuseident TLPAREN exprlist TRPAREN .
+
+    $default  reduce using rule 52 (expr)
+
+
+State 202
+
+   71 exprlist: exprlist TCOMMA . expr
+
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 209
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
+
+
+State 203
 
    29 stmt: TIF TLPAREN expr TRPAREN stmt . TELSE stmt
 
-    TELSE  shift, and go to state 196
+    TELSE  shift, and go to state 210
 
 
-State 190
+State 204
 
    30 stmt: TWHILE TLPAREN expr TRPAREN stmt .
 
     $default  reduce using rule 30 (stmt)
 
 
-State 191
+State 205
 
-   33 stmt: varuseident TLF expr TRF TEQUAL . expr TSEMICOLON
+   34 stmt: varuseident TLF expr TRF TEQUAL . expr TSEMICOLON
 
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
 
-    expr          go to state 197
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
-
-
-State 192
-
-   49 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE . stmtlist TRETURN expr TSEMICOLON TRBRACE
-
-    $default  reduce using rule 57 (stmtlist)
-
-    stmtlist  go to state 198
+    expr          go to state 211
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
-State 193
+State 206
 
-   45 expr: TNEW TINT TLF expr TRF .
+   51 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE . stmtlist TRETURN expr TSEMICOLON TRBRACE
 
-    $default  reduce using rule 45 (expr)
+    $default  reduce using rule 62 (stmtlist)
 
-
-State 194
-
-   39 expr: expr TDOT mtduseident TLPAREN exprlist . TRPAREN
-   66 exprlist: exprlist . TCOMMA expr
-
-    TRPAREN  shift, and go to state 199
-    TCOMMA   shift, and go to state 188
+    stmtlist  go to state 212
 
 
-State 195
+State 207
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
-   66 exprlist: exprlist TCOMMA expr .
+   47 expr: TNEW TINT TLF expr TRF .
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
-
-    $default  reduce using rule 66 (exprlist)
+    $default  reduce using rule 47 (expr)
 
 
-State 196
+State 208
+
+   41 expr: expr TDOT mtduseident TLPAREN exprlist . TRPAREN
+   71 exprlist: exprlist . TCOMMA expr
+
+    TRPAREN  shift, and go to state 213
+    TCOMMA   shift, and go to state 202
+
+
+State 209
+
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
+   71 exprlist: exprlist TCOMMA expr .
+
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
+
+    $default  reduce using rule 71 (exprlist)
+
+
+State 210
 
    29 stmt: TIF TLPAREN expr TRPAREN stmt TELSE . stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TSYSOUT   shift, and go to state 104
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 200
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 214
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
-State 197
+State 211
 
-   33 stmt: varuseident TLF expr TRF TEQUAL expr . TSEMICOLON
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   34 stmt: varuseident TLF expr TRF TEQUAL expr . TSEMICOLON
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TSEMICOLON   shift, and go to state 201
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TSEMICOLON   shift, and go to state 215
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
-State 198
+State 212
 
-   49 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist . TRETURN expr TSEMICOLON TRBRACE
-   58 stmtlist: stmtlist . stmt
+   51 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist . TRETURN expr TSEMICOLON TRBRACE
+   63 stmtlist: stmtlist . stmt
 
-    TIDENT    shift, and go to state 102
-    TINT      shift, and go to state 35
-    TLBRACE   shift, and go to state 103
-    TSYSOUT   shift, and go to state 104
-    TRETURN   shift, and go to state 202
-    TBOOL     shift, and go to state 37
-    TIF       shift, and go to state 106
-    TWHILE    shift, and go to state 107
-    TINVOKER  shift, and go to state 38
+    TIDENT       shift, and go to state 102
+    TINT         shift, and go to state 35
+    TLBRACE      shift, and go to state 103
+    TSYSOUT      shift, and go to state 104
+    TSYSOUTCHAR  shift, and go to state 105
+    TRETURN      shift, and go to state 216
+    TBOOL        shift, and go to state 37
+    TIF          shift, and go to state 107
+    TWHILE       shift, and go to state 108
+    TINVOKER     shift, and go to state 38
 
-    type          go to state 108
-    stmt          go to state 109
-    varuseident   go to state 110
+    type          go to state 109
+    stmt          go to state 110
+    varuseident   go to state 111
     typeuseident  go to state 43
 
 
-State 199
+State 213
 
-   39 expr: expr TDOT mtduseident TLPAREN exprlist TRPAREN .
+   41 expr: expr TDOT mtduseident TLPAREN exprlist TRPAREN .
 
-    $default  reduce using rule 39 (expr)
+    $default  reduce using rule 41 (expr)
 
 
-State 200
+State 214
 
    29 stmt: TIF TLPAREN expr TRPAREN stmt TELSE stmt .
 
     $default  reduce using rule 29 (stmt)
 
 
-State 201
+State 215
 
-   33 stmt: varuseident TLF expr TRF TEQUAL expr TSEMICOLON .
+   34 stmt: varuseident TLF expr TRF TEQUAL expr TSEMICOLON .
 
-    $default  reduce using rule 33 (stmt)
-
-
-State 202
-
-   49 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN . expr TSEMICOLON TRBRACE
-
-    TIDENT   shift, and go to state 114
-    TNUMBER  shift, and go to state 115
-    TLPAREN  shift, and go to state 116
-    TSYSIN   shift, and go to state 117
-    TFALSE   shift, and go to state 118
-    TTRUE    shift, and go to state 119
-    TBANG    shift, and go to state 120
-    TNEW     shift, and go to state 121
-    TTHIS    shift, and go to state 122
-
-    expr          go to state 203
-    biopexpr      go to state 124
-    vardeclident  go to state 125
-    varuseident   go to state 126
+    $default  reduce using rule 34 (stmt)
 
 
-State 203
+State 216
 
-   37 expr: expr . TLF expr TRF
-   38     | expr . TDOT TLENGT
-   39     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
-   49     | TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr . TSEMICOLON TRBRACE
-   51     | expr . TINSTANCEOF type
-   52 biopexpr: expr . TPLUS expr
-   53         | expr . TMINUS expr
-   54         | expr . TCLT expr
-   55         | expr . TAND expr
-   56         | expr . TMUL expr
+   51 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN . expr TSEMICOLON TRBRACE
 
-    TCLT         shift, and go to state 142
-    TDOT         shift, and go to state 143
-    TSEMICOLON   shift, and go to state 204
-    TPLUS        shift, and go to state 145
-    TMINUS       shift, and go to state 146
-    TMUL         shift, and go to state 147
-    TAND         shift, and go to state 148
-    TLF          shift, and go to state 149
-    TINSTANCEOF  shift, and go to state 150
+    TIDENT      shift, and go to state 116
+    TNUMBER     shift, and go to state 117
+    TLPAREN     shift, and go to state 118
+    TSYSIN      shift, and go to state 119
+    TSYSINCHAR  shift, and go to state 120
+    TFALSE      shift, and go to state 121
+    TTRUE       shift, and go to state 122
+    TBANG       shift, and go to state 123
+    TNEW        shift, and go to state 124
+    TTHIS       shift, and go to state 125
+
+    expr          go to state 217
+    biopexpr      go to state 127
+    vardeclident  go to state 128
+    varuseident   go to state 129
 
 
-State 204
+State 217
 
-   49 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON . TRBRACE
+   39 expr: expr . TLF expr TRF
+   40     | expr . TDOT TLENGT
+   41     | expr . TDOT mtduseident TLPAREN exprlist TRPAREN
+   51     | TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr . TSEMICOLON TRBRACE
+   53     | expr . TINSTANCEOF type
+   54 biopexpr: expr . TPLUS expr
+   55         | expr . TMINUS expr
+   56         | expr . TCLT expr
+   57         | expr . TCGT expr
+   58         | expr . TCEQ expr
+   59         | expr . TCNE expr
+   60         | expr . TAND expr
+   61         | expr . TMUL expr
 
-    TRBRACE  shift, and go to state 205
+    TCEQ         shift, and go to state 147
+    TCNE         shift, and go to state 148
+    TCLT         shift, and go to state 149
+    TCGT         shift, and go to state 150
+    TDOT         shift, and go to state 151
+    TSEMICOLON   shift, and go to state 218
+    TPLUS        shift, and go to state 153
+    TMINUS       shift, and go to state 154
+    TMUL         shift, and go to state 155
+    TAND         shift, and go to state 156
+    TLF          shift, and go to state 157
+    TINSTANCEOF  shift, and go to state 158
 
 
-State 205
+State 218
 
-   49 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE .
+   51 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON . TRBRACE
 
-    $default  reduce using rule 49 (expr)
+    TRBRACE  shift, and go to state 219
+
+
+State 219
+
+   51 expr: TLPAREN vararglist TRPAREN TARROW TLBRACE stmtlist TRETURN expr TSEMICOLON TRBRACE .
+
+    $default  reduce using rule 51 (expr)

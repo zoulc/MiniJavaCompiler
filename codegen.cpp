@@ -107,7 +107,7 @@ TypeInfo* VarUseIdent::typeCheck()
 {
 	if ( identType ) return identType ;
 	if ( TypeNamedValues.count(name) == 0 ) {
-		std::cout << " [ Type Check ] < VarUseIdent > Identifier doesn't exist." << std::endl ;
+		std::cout << " [ Error ] < VarUseIdent > Identifier \'"<<name<<"\' doesn't exist." << std::endl ;
 		identType = new NullType();
 		return NULL ;
 	}
@@ -145,7 +145,7 @@ TypeInfo* TypeUseIdent::typeCheck()
 	if ( identType ) return identType ;
 	if ( TypeNamedClassDecls.count(name) == 0 ) {
 		if ( TypeNamedItfaceDecls.count(name) == 0 ) {
-			std::cout << " [ Type Check ] < TypeUseIdent > Identifier doesn't exist." << std::endl ;
+			std::cout << " [ Error ] < TypeUseIdent > Identifier \'"<<name<<"\' doesn't exist." << std::endl ;
 			return NULL ;
 		}
 		corItfaceDecl = TypeNamedItfaceDecls[name] ;
@@ -196,7 +196,7 @@ TypeInfo* UsrDefIdentType::typeCheck()
 			concreType = new ItfaceType( tarIdent , tarIdent->getCorItfaceDecl() ) ;
 		} else {
 			concreType = new NullType();
-			std::cout << " [ Type Check ] < UsrDefIdent > Invalid Identfier." << std::endl ;
+			std::cout << " [ Error ] < UsrDefIdent > Invalid Identfier \'"<<tarIdent->name<<"\' ." << std::endl ;
 		}
 	}
 	isTypeChecked = true ;
@@ -271,10 +271,10 @@ llvm::Type* AbsMtdDecl::llvmTypeGen()
 	std::cout << " [ IR ] Itface " << Owner->itfaceIdent->name << "'s method "<<absMtdIdent->name<<" now is processing on its LLVM type ."<< std::endl ;
 	vector<Type*> typeVec ;
 	typeVec.clear();
-	typeVec.push_back( Type::getInt64PtrTy(getGlobalContext())) ;
+	typeVec.push_back( Builder.getInt64Ty()->getPointerTo() ) ;
 	std::vector<class VarArg*>::iterator vait ;
 	for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ )
-		typeVec.push_back( (*vait)->getLLVMType() ) ;
+		typeVec.push_back( (*vait)->typeCheck()->llvmTypeGen() ) ;
 	ArrayRef<Type*> argTypeVec( typeVec ) ;
 	llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false);
 	absMtdDynFunc = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->itfaceIdent->name + std::string("_") +absMtdIdent->name , TheModule);
@@ -286,21 +286,22 @@ llvm::Value* AbsMtdDecl::codeGen()
 {
 	if ( isCodeGened ) return absMtdDynFunc ;
 	llvmTypeGen();
-	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext());
-	absMtdDynFunc->getBasicBlockList().push_back(func_entry);
+	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , absMtdIdent->name + std::string("_entry") , absMtdDynFunc );
 	Builder.SetInsertPoint( func_entry ) ;
 
 	Function* thisFunc = absMtdDynFunc ;
 	vector<Value*> tempArg ;
 
+	//ClearNamedValues();
 	NamedValues.clear();
+	cout<<" [ IR ] < AbsMtdDecl > Generate the concrete method fron the interfaces."<<endl;
 	int j = 0 ;
 	Value * clsIntPtr ;
 	for( auto &Arg : thisFunc->args() ) {
 		if ( j == 0 ) {
 			clsIntPtr = &Arg ;
 		} else {
-			tempArg.push_back( &Arg  ) ;
+			tempArg.push_back( &Arg ) ;
 		}
 		j++;
 	}
@@ -311,9 +312,9 @@ llvm::Value* AbsMtdDecl::codeGen()
 	for ( cit = Owner->impClasses.begin() ; cit != Owner->impClasses.end() ; cit ++ )
 	{
 		ClassDecl* thisCls = (*cit);
-		Value* condFindClass = Builder.CreateICmpEQ( clsNo , ConstantInt::get(Type::getInt64Ty(getGlobalContext()), thisCls->classDeclNumber , true) );
-		BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext());
-		
+		Value* condFindClass = Builder.CreateICmpEQ( clsNo , ConstantInt::get(Type::getInt64Ty(getGlobalContext()), thisCls->classDeclNumber , true)  );
+		BasicBlock *ThenBB = BasicBlock::Create(getGlobalContext() );
+
 		thisFunc->getBasicBlockList().push_back(ThenBB);
 
 		BasicBlock *MergeBB = BasicBlock::Create(getGlobalContext());
@@ -325,9 +326,9 @@ llvm::Value* AbsMtdDecl::codeGen()
 		MtdDecl* thisMtd = thisCls->mtdDecl[mtdSlot];
 		ClassDecl* formCls = thisMtd->formOwner;
 
-		
 		Value* clsPtr = Builder.CreatePointerCast( clsIntPtr , thisCls->getClassLLVMType()->getPointerTo() ) ;
 		Value* formClsPtr = Builder.CreatePointerCast( clsIntPtr , formCls->getClassLLVMType()->getPointerTo() ) ;
+
 		vector<Value*> args ;
 		args.push_back( formClsPtr );
 		std::vector<Value*>::iterator ait ;
@@ -344,8 +345,6 @@ llvm::Value* AbsMtdDecl::codeGen()
 		// Make a ret
 		Builder.CreateRet(retval);
 
-		//Builder.CreateBr(MergeBB);
-
 		thisFunc->getBasicBlockList().push_back(MergeBB);
 		Builder.SetInsertPoint(MergeBB);
 	}
@@ -360,10 +359,10 @@ llvm::Value* AbsMtdDecl::codeGen()
 TypeInfo* AbsMtdDecl::typeCheck()
 {
 	if ( absMtdDeclType ) return absMtdDeclType ;
-	/* may need chagnes */
 
+	if ( type_check_level >= 1 ) std::cout<<" [ Type Check ] Abstract Method "<<absMtdIdent->name<<" is processing."<<std::endl ;
 	rtnType->typeCheck();
-	
+
 	absMtdDeclType = new VoidType();
 	return absMtdDeclType ;
 }
@@ -372,12 +371,12 @@ TypeInfo* ItfaceDecl::typeCheck()
 {
 	if ( itfaceDeclType ) return itfaceDeclType ;
 	// TODO: Postpone the extend of the interfaces
-	std::cout<<" [ Type Check ] Itface "<<itfaceIdent->name<<" is processing."<<std::endl ;
+	if ( type_check_level >= 1 ) std::cout<<" [ Type Check ] Itface "<<itfaceIdent->name<<" is processing."<<std::endl ;
 
 	std::vector< ExtItface * >::iterator eit ;
 	for ( eit = extItfaceList.extList.begin() ; eit != extItfaceList.extList.end() ; eit ++ ) {
 		if ( TypeNamedItfaceDecls.count((*eit)->extIdent->name) == 0 ) {
-			std::cout<<" [ Type Check ] < ItfaceDecl > Invalid Interface Name."<<std::endl ;
+			std::cout<<" [ Error ] < ItfaceDecl "<<itfaceIdent->name<<" > Invalid extended Interface Name."<<std::endl ;
 			continue ;
 		}
 		ItfaceDecl* tarItface = TypeNamedItfaceDecls[ (*eit)->extIdent->name ] ;
@@ -436,7 +435,7 @@ llvm::Value* ItfaceDecl::codeGen()
 
 	std::vector< class ClassDecl* >::iterator cit ;
 	for ( cit = impClasses.begin() ; cit != impClasses.end() ; cit ++ )
-		(*cit)->getClassLLVMType();
+		(*cit)->codeGen();
 
 	std::vector< class AbsMtdDecl* >::iterator ait ;
 	for ( ait = absMtdDecl.begin() ; ait != absMtdDecl.end() ;  ait ++ )
@@ -449,37 +448,12 @@ llvm::Value* ItfaceDecl::codeGen()
 llvm::Value* ItfaceDecl::getConcreMethod(std::string mtdName )
 {
 	if ( absMtdName2Pos.count(mtdName) == 0  ) {
-		std::cout <<"  [ Type Check ] < Interface > Invalid Abstract Method . " << std::endl ;
+		std::cout <<"  [ Error ] < Interface > Invalid Abstract Method . " << std::endl ;
 		return NULL ;
 	}
 	int slot = absMtdName2Pos[mtdName];
 	AbsMtdDecl* tarAbsMtdDecl = absMtdDecl[slot];
-	cout << 1 << endl ; 
 	return tarAbsMtdDecl->codeGen();
-}
-
-/* Need TO DO */
-
-Value* LamdaGenExpr::codeGen() {
-	return NULL ;
-}
-
-Value* LamdaAppExpr::codeGen() {
-	return NULL ;
-}
-
-TypeInfo* LamdaGenExpr::typeCheck()
-{
-	if ( exprType ) return exprType ;
-	exprType = new InvokerType() ;
-	return exprType ;
-}
-
-TypeInfo* LamdaAppExpr::typeCheck()
-{
-	if (exprType) return exprType ;
-	exprType = new IntType();
-	return exprType	;
 }
 
 /* Type Check */
@@ -498,7 +472,7 @@ TypeInfo* ObjNewExpr::typeCheck()
 {
 	if ( exprType ) return exprType;
 	if ( TypeNamedClassDecls.count( tarIdent->name ) == 0 ) {
-		cout<<"Error , class not defined"<<endl;
+		cout<<" [ Error ] < ObjNewExpr > Class \'"<<tarIdent->name<<"\' is not defined"<<endl;
 		return NULL ;
 	}
 	exprType = new UsrDefIdentType( tarIdent );
@@ -547,7 +521,7 @@ TypeInfo* MainClassDecl::typeCheck()
 
 TypeInfo* SiOpExpr::typeCheck()
 {
-	std::cout <<"  [ Type Check ] \"SiOpExpr\" should not be type checked. " << std::endl ;
+	std::cout <<"  [ Error ] < SiOpExpr > \"SiOpExpr\" should not be type checked. " << std::endl ;
 	return NULL ;
 }
 
@@ -603,6 +577,14 @@ TypeInfo* SysOutPrtStmt::typeCheck()
 	return stmtType ;
 }
 
+TypeInfo* SysOutPrtCharStmt::typeCheck()
+{
+	if (stmtType) return stmtType;
+	prtExpr->typeCheck();
+	stmtType = new VoidType();
+	return stmtType ;
+}
+
 TypeInfo* AssignStmt::typeCheck()
 {
 	if ( stmtType ) return stmtType ;
@@ -611,13 +593,33 @@ TypeInfo* AssignStmt::typeCheck()
 	return stmtType ;
 }
 
+
+//New : Added for BiOpExpr's typecheck ;
+TypeInfo* BiOpExpr::typeCheck()
+{
+	if ( exprType ) return exprType ;
+	leftExpr->typeCheck();
+	rightExpr->typeCheck();
+	exprType = new IntType();
+	return exprType ;
+}
+
 TypeInfo* GetMtdCallExpr::typeCheck()
 {
 	if ( exprType ) return exprType;
+	if ( type_check_level >= 2 ) cout<<" [ Type Check ] < GetMtdCallExpr > Method "<<mtdIdent->name<<" is processing. "<<endl;
 	if ( tarExpr->typeCheck() == NULL ) return NULL;
 	if ( tarExpr->typeCheck()->typeName == "Class" ) {
 		tarClassDecl = (( class ClassType* )tarExpr->typeCheck())->tarClassDecl ;
+
+		if ( type_check_level >= 2 ) cout<<" [ Type Check ] < GetMtdCallExpr > Corresponding Class is "<<(( class ClassType* )tarExpr->typeCheck())->tarIdent->name <<'\n';
 		tarClassDecl->typeCheck();
+
+		//New : Added for fill List's type Check ;
+		std::vector<Expr*>::iterator fit ;
+		for ( fit = fillList.fillList.begin() ; fit != fillList.fillList.end() ; fit ++ )
+			(*fit)->typeCheck();
+
 		exprType = tarClassDecl->getMethodRtnType( mtdIdent->name ) ;
 		isClass = true ;
 		return exprType ;
@@ -625,11 +627,17 @@ TypeInfo* GetMtdCallExpr::typeCheck()
 		if ( tarExpr->typeCheck()->typeName == "Itface") {
 			tarItfaceDecl = (( class ItfaceType* )tarExpr->typeCheck())->tarItfaceDecl ;
 			tarItfaceDecl->typeCheck();
+
+			//New : Added for fill List's type Check ;
+			std::vector<Expr*>::iterator fit ;
+			for ( fit = fillList.fillList.begin() ; fit != fillList.fillList.end() ; fit ++ )
+				(*fit)->typeCheck();
+
 			exprType = tarItfaceDecl->getAbsMethodRtnType( mtdIdent->name ) ;
 			isClass = false ;
 			return exprType ;
 		} else {
-			std::cout << " [ Type Check ] < GetMtdCallExpr > Invalid Caller Type ." << std::endl ;
+			std::cout << " [ Error ] < GetMtdCallExpr > Invalid Caller\'s Type ." << std::endl ;
 			exprType = new NullType() ;
 			return exprType;
 		}
@@ -641,8 +649,9 @@ TypeInfo* IdentAccessExpr::typeCheck()
 {
 	if ( exprType ) return exprType ;
 	tarIdent->typeCheck();
+	if ( type_check_level >= 1 ) cout<<" [ Type Check ] < IdentAccessExpr > Access @"<<tarIdent->name<<" is processing . "<<endl;
 	if ( TypeNamedValues.count( tarIdent->name ) == 0 ) {
-		cout<<"Error"<<endl;
+		cout<<" [ Error ] < IdentAccessExpr > Invalid Identifier \'"<<tarIdent->name<<"\' . "<<endl;
 		return NULL;
 	}
 	exprType = TypeNamedValues[ tarIdent->name ] ;
@@ -678,17 +687,17 @@ TypeInfo* VarDeclStmt::typeCheck()
 TypeInfo* ClassDecl::typeCheck()
 {
 	if ( classDeclType ) return classDeclType ;
-	cout << " [ Type Check ] " << classIdent->name << endl ;
+	if ( type_check_level >= 1 ) cout << " [ Type Check ] < ClassDecl > " << classIdent->name << " is processing ." << endl ;
 	TypeNamedClassDecls[ classIdent->name ] = this ;
 	NamedClassDecls[ classIdent->name ] = this ;
 	classDeclType = new VoidType();
 
 	//Fetch Base Class and load methods and fields from it .
-	std::cout << " [ Type Check ] Class " << classIdent->name << " now is processing on its base class ."<< std::endl ;
+	if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < ClassDecl > " << classIdent->name << " now is processing on its base class ."<< std::endl ;
 	if ( extClassIdent != NULL ) {
 		std::string extClassName = extClassIdent->name ;
 		if ( NamedClassDecls[extClassName] == 0 ) {
-			std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s base class hasn't been defined."<<std::endl;
+			std::cout<<" [ Error ] < ClassDecl > "<<classIdent->name<<"'s base class hasn't been defined."<<std::endl;
 			return NULL ;
 		}
 		baseClass = NamedClassDecls[extClassName] ;
@@ -704,7 +713,7 @@ TypeInfo* ClassDecl::typeCheck()
 			fieldDecl.push_back((*vit));
 			TypeInfo * itType = (*vit)->typeCheck();
 			if ( itType == NULL ) {
-				std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name << std::endl;
+				std::cout<<" [ Error ] < ClassDecl > "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name <<" haven't defined. "<< std::endl;
 				return NULL ;
 			}
 			fieldName2Pos[(*vit)->varIdent->name] = 1 + fieldDecl.size();
@@ -729,7 +738,7 @@ TypeInfo* ClassDecl::typeCheck()
 	std::vector< ImpItface * >::iterator iit ;
 	for ( iit = impItfaceList.impList.begin() ; iit != impItfaceList.impList.end() ; iit ++ ) {
 		if ( TypeNamedItfaceDecls.count((*iit)->impIdent->name) == 0 ) {
-			std::cout<<"[ Type Check ] < ItfaceDecl > Invalid Interface Name."<<std::endl ;
+			std::cout<<" [ Error ] < ClassDecl > Invalid Implemented Interface \'"<<(*iit)->impIdent->name<<"\'."<<std::endl ;
 			continue ;
 		}
 		ItfaceDecl* tarItface = TypeNamedItfaceDecls[ (*iit)->impIdent->name ] ;
@@ -739,12 +748,12 @@ TypeInfo* ClassDecl::typeCheck()
 	}
 
 	//After that , prepare its own fields and methods .
-	std::cout << " [ Type Check ] Class " << classIdent->name << " initialize the fields ."<< std::endl ;
+	if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < ClassDecl > " << classIdent->name << " initialize the fields . "<< std::endl ;
 	std::vector<class VarDecl*>::iterator vit;
 	for( vit = (varDeclList.declList).begin() ; vit != (varDeclList.declList).end() ; vit++ ) {
 		TypeInfo* itType = (*vit)->typeCheck();
 		if ( itType == NULL ) {
-			std::cout<<" [ Type Check ] ClassDecl "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name << std::endl;
+			std::cout<<" [ Error ] < ClassDecl > "<<classIdent->name<<"'s field which named "<< (*vit)->varIdent->name << " haven't defined ." <<std::endl;
 			return NULL ;
 		}
 		fieldDecl.push_back((*vit));
@@ -753,10 +762,10 @@ TypeInfo* ClassDecl::typeCheck()
 		//and the class number of the 0 offset
 	}
 
-	std::cout << " [ Type Check ] Class " << classIdent->name << " initialize the methods ."<< std::endl ;
+	if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < ClassDecl > Class " << classIdent->name << " initialize the methods ."<< std::endl ;
 	std::vector<class MtdDecl*>::iterator mit;
 	for( mit = (mtdDeclList.declList).begin() ; mit !=(mtdDeclList.declList).end() ; mit++ ) {
-		std::cout << " [ Type Check ] Add the method "<<(*mit)->mtdIdent->name<<" to Class "<<classIdent->name<<std::endl;
+		if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < ClassDecl > Add the method "<<(*mit)->mtdIdent->name<<" to Class "<<classIdent->name<<std::endl;
 		if ( mtdName2Pos.count((*mit)->mtdIdent->name) == 0 ) {
 			mtdName2Pos[(*mit)->mtdIdent->name] = mtdDecl.size() ;
 			(*mit)->Owner = this ;
@@ -788,16 +797,18 @@ TypeInfo* VarArg::typeCheck()
 	varType->typeCheck();
 	varIdent->typeCheck();
 	if ( varType ) {
-		if ( varType->isUsrDefIdentType() )
+		if ( varType->isUsrDefIdentType() ) {
 			return ( ( ( UsrDefIdentType* ) varType )->getConcreType()) ;
-		else
+		} else
 			return varType ;
 	}
 	return NULL ;
 }
 
 TypeInfo* MtdDecl::typeCheck() {
+	if ( type_check_level >= 1 ) std::cout << " [ Type Check ] < MtdDecl > Method " << mtdIdent->name << " is processing ."<< std::endl ;
 	if ( mtdDeclType ) return mtdDeclType ;
+	mtdDeclType = new VoidType();
 	TypeNamedValues.clear();
 	std::vector<class VarDecl*>::iterator dit ;
 	for (dit = Owner->varDeclList.declList.begin() ;
@@ -816,7 +827,6 @@ TypeInfo* MtdDecl::typeCheck() {
 		if ( ( (*sit)->typeCheck() ) == NULL ) return NULL ;
 	}
 	if ( (rtnExpr->typeCheck()) == NULL ) return NULL ;
-	mtdDeclType = new VoidType();
 	return mtdDeclType ;
 }
 
@@ -827,7 +837,7 @@ TypeInfo* ClassDecl::getMethodRtnType( std::string mtdName ) {
 		if ( (*mit)->mtdIdent->name == mtdName )
 			return (*mit)->rtnExpr->typeCheck() ;
 	}
-	cout<<"Error Method Not Found"<<endl;
+	cout<<" [ Error ] Method \'"<<mtdName<<"\' Not Found"<<endl;
 	return NULL ;
 }
 
@@ -881,19 +891,19 @@ Value*  Stmt :: codeGen() { return NULL ; }
 
 Value*  IntLiterExpr :: codeGen()
 {
-	std::cout << "Creating integer literature: " << value << endl;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] Creating integer literature: " << value << endl;
 	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, true);
 }
 
 Value*  TrueLiterExpr :: codeGen()
 {
-	std::cout << "Creating bool literature: " << value << endl;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] Creating bool literature: " << value << endl;
 	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
 }
 
 Value*  FalseLiterExpr :: codeGen()
 {
-	std::cout << "Creating bool literature: " << value << endl;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] Creating bool literature: " << value << endl;
 	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, false);
 }
 
@@ -901,7 +911,7 @@ Value*  FalseLiterExpr :: codeGen()
 
 Value* NegExpr::codeGen()
 {
-	std::cout << "Creating single operation Neg " << endl;
+	if ( code_gen_level >= 1 ) std::cout << "Creating single operation Neg " << endl;
 	return Builder.CreateSub(
 		ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true),
 							  tarExpr->codeGen(),
@@ -910,7 +920,7 @@ Value* NegExpr::codeGen()
 
 Value* ParenExpr::codeGen()
 {
-	std::cout << "Creating single operation Paren " << endl;
+	if ( code_gen_level >= 1 ) std::cout << "Creating single operation Paren " << endl;
 	return tarExpr->codeGen();
 }
 
@@ -976,24 +986,21 @@ Value* IfThenElseStmt::codeGen()
 
 Value* AssignStmt::codeGen()
 {
-	if(NamedValues.count(assignIdent->name)==0)
+	/*  Used for lambda  */
+	NamedValuesAccess(assignIdent->name);
+
+	if(NamedValues[assignIdent->name]==0)
 	{
-		std::cout<<"Undefined Value\n";
+		std::cout<<" [ Error ] < AssignStmt > Undefined Value\n";
 		return nullptr;
 	}
 	Value * rval=valueExpr->codeGen();
-	std::cout << "Creating Assignment statement" << endl;
-	if ( valueExpr->typeCheck() == NULL ) cout << "fuck" <<endl ; 
-	cout << valueExpr->typeCheck()->typeName << endl ; 
-	if ( NamedValues[assignIdent->name]->getType() != (valueExpr->typeCheck())->llvmTypeGen()->getPointerTo() ) 
-		cout<<"haha"<<endl;
-	cout<<"hehe"<<endl;
-	//Value * ptrCast = Builder.CreatePointerCast( NamedValues[assignIdent->name] , (valueExpr->typeCheck())->llvmTypeGen()->getPointerTo() );
-
-	Value* ptr = Builder.CreatePointerCast( NamedValues[assignIdent->name] , ( valueExpr->typeCheck())->llvmTypeGen()->getPointerTo());
-	Value* result = Builder.CreateStore(rval, ptr);
-	std::cout << "Store instruction created" << endl;
-	return result ; 
+	//std::cout << "Creating Assignment statement for variable " << assignIdent->name << endl;
+	//Value * ptrCast = Builder.CreatePointerCast( NamedValues[assignIdent->name] , (valueExpr->typeCheck())->llvmTypeGen() );
+	Value * ptrCast = CreatePtrAdd( NamedValues[assignIdent->name] ,0, rval->getType()->getPointerTo() );
+	Builder.CreateStore(rval,ptrCast);
+	//std::cout << "Store instruction created" << endl;
+	return NamedValues[assignIdent->name];
 }
 
 /* StmtList.h*/
@@ -1002,8 +1009,13 @@ Value * StmtList::codeGen()
 {
 	std::vector <class Stmt * >::iterator i;
 	Value * res=Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
-	for(i=stmtList.begin();i!=stmtList.end();i++)
+	for(i=stmtList.begin();i!=stmtList.end();i++){
+//		std::cout<<" The "<<(i-stmtList.begin())<< " Stmt is pointing to "<<(long long)(*i)<<endl ;
+	}
+	for(i=stmtList.begin();i!=stmtList.end();i++){
+//		std::cout<< " Now is processing on the Stmt Points to "<<(long long )( *i)<<" "<<(i-stmtList.begin())<<std::endl;
 		res=(*i)->codeGen();
+	}
 	return res;
 }
 
@@ -1025,17 +1037,32 @@ llvm::Value* LessCmpExpr::codeGen()
     return Builder.CreateICmpULT( leftExpr->codeGen() , rightExpr->codeGen() , "ultcmptmp");
 }
 
+llvm::Value* GreaterCmpExpr::codeGen()
+{
+    return Builder.CreateICmpSGT( leftExpr->codeGen() , rightExpr->codeGen() , "ultcmptmp");
+}
+
+llvm::Value* EqualCmpExpr::codeGen()
+{
+    return Builder.CreateICmpEQ( leftExpr->codeGen() , rightExpr->codeGen() , "ultcmptmp");
+}
+
+llvm::Value* NotEqualCmpExpr::codeGen()
+{
+    return Builder.CreateICmpNE( leftExpr->codeGen() , rightExpr->codeGen() , "ultcmptmp");
+}
+
 llvm::Value* InsOfExpr::codeGen()
 {
 	Value * intPtrCast = Builder.CreatePointerCast( tarExpr->codeGen() , Type::getInt64Ty(getGlobalContext()) ) ;
 	Value * tarClsNo = Builder.CreateLoad( intPtrCast ) ;
 	if ( ! srcType->isUsrDefIdentType() ) {
-		std::cout<<" [ IR ] < InsOfExpr > Invalid class Type." <<std::endl;
+		std::cout<<" [ Error ] < InsOfExpr > Invalid class Type." <<std::endl;
 		return NULL ;
 	}
 	TypeInfo * tarType = ( ( UsrDefIdentType * ) srcType )->getConcreType() ;
 	if ( tarType->typeName != "Class" ) {
-		std::cout<<" [ IR ] < InsOfExpr > Invalid class Type." <<std::endl;
+		std::cout<<" [ Error ] < InsOfExpr > Invalid class Type." <<std::endl;
 		return NULL ;
 	}
 	ClassDecl* tarClassDecl = ( ( ClassType* ) tarType ) ->tarClassDecl ;
@@ -1068,13 +1095,13 @@ llvm::Type* IntType::llvmTypeGen()
 llvm::Type* ClassType::llvmTypeGen()
 {
 	if ( tarType ) return tarType ;
-	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
+	tarType = tarClassDecl->getClassLLVMType();
     return tarType ;
 }
 llvm::Type* ItfaceType::llvmTypeGen()
 {
 	if ( tarType ) return tarType ;
-	tarType = Type::getInt64PtrTy(getGlobalContext());
+	tarType = Type::getInt64Ty(getGlobalContext())->getPointerTo();
     return tarType ;
 }
 
@@ -1144,19 +1171,30 @@ llvm::Value* VarDeclStmt::codeGen()
 {
     /* TODO : TypeInfo's virtual method llvmTypeGen need implementation.*/
     Type* tarType = type->llvmTypeGen() ;
-    if ( ! ( NamedValues.count(varIdent->name) == 0 ) ) {
-        std::cout<<"VarDeclStmt : Redefinition of the same name."<<std::endl;
+    /*  Used for lambda  */
+	//std::cout<<"VarDeclStmt Points to "<<(long long)(this)<<std::endl;
+	//td::cout<<"VarDeclStmt Name is "<<varIdent->name<<std::endl;
+	//NamedValuesAccess(varIdent->name);
+	if ( ! ( NamedValues[varIdent->name] == 0) ) {
+            std::cout<<" [ Error ] < VarDeclStmt > Redefinition of the same name "<<varIdent->name<<" .\n";
         return NULL ;
     }
     Value * targetValue =
         Builder.CreateAlloca( tarType , 0 , varIdent->name ) ;
     NamedValues[varIdent->name] = targetValue ;
+	/*  Used for lambda  */
+	NamedValuesLevel[varIdent->name]=LambdaLevel;
+
     return targetValue ;
 }
 
 llvm::Value* IdentAccessExpr::codeGen() {
-    if ( NamedValues.count(tarIdent->name) == 0 ) {
-        std::cout<<" [Generate] IdentAccessExpr : Value Not Defined."<<std::endl ;
+	/*  Used for lambda  */
+
+	NamedValuesAccess(tarIdent->name);
+
+	if ( NamedValues[tarIdent->name] == 0 ) {
+        std::cout<<" [ Error ] < IdentAccessExpr > Value Not Defined ."<<std::endl ;
     }
     return Builder.CreateLoad( NamedValues[tarIdent->name] , "loadvar" );
 }
@@ -1164,12 +1202,12 @@ llvm::Value* IdentAccessExpr::codeGen() {
 llvm::Type* VarDecl::getLLVMType()
 {
 	if (llvmType) return llvmType ;
-	llvmType = varType->llvmTypeGen();
+	llvmType = varType->typeCheck()->llvmTypeGen();
 	return llvmType ;
 }
 
 void Program::ClassInitial() {
-	std::vector<class ItfaceDecl*>::iterator iit ; 
+	std::vector<class ItfaceDecl*>::iterator iit ;
 	for ( iit = itfaceDeclList.declList.begin() ; iit != itfaceDeclList.declList.end() ; iit ++ ) {
 		(*iit)->codeGen();
 	}
@@ -1223,7 +1261,7 @@ ClassDecl* ClassDecl::getBaseClass() {
 llvm::Type* ClassDecl::getClassLLVMType() {
 	if ( classLLVMType ) return classLLVMType ;
 	if ( ! ( classDeclType ) ) this->typeCheck();
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " now is processing on its LLVM type ."<< std::endl ;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " now is processing on its LLVM type ."<< std::endl ;
 	// ABANDONED : getBaseClass();
 	std::string className = classIdent->name ;
 	/*
@@ -1235,18 +1273,18 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 	NamedClassDecls[className] = this ;
 
 	//make an oblique identified class type , then fill some thing into it.
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " create a oblique identifed type ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " create a oblique identifed type ."<< std::endl ;
 	classLLVMType = StructType::create(Builder.getContext() , className );
 
 	//Generate LLVM Type for every fields .
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " generate the LLVM Type for the fields ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " generate the LLVM Type for the fields ."<< std::endl ;
 	std::vector<class VarDecl*>::iterator it;
 	for( it = fieldDecl.begin() ;
 		 it != fieldDecl.end() ; it++ ) {
 		llvm::Type* itType = (*it)->getLLVMType();
 		if ( itType == NULL ) {
-			std::cout<<" [Check] ClassDecl "<<classIdent->name<<
-			"'s field which named "<< (*it)->varIdent->name << std::endl;
+			std::cout<<" [ Error ] < ClassDecl > "<<classIdent->name<<
+			"'s field which named "<< (*it)->varIdent->name<<" has an invalid type . " << std::endl;
 			return NULL ;
 		}
 	}
@@ -1258,11 +1296,11 @@ llvm::Type* ClassDecl::getClassLLVMType() {
 	classTypeVec.push_back( Type::getInt64Ty(getGlobalContext()) ) ;
 
 	//push the VTable of Function into the classTypeVec
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initial the VTable's type ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " initial the VTable's type ."<< std::endl ;
 	classTypeVec.push_back( getVTableType()->getPointerTo() );
 
 	//push the fields' types into the class TypeVec
-	std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " fill the whole type ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getClassLLVMType > Class " << classIdent->name << " fill the whole type ."<< std::endl ;
 	for( it = fieldDecl.begin() ;
 	     it != fieldDecl.end() ; it++ ) {
 		llvm::Type* itType = (*it)->getLLVMType();
@@ -1276,53 +1314,62 @@ llvm::Type* ClassDecl::getVTableType()
 {
 	if ( vtableType ) return vtableType ;
 	if ( ! ( classDeclType ) ) this->typeCheck();
-	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " now is processing on its VTable's LLVM type ."<< std::endl ;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " now is processing on its VTable's LLVM type ."<< std::endl ;
 	// ABANDONED : getBaseClass();
 	//make an oblique identified class type , then fill some thing into it.
-	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " create an oblique type ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " create an oblique type ."<< std::endl ;
 	vtableType = StructType::create(Builder.getContext() , (classIdent->name) + std::string("_vtable"));
 
-	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " get the methods' types and fill the whole VTable type ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " get the methods' types and fill the whole VTable type ."<< std::endl ;
 	std::vector<llvm::Type*> vtableTypeVec;
 	vtableTypeVec.clear();
 	std::vector<class MtdDecl*>::iterator mit;
 	for( mit = mtdDecl.begin() ; mit != mtdDecl.end() ; mit++ ) {
-		std::cout << " [ IR ] < getVTableType > Add method " << (*mit)->mtdIdent->name << " to vtable ."<<std::endl;
+		if ( code_gen_level >= 2 ) std::cout << " [ IR ] < getVTableType > Add method " << (*mit)->mtdIdent->name << " to vtable ."<<std::endl;
 		vtableTypeVec.push_back( (*mit)->getFunctionType());
 	}
 
 	cast<StructType>(vtableType)->setBody( vtableTypeVec );
-	std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " 's VTable's type has been processed successfully ."<< std::endl ;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] < getVTableType > Class " << classIdent->name << " 's VTable's type has been processed successfully ."<< std::endl ;
 	return vtableType ;
 }
 
 void ClassDecl::setNamedField( llvm::Value* thisClass )
 {
+	if ( code_gen_level >= 1 )
+		std::cout<<" [ IR ] < setNamedField > Adding the class's fields into Variable Table. "<<std::endl; 
 	if ( ! ( isa<PointerType>( thisClass->getType() ) ) ) {
-		std::cout<<" [ IR ] < setNamedField > Error : type is not compatible."<<std::endl;
+		std::cout<<" [ Error ] < setNamedField > Class-Pointer has an invalid type. "<<std::endl;
 	}
 	Value * selClass = Builder.CreateLoad( thisClass ) ;
 	if ( ! ( selClass->getType() == getClassLLVMType() ) ) {
-		std::cout<<" [ IR ] < setNamedField > Error : the pointer's type is not correct."<<std::endl;
+		std::cout<<" [ Error ] < setNamedField > Class-Pointer has an invalid type. "<<std::endl;
 	}
 	Value * test = Builder.CreateAlloca( getClassLLVMType() ) ;
 	if ( ! ( test->getType()  == getClassLLVMType()->getPointerTo() ) ) {
-		std::cout<<" Testing ! Error occurs ! " <<std::endl;
+	//	std::cout<<" Testing ! Error occurs ! " <<std::endl;
 	}
 	std::vector<class VarDecl*>::iterator it;
 	for( it = fieldDecl.begin() ;
 	     it != fieldDecl.end() ; it++ ) {
-		std::cout<<" [ IR ] < setNamedField > Add the field "<<(*it)->varIdent->name<<" at Pos :"<< fieldName2Pos[(*it)->varIdent->name]<<" into NamedValues ."<<std::endl;
+		if ( code_gen_level >= 2 ) std::cout<<" [ IR ] < setNamedField > Add the field "<<(*it)->varIdent->name<<" at Pos :"<< fieldName2Pos[(*it)->varIdent->name]<<" into NamedValues ."<<std::endl;
 		NamedValues[ (*it)->varIdent->name ]
 			= Builder.CreateStructGEP( getClassLLVMType() , thisClass , fieldName2Pos[(*it)->varIdent->name] );
+
+		/*  Used for lambda  */
+		NamedValuesLevel[ (*it)->varIdent->name ]=LambdaLevel;
+		IsField[ (*it)->varIdent->name ]=1;
 	}
-	cout<<"Reached here."<<endl;
+	/*  Used for lambda  */
+	ClassDecl* LambdaOnwer=this;
+	if ( code_gen_level >= 1 )
+		std::cout<<" [ IR ] < setNamedField > Finished successfully. "<<std::endl; 
 }
 
 int ClassDecl::getMethodId(std::string mtdName)
 {
 	if ( mtdName2Pos.count(mtdName) == 0 ) {
-		std::cout<<" [ Check ] getMethodId : "<<mtdName<<" is not a valid method."<<std::endl;
+		std::cout<<" [ Error ] < getMethodId > "<<mtdName<<" is not a valid method."<<std::endl;
 		return -1 ;
 	}
 	return mtdName2Pos[mtdName];
@@ -1331,7 +1378,7 @@ int ClassDecl::getMethodId(std::string mtdName)
 llvm::Type* ClassDecl::getMethodType(std::string mtdName)
 {
 	if ( mtdName2Pos.count(mtdName) == 0 ) {
-		std::cout<<" [ Check ] getMethodId : "<<mtdName<<" is not a valid method."<<std::endl;
+		std::cout<<" [ Error ] < getMethodType > "<<mtdName<<" is not a valid method."<<std::endl;
 		return NULL ;
 	}
 	int mtd_id = mtdName2Pos[mtdName];
@@ -1340,13 +1387,15 @@ llvm::Type* ClassDecl::getMethodType(std::string mtdName)
 
 llvm::Value* ClassDecl::getVTableLoc()
 {
-	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " now is processing on its VTable's Global Location ."<< std::endl ;
+	if ( code_gen_level >= 1 ) 
+		std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " now is processing on its VTable's Global Location ."<< std::endl ;
 	if (vtableLoc) return vtableLoc ;
 	getVTableType();
 
 	std::vector< Constant* > vtableFuncVec ;
 
-	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " fill's the initial data with the Virtual Functions."<< std::endl ;
+	if ( code_gen_level >= 2 ) 
+		std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " fill's the initial data with the Virtual Functions."<< std::endl ;
 	std::vector<class MtdDecl*>::iterator mit;
 	for( mit = mtdDecl.begin() ;
 		 mit != mtdDecl.end() ; mit++ ) {
@@ -1357,62 +1406,88 @@ llvm::Value* ClassDecl::getVTableLoc()
 		//}
 	}
 
-	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the initial constants ."<< std::endl ;
+	if ( code_gen_level >= 2 ) 
+		std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the initial constants ."<< std::endl ;
 	llvm::ArrayRef< Constant* > vtableInitial(vtableFuncVec);
 
-	std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the global table with constants ."<< std::endl ;
+	if ( code_gen_level >= 2 ) 
+		std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " generate the global table with constants ."<< std::endl ;
 	vtableLoc = new GlobalVariable( *TheModule,
 		cast<StructType>(getVTableType()), true, GlobalValue::ExternalLinkage ,
 		ConstantStruct::get( cast<StructType>(getVTableType()) , vtableInitial ) ,
 		classIdent->name + std::string("_vatble_loc") );
 
+	if ( code_gen_level >= 1 ) 
+		std::cout << " [ IR ] < getVTableLoc > Class " << classIdent->name << " has prepared its VTable's Global Location successfully ."<< std::endl ;
 	return vtableLoc;
 }
 
 llvm::Value* ClassDecl::codeGen()
 {
-    std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " now is processing ."<< std::endl ;
+    if ( code_gen_level >= 1 ) 
+	std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " now is processing ."<< std::endl ;
     getClassLLVMType();
     std::vector<class MtdDecl*>::iterator mit;
     for( mit = mtdDecl.begin() ;
 	mit != mtdDecl.end() ; mit++ ) {
-	cout<< (*mit)->mtdIdent->name << endl;
+	//cout<< (*mit)->mtdIdent->name << endl;
 	(*mit)->getFunction();
     }
-    std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " has been generated successfuly ."<< std::endl ;
+    for( mit = mtdDecl.begin() ;
+	mit != mtdDecl.end() ; mit++ )
+		(*mit)->codeGen();
+
+    if ( code_gen_level >= 1 ) 
+	std::cout << " [ IR ] < ClassDecl::codeGen > Class " << classIdent->name << " has been generated successfuly ."<< std::endl ;
     return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
 }
 
 Value * GetMtdCallExpr::codeGen()
 {
-    std::cout << " [ IR ] < CetMtdCallExpr::codeGen > now is processing."<< std::endl ;
+    if ( code_gen_level >= 1 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > now is processing."<< std::endl ;
 	if ( isClass ) {
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH0"<< std::endl ;
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > tarExpr: "<<(((ClassType*)(tarExpr->typeCheck()))->tarIdent)<< std::endl ;
 		ClassDecl* tarClassDecl = ((ClassType*)(tarExpr->typeCheck()))->tarClassDecl;
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH0.5"<< std::endl ;
 		int mtdSlot = tarClassDecl->getMethodId(mtdIdent->name) ;
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > "<<mtdSlot<< std::endl ;
 		MtdDecl*   tarMtdDecl   = tarClassDecl->mtdDecl[mtdSlot];
-		ClassDecl* tarFormClassDecl = tarMtdDecl->formOwner ;
+		//ClassDecl* tarFormClassDecl = tarMtdDecl->formOwner ;
 
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH1"<< std::endl ;
 		vector <Value*> arg;
-		Value* exprValue = tarExpr->codeGen(); 
-		Value* thisPtr = Builder.CreatePointerCast( exprValue , tarClassDecl->getClassLLVMType()->getPointerTo() ) ; 
-		Value* firPtr = Builder.CreatePointerCast( exprValue , tarFormClassDecl->getClassLLVMType()->getPointerTo() ) ;
-		arg.push_back( firPtr );
-		std::vector< class Expr* >::iterator fit ; 
-		std::vector< class VarArg* >::iterator vit = tarMtdDecl->varArgList.declList.begin()  ; 	
-		for( fit = fillList.fillList.begin() ; fit != fillList.fillList.end() ; fit ++ , vit ++  ) {
-			Value* tmpArgValue = (*fit)->codeGen();
-			if ( (*fit)->typeCheck()->typeName != (*vit)->typeCheck()->typeName ) {
-				arg.push_back( Builder.CreatePointerCast( tmpArgValue , (*vit)->typeCheck()->llvmTypeGen() ) ) ;  
-			} else {
-				arg.push_back( tmpArgValue ) ; 
-			}  	
-		}
-		
-		ArrayRef<Value*> argRef(arg);
+		//cout<<tarFormClassDecl->classIdent->name<<endl;
+		FunctionType* funcType=tarMtdDecl->func_type;
 
-		Value * my_vtable=Builder.CreateLoad(Builder.CreateStructGEP(tarClassDecl->getClassLLVMType(),thisPtr,1));
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH2"<< std::endl ;
+		Value* Ptr = Builder.CreateAlloca( funcType->params()[0]) ;
+		Value* PtrV=tarExpr->codeGen();
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH3"<< std::endl ;
+		Value* _Ptr=CreatePtrAdd(Ptr,0,PtrV->getType()->getPointerTo());
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH4"<< std::endl ;
+		Builder.CreateStore(PtrV,_Ptr);
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH5"<< std::endl ;
+		arg.push_back( Builder.CreateLoad(Ptr) );
+		int i;
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH6"<< std::endl ;
+		for(i=0;i<(fillList.fillList.size());i++)
+		{
+			Ptr = Builder.CreateAlloca( funcType->params()[i+1]) ;
+			PtrV=fillList.fillList[i]->codeGen();
+			Builder.CreateStore(PtrV,CreatePtrAdd(Ptr,0,PtrV->getType()->getPointerTo()));
+			arg.push_back( Builder.CreateLoad( Ptr ) );
+		}
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH7"<< std::endl ;
+		Value * arg0=CreatePtrAdd(arg[0],0,tarClassDecl->getClassLLVMType()->getPointerTo());
+		Value * my_vtable=Builder.CreateLoad(Builder.CreateStructGEP(tarClassDecl->getClassLLVMType(),arg0,1));
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH8"<< std::endl ;
 		Value * my_func_p=Builder.CreateStructGEP(tarClassDecl->getVTableType(),my_vtable, mtdSlot );
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH9"<< std::endl ;
 		Value * my_func=Builder.CreateLoad(my_func_p);
+    if ( code_gen_level >= 2 ) std::cout << " [ IR ] < CetMtdCallExpr::codeGen > CH10"<< std::endl ;
+
+		ArrayRef<Value*> argRef(arg);
 		return Builder.CreateCall(my_func,argRef);
 
 	} else {
@@ -1420,34 +1495,54 @@ Value * GetMtdCallExpr::codeGen()
 		ItfaceDecl* tarItfaceDecl = ((ItfaceType*)tarExpr->typeCheck())->tarItfaceDecl ;
 		int absMtdSlot = tarItfaceDecl->absMtdName2Pos[ mtdIdent->name ];
 		AbsMtdDecl* tarAbsMtdDecl = tarItfaceDecl->absMtdDecl[absMtdSlot];
-		
+
 		vector <Value*> arg;
-		cout<<tarExpr->typeCheck()->typeName<<endl;
-		cout<<tarAbsMtdDecl->absMtdIdent->name<<endl;
-		cout<<5<<endl;
+		//cout<<tarExpr->typeCheck()->typeName<<endl;
+		//cout<<tarAbsMtdDecl->absMtdIdent->name<<endl;
 		Value* firPtr = Builder.CreatePointerCast( tarExpr->codeGen() , tarExpr->typeCheck()->llvmTypeGen() ) ;
 		arg.push_back( firPtr );
-		std::vector< class Expr* >::iterator fit ; 
-		std::vector< class VarArg* >::iterator vit = tarAbsMtdDecl->varArgList.declList.begin()  ; 	
+		std::vector< class Expr* >::iterator fit ;
+		std::vector< class VarArg* >::iterator vit = tarAbsMtdDecl->varArgList.declList.begin()  ;
 		for( fit = fillList.fillList.begin() ; fit != fillList.fillList.end() ; fit ++ , vit ++  ) {
 			Value* tmpArgValue = (*fit)->codeGen();
 			if ( (*fit)->typeCheck()->typeName != (*vit)->typeCheck()->typeName ) {
-				arg.push_back( Builder.CreatePointerCast( tmpArgValue , (*vit)->typeCheck()->llvmTypeGen() ) ) ;  
+				arg.push_back( Builder.CreatePointerCast( tmpArgValue , (*vit)->typeCheck()->llvmTypeGen() ) ) ;
 			} else {
-				arg.push_back( tmpArgValue ) ; 
-			}  	
+				arg.push_back( tmpArgValue ) ;
+			}
 		}
-		
+
 		ArrayRef<Value*> argRef(arg);
-		cout<<3<<endl;	
-		std::map<std::string,llvm::Value*> tempMap(NamedValues); 
+		std::map<std::string,llvm::Value*> tempMap(NamedValues);
 		Value * my_func = tarItfaceDecl->getConcreMethod(mtdIdent->name);
-		cout<<4<<endl;
-		NamedValues.clear();	
-		NamedValues = tempMap ; 
+		NamedValues.clear();
+		NamedValues = tempMap ;
 		Value * result = Builder.CreateCall(my_func,argRef);
-		cout<<2<<endl;
-		return result ; 
+		return result ;
+
+/*
+		vector<Value*> arg;
+		Value* tmpV = tarExpr->codeGen() ;
+		Value* firPtr = Builder.CreatePointerCast( tmpV ,  ) ;
+		arg.push_back(firPtr);
+		int i;
+		for(i=0;i<(fillList.fillList.size());i++)
+			arg.push_back(fillList.fillList[i]->codeGen());
+		ArrayRef<Value*> argRef(arg);
+
+		if(tarExpr->typeCheck()->typeName!="Itface")
+			std::cout<<" [ Type Check ] Error tarExp Type in GetMtdCallExpr --"<<tarExpr->typeCheck()->typeName<<endl;
+		string ItfaceName=((ItfaceType*)tarExpr->typeCheck())->tarIdent->name;
+		cout<<"Debug :"<<ItfaceName<<endl;
+		ItfaceDecl* tarItfaceDecl = ((ItfaceType*)tarExpr->typeCheck())->tarItfaceDecl ;
+
+		cout<<"Debug : After getting the interface's decl."<<endl;
+
+		Value * my_func = tarItfaceDecl->getConcreMethod(mtdIdent->name);
+
+		cout<<"Debug : After get concrete method from the interface."<<endl;
+		return Builder.CreateCall(my_func,argRef);
+*/
 	}
 	return NULL ;
 }
@@ -1455,15 +1550,15 @@ Value * GetMtdCallExpr::codeGen()
 Type * MtdDecl::getFunctionType()
 {
 	if( llvmType == NULL ) {
-		std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its LLVM type ."<< std::endl ;
+		if ( code_gen_level >= 1 ) std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its LLVM type ."<< std::endl ;
 		vector<Type*> typeVec ;
 		typeVec.clear();
 		typeVec.push_back( formOwner->getClassLLVMType()->getPointerTo() ) ;
 		std::vector<class VarArg*>::iterator vait ;
 		for ( vait = varArgList.declList.begin() ; vait != varArgList.declList.end() ; vait ++ )
-			typeVec.push_back( (*vait)->getLLVMType() ) ;
+			typeVec.push_back( (*vait)->typeCheck()->llvmTypeGen() ) ;
 		ArrayRef<Type*> argTypeVec( typeVec ) ;
-		llvmType = FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false);
+		llvmType =func_type= FunctionType::get(rtnType->llvmTypeGen(),argTypeVec,false);
 		func = Function::Create( cast<FunctionType>(llvmType) , Function::ExternalLinkage , Owner->classIdent->name + std::string("_") + mtdIdent->name , TheModule);
 		llvmType = func->getType();
 	}
@@ -1472,59 +1567,68 @@ Type * MtdDecl::getFunctionType()
 
 Function * MtdDecl::codeGen()
 {
-	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its IR code ."<< std::endl ;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing on its IR code ."<< std::endl ;
 	BasicBlock * func_entry= BasicBlock::Create(getGlobalContext() , mtdIdent->name + std::string("_entry") , func);
 	Builder.SetInsertPoint( func_entry ) ;
 
-	NamedValues.clear();
+	ClearNamedValues();
 
-	Value * thisCls ; 
-
+	Value * thisCls ;
 	int j = 0 ;
-	cout << "fuck" << endl;
 	for( auto &Arg : func->args() ) {
 		if ( j == 0 ) {
 			thisCls = Builder.CreatePointerCast( &Arg , Owner->getClassLLVMType()->getPointerTo() )  ;
 			Value * tmpPtr = Builder.CreateAlloca( Owner->getClassLLVMType()->getPointerTo() , 0 );
-			Builder.CreateStore( thisCls , tmpPtr ); 
+			Builder.CreateStore( thisCls , tmpPtr );
 			NamedValues[std::string("this")] = tmpPtr ;
+
+			/*  Used for lambda  */
+			NamedValuesLevel[std::string("this")]=LambdaLevel;
 		} else {
-			// Add the Alloca Instruction for the Argments 
-			cout << varArgList.declList[j-1]->typeCheck()->typeName << endl ; 
-			Value* tmpPtr = Builder.CreateAlloca( varArgList.declList[j-1]->typeCheck()->llvmTypeGen() , 0 ) ; 
-			Builder.CreateStore( &Arg , tmpPtr ) ; 
- 			NamedValues[varArgList.declList[j-1]->varIdent->name] = tmpPtr ;
+			// Add the Alloca Instruction for the Argments
+			//cout<<varArgList.declList[j-1]->varIdent->name<<endl;
+
+			Value* tmpPtr = Builder.CreateAlloca( varArgList.declList[j-1]->typeCheck()->llvmTypeGen() , 0 ) ;
+			Builder.CreateStore( &Arg , tmpPtr ) ;
+ 			tmpPtr = Builder.CreatePointerCast( tmpPtr , varArgList.declList[j-1]->typeCheck()->llvmTypeGen()->getPointerTo() );
+			NamedValues[varArgList.declList[j-1]->varIdent->name] = tmpPtr ;
+
+			/*  Used for lambda  */
+			NamedValuesLevel[varArgList.declList[j-1]->varIdent->name]=LambdaLevel;
 		}
 		j++;
 	}
-	cout << "fuck" << endl;
 	Owner->setNamedField(thisCls);
 
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Ch1 Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	stmtList.codeGen();
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Ch2 Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	Value * retval;
 	retval=rtnExpr->codeGen();
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Ch3 Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	Builder.CreateRet(retval);
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Ch4 Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	verifyFunction( *func ) ;
 	//TheFPM->run(*func);
-	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" have been generated successfully  ."<< std::endl ;
 	return NULL;
 }
 
 Function * MtdDecl::getFunction()
 {
 	if ( isCreated ) return func ;
-	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" now is processing."<< std::endl ;
 	getFunctionType();
-	codeGen();
+	//codeGen();
 	isCreated = true ;
-	std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" has been processed successfully ."<< std::endl ;
+	if ( code_gen_level >= 2 ) std::cout << " [ IR ] Class " << Owner->classIdent->name << "'s method "<<mtdIdent->name<<" has been processed successfully ."<< std::endl ;
 	return func;
 }
 
 Value* ObjNewExpr::codeGen()
 {
 
-	std::cout << " [ IR ] < ObjNewExpr::codeGen > Now allocating an object ."<< std::endl ;
+	if ( code_gen_level >= 1 ) std::cout << " [ IR ] < ObjNewExpr::codeGen > Now allocating an object ."<< std::endl ;
 	Value * mallocSize = ConstantExpr::getSizeOf(
 					NamedClassDecls[tarIdent->name]->getClassLLVMType());
 	mallocSize = ConstantExpr::getTruncOrBitCast( cast<Constant>(mallocSize) , Type::getInt64Ty(getGlobalContext()));
@@ -1571,31 +1675,48 @@ llvm::Type* UsrDefIdentType::llvmTypeGen() {
 	if (tarType) return tarType;
 	if ( NamedClassDecls.count( tarIdent->name ) == 0 ) {
 		if ( NamedItfaceDecls.count( tarIdent->name ) == 0 ) {
-			std::cout<<" [ IR ] Itface "<<tarIdent->name<<" is not defined."<<std::endl;
+			std::cout<<" [ Error ] Itface \'"<<tarIdent->name<<"\' is not defined."<<std::endl;
 			return NULL;
 		}
-		cout << "is an interface" << endl ; 
-		return Type::getInt64PtrTy(getGlobalContext());
+		return Builder.getInt64Ty()->getPointerTo();
 	}
 	ClassDecl* tarClassDecl = NamedClassDecls[tarIdent->name] ;
 	if ( tarClassDecl == NULL ) {
-		std::cout<<" [ IR ] Class "<<tarIdent->name<<" is not defined."<<std::endl;
+		std::cout<<" [ Error ] Class \'"<<tarIdent->name<<"\' is not defined."<<std::endl;
 		return NULL;
 	}
-	cout << "is a class" <<endl;
+	//cout<<tarClassDecl->classIdent->name<<endl;
 	tarType = tarClassDecl->getClassLLVMType()->getPointerTo();
 	return tarType;
 }
 
 llvm::Type* VarArg::getLLVMType(){
     	if ( llvmType ) return llvmType ;
-	llvmType = varType->llvmTypeGen();
+	llvmType = varType->typeCheck()->llvmTypeGen();
 	return llvmType;
 }
 
 llvm::Value* SysOutPrtStmt::codeGen() {
 	llvm::Value* number = prtExpr->codeGen();
 	llvm::Value* format = Builder.CreateGlobalStringPtr("%lld\n");
+
+	std::vector<llvm::Type *> printfArgs;
+	printfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	printfArgs.push_back(Builder.getInt64Ty());
+	llvm::ArrayRef<llvm::Type*>  argsRef(printfArgs);
+
+	llvm::FunctionType *printfType =
+		llvm::FunctionType::get(Builder.getInt64Ty(), argsRef, false);
+	llvm::Constant *printfFunc = TheModule->getOrInsertFunction("printf", printfType);
+
+  	std::vector<llvm::Value *> printfValues = { format, number };
+
+  	return Builder.CreateCall(printfFunc, printfValues);
+}
+
+llvm::Value* SysOutPrtCharStmt::codeGen() {
+	llvm::Value* number = prtExpr->codeGen();
+	llvm::Value* format = Builder.CreateGlobalStringPtr("%c");
 
 	std::vector<llvm::Type *> printfArgs;
 	printfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
@@ -1629,4 +1750,308 @@ llvm::Value* SysInReadExpr::codeGen() {
 	Builder.CreateCall(scanfFunc, scanfValues);
 
 	return Builder.CreateLoad(number, "");
+}
+
+llvm::Value* SysInReadCharExpr::codeGen() {
+	llvm::Value* number = Builder.CreateAlloca( Builder.getInt64Ty(), 0, "" );
+	llvm::Value* zero = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true);
+	Builder.CreateStore(zero, number);
+	llvm::Value* format = Builder.CreateGlobalStringPtr("%c");
+
+	std::vector<llvm::Type *> scanfArgs;
+	scanfArgs.push_back(Builder.getInt8Ty()->getPointerTo());
+	scanfArgs.push_back(Builder.getInt64Ty()->getPointerTo());
+	llvm::ArrayRef<llvm::Type*> argsRef(scanfArgs);
+
+	llvm::FunctionType *scanfType =
+		llvm::FunctionType::get(Builder.getInt64Ty(), argsRef, false);
+	llvm::Constant *scanfFunc = TheModule->getOrInsertFunction("scanf", scanfType);
+
+	std::vector<llvm::Value *> scanfValues = { format, number };
+
+	Builder.CreateCall(scanfFunc, scanfValues);
+
+	return Builder.CreateLoad(number, "");
+}
+/*  Used for lambda  */
+
+void MtdDecl::ClearNamedValues()
+{
+	NamedValues.clear();
+	LambdaLevel=1;
+	LambdaArgCount.resize(LambdaLevel+1);
+	LambdaArgStart.resize(LambdaLevel+1);
+	LambdaBB.resize(LambdaLevel+1);
+	FunctionArgStart.resize(LambdaLevel+1);
+	FunctionBB.resize(LambdaLevel+1);
+	LambdaArgCount[LambdaLevel]=0;
+	LambdaArgStart[LambdaLevel]=0;
+	LambdaBB[LambdaLevel]=0;
+	IsField.clear();
+	LambdaOwner=Owner;
+}
+
+void NamedValuesAccess(string name)
+{
+	if(IsField[name])
+	{
+		if(NamedValuesLevel[name]&&NamedValuesLevel[name]<LambdaLevel)
+		{
+			if ( code_gen_level >= 1 ) std::cout<<" [ Lambda ] Field Access\n";
+			NamedValuesAccess("this");
+			Value * thisClass=Builder.CreateLoad(NamedValues["this"]);
+			if ( code_gen_level >= 1 ) std::cout<<" [ Lambda ] this Access finish\n";
+			std::vector<class VarDecl*>::iterator it;
+			for( it = LambdaOwner->fieldDecl.begin() ;
+				it != LambdaOwner->fieldDecl.end() ; it++ ) {
+					NamedValues[ (*it)->varIdent->name ]
+						= Builder.CreateStructGEP( LambdaOwner->getClassLLVMType() , thisClass , LambdaOwner->fieldName2Pos[(*it)->varIdent->name] );
+					NamedValuesLevel[ (*it)->varIdent->name ]=LambdaLevel;
+				}
+		}
+		return;
+	}
+	BasicBlock * OldBB=Builder.GetInsertBlock();
+	for(;NamedValuesLevel[name]&&NamedValuesLevel[name]<LambdaLevel;)
+	{
+		if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Access Value "<<name<<" At Level "<<NamedValuesLevel[name]<<'\n';
+		ArgValuesAccess(name,NULL,NamedValuesLevel[name]+1);
+	}
+	Builder.SetInsertPoint( OldBB ) ;
+}
+
+Value* CreatePtrAdd(Value * Ptr, int offset,Type* AfterPtr)
+{
+	Value *tmp;
+	tmp=Builder.CreatePtrToInt(Ptr,Type::getInt64Ty(getGlobalContext()));
+	tmp=Builder.CreateAdd(tmp,ConstantInt::get(Type::getInt64Ty(getGlobalContext()),offset, true));
+	tmp=Builder.CreateIntToPtr(tmp,AfterPtr);
+	return tmp;
+}
+
+void ArgValuesAccess(string name,Type* ArgPtrType,int Level)
+{
+	if(ArgPtrType==NULL)
+	{
+		if(NamedValues[name]==NULL)
+		{
+			if ( code_gen_level >= 1 ) cout<<" [ Lambda ] ArgValuesAccess Error\n";
+			return;
+		}
+		ArgPtrType=NamedValues[name]->getType();
+	}
+	if ( code_gen_level >= 1 ) cout<<" [ Lambda ] ArgValuesAccess CH1\n";
+	Builder.SetInsertPoint( LambdaBB[Level] ) ;
+	int offset=8*(++LambdaArgCount[Level]);
+	if ( code_gen_level >= 1 ) cout<<" [ Lambda ] ArgValuesAccess CH2\n";
+	Value* addr;
+	if(NamedValues[name]!=NULL)
+	{
+		addr = LambdaArgStart[Level];
+		addr=CreatePtrAdd(addr,offset,ArgPtrType);
+		Builder.CreateStore(Builder.CreateLoad(NamedValues[name]),addr);
+	}
+	if ( code_gen_level >= 1 ) cout<<" [ Lambda ] ArgValuesAccess CH3\n";
+
+	Builder.SetInsertPoint( FunctionBB[Level] ) ;
+	addr = FunctionArgStart[Level];
+	addr=CreatePtrAdd(addr,offset,ArgPtrType);
+	if ( code_gen_level >= 1 ) cout<<" [ Lambda ] ArgValuesAccess CH4\n";
+	if ( code_gen_level >= 1 ) cout<<" [ Lambda ] "<<name<<" at offset "<<offset<<" Level "<<Level<<"\n";
+	NamedValues[name] = addr;
+
+	NamedValuesLevel[name] = Level;
+}
+
+FunctionType* GetLambdaType()
+{
+	static FunctionType* LT=NULL;
+	if(LT==NULL)
+	{
+		vector<Type*> _type_list_1;
+		_type_list_1.clear();
+		_type_list_1.push_back(Type::getInt64Ty(getGlobalContext())->getPointerTo());
+		ArrayRef<Type*> _type_list_2 ( _type_list_1 ) ;
+		LT=FunctionType::get(Type::getInt64Ty(getGlobalContext()),_type_list_2,false);
+	}
+	return LT;
+}
+
+Type* GetIntType()
+{
+	return Type::getInt64Ty(getGlobalContext());
+}
+
+Value* LamdaGenExpr::codeGen() {
+
+	map<string, int> __NamedValuesLevel(NamedValuesLevel);
+	map<string, Value*> __NamedValues(NamedValues);
+	BasicBlock * OldBB=Builder.GetInsertBlock();
+	Value * SizeAddr = Builder.CreateAlloca( Builder.getInt64Ty(),0, "" );
+	BasicBlock * Entry= BasicBlock::Create(getGlobalContext() , "lambdapre" , Builder.GetInsertBlock()->getParent());
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Malloc Data\n";
+	/* Lambda Data */
+	LambdaLevel++;
+	LambdaArgCount.resize(LambdaLevel+1);
+	LambdaArgStart.resize(LambdaLevel+1);
+	LambdaBB.resize(LambdaLevel+1);
+	FunctionArgStart.resize(LambdaLevel+1);
+	FunctionBB.resize(LambdaLevel+1);
+	LambdaArgCount[LambdaLevel]=0;
+	LambdaBB[LambdaLevel]=Entry;
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Create Function\n";
+	/* Function Create */
+	Function * func=Function::Create(  GetLambdaType(), Function::ExternalLinkage , "" , TheModule);
+	FunctionBB[LambdaLevel]= BasicBlock::Create(getGlobalContext() , "loaddata" , func);
+	Builder.SetInsertPoint(FunctionBB[LambdaLevel]);
+	for( auto &Arg : func->args() )
+	{
+		if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  in arg\n";
+		Value *tmp = Builder.CreatePointerCast( &Arg , (Type::getInt64Ty(getGlobalContext()))->getPointerTo())  ;
+		if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  in arg 2\n";
+		Value * tmpPtr = Builder.CreateAlloca( Type::getInt64Ty(getGlobalContext())->getPointerTo() , 0 );
+		if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  in arg 3\n";
+		Builder.CreateStore( tmp , tmpPtr );
+		if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  in arg 4\n";
+		FunctionArgStart[LambdaLevel]=Builder.CreateLoad(tmpPtr);
+	}
+
+	/* Lambda Malloc */
+	Builder.SetInsertPoint(Entry);
+	Value * mallocSize = Builder.CreateLoad( SizeAddr );
+	Instruction * var_malloc=CallInst::CreateMalloc(	Builder.GetInsertBlock(),
+					Type::getInt64Ty(getGlobalContext()),
+					Builder.getInt64Ty(),
+					mallocSize, nullptr , nullptr , "_malloc");
+	Builder.Insert(var_malloc);
+	LambdaArgStart[LambdaLevel] = var_malloc ;
+
+	assert(LambdaArgStart[LambdaLevel]->getType()==GetIntType()->getPointerTo()&&"nsknojj");
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Insert Argument\n";
+	/* Argument */
+	Builder.SetInsertPoint(FunctionBB[LambdaLevel]);
+	for(int i=0;i<varArgList.declList.size();i++)
+		ArgValuesAccess(varArgList.declList[i]->varIdent->name,varArgList.declList[i]->typeCheck()->llvmTypeGen()->getPointerTo(),LambdaLevel);
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen\n";
+	/* Function */
+	BasicBlock * myStmt= BasicBlock::Create(getGlobalContext() , "funcstmt" , func);
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen CH0\n";
+	Builder.SetInsertPoint( myStmt ) ;
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen "<<stmtList.stmtList.size()<<endl;
+	stmtList.codeGen();
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen CH1\n";
+	Value * retval = rtnExpr->codeGen();
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen CH2\n";
+	Value * retaddr = Builder.CreateAlloca(retval->getType());
+	Builder.CreateStore(retval,retaddr);
+	retaddr=Builder.CreatePtrToInt(retaddr,Type::getInt64Ty(getGlobalContext()));
+	retaddr=Builder.CreateIntToPtr(retaddr,
+					Type::getInt64Ty(getGlobalContext())
+					->getPointerTo());
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function CodeGen CH3\n";
+	retval = Builder.CreateLoad	(retaddr);
+	Builder.CreateRet(retval);
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Verify Function\n";
+
+	Builder.SetInsertPoint( FunctionBB[LambdaLevel] ) ;
+	Builder.CreateBr(myStmt);
+	Builder.SetInsertPoint( OldBB ) ;
+	Builder.CreateStore(ConstantInt::get(Type::getInt64Ty(getGlobalContext()),8*(LambdaArgCount[LambdaLevel]+1), true),SizeAddr);
+	Builder.CreateBr(Entry);
+	Builder.SetInsertPoint( Entry ) ;
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function Store CH1\n";
+	Value * func_addr=CreatePtrAdd(LambdaArgStart[LambdaLevel],0,GetLambdaType()->getPointerTo()->getPointerTo());
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function Store CH2\n";
+
+	Builder.CreateStore(func,func_addr);
+
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Function Store CH3\n";
+
+//	assert(NamedValues["x"]!=NULL);
+	NamedValuesLevel=__NamedValuesLevel;
+	NamedValues=__NamedValues;
+	Builder.SetInsertPoint( Entry ) ;
+//	assert(NamedValues["x"]==NULL);
+
+	verifyFunction( *func ) ;
+	//TheFPM->run(*func);
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Finish\n";
+	return LambdaArgStart[LambdaLevel--];
+}
+
+Value* LamdaAppExpr::codeGen() {
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Create Call "<<tarIdent->name<<endl;
+
+	NamedValuesAccess(tarIdent->name);
+	if (   NamedValues[tarIdent->name] == 0 ) {
+       		std::cout<<" [ Error ] No such Invoker."<<std::endl;
+        	return NULL ;
+    	}
+	Value* addr= Builder.CreateLoad(NamedValues[tarIdent->name]);
+	for(int i=0;i<fillList.fillList.size();i++)
+   	 {
+		Value *exp=fillList.fillList[i]->codeGen();
+		Value *my_addr=CreatePtrAdd(addr,(i+1)*8,exp->getType()->getPointerTo());
+		Builder.CreateStore(exp,my_addr);
+	}
+	Value* my_func=CreatePtrAdd(addr,0,GetLambdaType()->getPointerTo()->getPointerTo());
+	my_func=Builder.CreateLoad(my_func);
+
+	vector<Value*> _value_list_1;
+	_value_list_1.clear();
+	_value_list_1.push_back(addr);
+	ArrayRef<Value*> _value_list_2 ( _value_list_1 ) ;
+	assert(addr->getType()==GetIntType()->getPointerTo()&&"nsknojj");
+	if ( code_gen_level >= 1 ) std::cout << " [ Lambda ]  Create Call Finish. "<<tarIdent->name<<endl;
+	return Builder.CreateCall(my_func, _value_list_2);
+}
+
+TypeInfo* LamdaGenExpr::typeCheck()
+{
+	if ( exprType ) return exprType ;
+	exprType = new InvokerType() ;
+	if ( type_check_level >= 1 ) std::cout << " [ Type Check ] < LambdaExpr > LambdaGen Start"<<endl;
+	map<string,TypeInfo*> __TypeNamedValues(TypeNamedValues);
+	std::vector<class VarArg*>::iterator vit;
+	if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < LambdaExpr > VarArgList: "<<varArgList.declList.size()<<endl;
+	for ( vit = varArgList.declList.begin() ;
+	      vit != varArgList.declList.end() ; vit ++ ) {
+		TypeNamedValues[(*vit)->varIdent->name] = (*vit)->typeCheck() ;
+	}
+	std::vector< class Stmt * >::iterator sit ;
+	if ( type_check_level >= 2 ) std::cout << " [ Type Check ] < LambdaExpr> StmtList: "<<stmtList.stmtList.size()<<endl;
+	for ( sit = stmtList.stmtList.begin() ;
+	      sit != stmtList.stmtList.end() ; sit ++ ) {
+		if ( ( (*sit)->typeCheck() ) == NULL ) return NULL ;
+	}
+	if ( (rtnExpr->typeCheck()) == NULL ) return NULL ;
+	TypeNamedValues=__TypeNamedValues;
+	if ( type_check_level >= 1 ) std::cout << " [ Type Check ] < LambdaExpr > LambdaGen Finish"<<endl;
+	return exprType ;
+}
+
+TypeInfo* LamdaAppExpr::typeCheck()
+{
+	if (exprType) return exprType ;
+	exprType = new IntType();
+	if ( type_check_level >= 1 ) std::cout << " [ Type Check ] < LambdaExpr > LambdaApp Start"<<endl;
+	tarIdent->typeCheck();
+	std::vector<class Expr*>::iterator vit;
+	for ( vit = fillList.fillList.begin() ;
+	      vit != fillList.fillList.end() ; vit ++ )
+			(*vit)->typeCheck();
+	if ( type_check_level >= 1 ) std::cout << " [ Type Check ] < LambdaExpr > LambdaApp Finish"<<endl;
+	return exprType	;
+}
+
+llvm::Type* InvokerType::llvmTypeGen()
+{
+	if ( tarType ) return tarType ;
+	tarType = Type::getInt64Ty(getGlobalContext())->getPointerTo();
+	return tarType ;
 }
