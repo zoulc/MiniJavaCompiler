@@ -28,6 +28,7 @@
 */
 #include "node.h"
     Program *programAst; /* the top level root node of our final AST */
+    extern std::map<std::string, TemplateClassDecl*> NamedTemplateClassDecls;
 
     extern int yylex();
     void yyerror(const char *s) { printf("ERROR: %s\n", s); }
@@ -68,7 +69,7 @@
    they represent.
  */
 %token  TIDENT TINT TDOUBLE TNUMBER
-%token  TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
+%token  TCEQ TCNE TCLT TCGT TCLE TCGE TEQUAL
 %token  TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token  TSEMICOLON TSYSOUT TSYSIN TSYSOUTCHAR TSYSINCHAR
 %token  TPLUS TMINUS TMUL TDIV TAND
@@ -126,6 +127,8 @@ program : mainclassdecl
          { programAst->AddClassDecl( $2 ) ; }
          | program itfacedecl
          { programAst->AddItfaceDecl( $2 ) ; }
+	 | program templateclassdecl
+	 { }
         ;
 
 mainclassdecl : TCLASS classdeclident TLBRACE TPUBLIC TSTATIC TVOID TMAIN TLPAREN TSTRING TLF TRF argdeclident TRPAREN TLBRACE stmtlist TRBRACE TRBRACE
@@ -145,6 +148,13 @@ impitfacelist :/*blank*/ { $$ = new ImpItfaceList() ; }
             |   impitface { $$ = ( new ImpItfaceList() )->AddImpItface( $1 ) ; }
             |   impitfacelist TCOMMA impitface { $$ = $1 -> AddImpItface( $3 ) ; }
             ;
+
+templateclassdecl : TCLASS classdeclident TCLT TIDENT TCGT TLBRACE vardecllist mtddecllist TRBRACE
+		    { NamedTemplateClassDecls.insert(std::pair<std::string, TemplateClassDecl*>
+			($2->name, new TemplateClassDecl( $2, *$4, NULL, new ImpItfaceList(), $7, $8))); }
+		  | TCLASS classdeclident TCLT TIDENT TCGT TEXTENDS classdeclident TLBRACE vardecllist mtddecllist TRBRACE
+		    { NamedTemplateClassDecls.insert(std::pair<std::string, TemplateClassDecl*>
+			($2->name, new TemplateClassDecl( $2, *$4, $7, new ImpItfaceList(), $9, $10))); }
 
 classdecl : TCLASS classdeclident TEXTENDS classdeclident TIMPLEM impitfacelist TLBRACE vardecllist mtddecllist TRBRACE
             { $$ = new ClassDecl( $2 , $4 , $6 , $8 , $9 ) ;  }
@@ -182,6 +192,8 @@ type : TINT TLF TRF { $$ = new ArrType( new IntType() ) ; }
      | TINT { $$ = new IntType() ; }
      | TBOOL  { $$ = new BoolType() ; }
      | TINVOKER { $$ = new InvokerType() ; }
+     | typeuseident TCLT TIDENT TCGT  { $$ = new TemplateUsrDefIdentType( $1, *$3); }
+     | typeuseident TCLT TINT TCGT { $$ = new TemplateUsrDefIdentType( $1, string("int") ); }
      | typeuseident  { $$ = new UsrDefIdentType( $1 ) ; }
      ;
 
@@ -216,6 +228,10 @@ expr : biopexpr { $$ = $1 ; }
      | TTHIS { $$ = new ThisExpr( ) ; }
      | TNEW TINT TLF expr TRF
        { $$ = new ArrNewExpr( $4 ) ; }
+     | TNEW typeuseident TCLT TIDENT TCGT TLPAREN TRPAREN
+       { $$ = new TemplateObjNewExpr( $2, *$4 ); }
+     | TNEW typeuseident TCLT TINT TCGT TLPAREN TRPAREN
+       { $$ = new TemplateObjNewExpr( $2, string("int") ); }
      | TNEW typeuseident TLPAREN TRPAREN
        { $$ = new ObjNewExpr( $2 ) ; }
      | TBANG expr

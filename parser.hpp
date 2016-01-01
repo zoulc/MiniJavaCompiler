@@ -52,8 +52,8 @@ extern int yydebug;
     TCEQ = 262,
     TCNE = 263,
     TCLT = 264,
-    TCLE = 265,
-    TCGT = 266,
+    TCGT = 265,
+    TCLE = 266,
     TCGE = 267,
     TEQUAL = 268,
     TLPAREN = 269,
@@ -106,7 +106,7 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 37 "parser.y" /* yacc.c:1909  */
+#line 38 "parser.y" /* yacc.c:1909  */
 
     Ident* ident;
     TypeInfo* type;

@@ -38,6 +38,7 @@ using namespace std;
 using namespace llvm;
 
 #include "node.h"
+std::map<std::string, TemplateClassDecl*> NamedTemplateClassDecls;
 #include "parser.hpp"
 
 extern Program *programAst;
@@ -55,6 +56,7 @@ static std::map<std::string, ClassDecl*> TypeNamedClassDecls ;
 static std::map<std::string, TypeInfo*> TypeNamedValues ;
 static std::map<std::string, ItfaceDecl*> TypeNamedItfaceDecls ;
 static std::map<std::string, Ident*> IdentNamedValues ;
+static std::vector<ClassDecl*> classToInit ;
 
 static Module *TheModule;
 static IRBuilder<> Builder(getGlobalContext());
@@ -110,7 +112,10 @@ Value *Program::codeGen() {
   this->typeCheck();
   std::cout<<" [ Gava ] All Classes have been checked. "<<std::endl;
   this->ClassInitial();
-  std::cout<<" [ Gava ] All Classes have been initialized. "<<std::endl;
+  std::cout<<" [ Gava ] Now check the instantiated template class. "<<std::endl;
+  for (int i = 0; i < classToInit.size(); ++i)
+    classToInit[i]->codeGen();
+  std::cout<<" [ Gava ] All Classes have been initialized successfully. "<<std::endl;
   return mainClassDecl->codeGen();
 }
 
